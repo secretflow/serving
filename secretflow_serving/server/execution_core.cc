@@ -68,7 +68,7 @@ ExecutionCore::ExecutionCore(Options opts)
 
   if (opts_.feature_source_config.has_value()) {
     SPDLOG_INFO("create feature adpater, type:{}",
-                opts_.feature_source_config->options_case());
+                static_cast<int>(opts_.feature_source_config->options_case()));
     feature_adapater_ = feature::FeatureAdapterFactory::GetInstance()->Create(
         *opts_.feature_source_config, opts_.id, opts_.party_id, source_schema);
   }
