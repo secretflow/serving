@@ -181,6 +181,7 @@ def _com_github_lz4_lz4():
         name = "com_github_lz4_lz4",
         sha256 = "030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1",
         strip_prefix = "lz4-1.9.3",
+        type = "tar.gz",
         build_file = "@sf_serving//bazel:lz4.BUILD",
         urls = [
             "https://codeload.github.com/lz4/lz4/tar.gz/refs/tags/v1.9.3",
