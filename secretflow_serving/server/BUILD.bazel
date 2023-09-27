@@ -1,0 +1,111 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_binary", "serving_cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_library(
+    name = "health",
+    srcs = ["health.cc"],
+    hdrs = ["health.h"],
+    deps = [
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "execution_core",
+    srcs = ["execution_core.cc"],
+    hdrs = ["execution_core.h"],
+    deps = [
+        "//secretflow_serving/apis:execution_service_cc_proto",
+        "//secretflow_serving/feature_adapter",
+        "//secretflow_serving/framework:executable",
+        "//secretflow_serving/protos:feature_cc_proto",
+        "//secretflow_serving/server/metrics:default_metrics_registry",
+    ],
+)
+
+serving_cc_library(
+    name = "prediction_core",
+    srcs = ["prediction_core.cc"],
+    hdrs = ["prediction_core.h"],
+    deps = [
+        "//secretflow_serving/apis:prediction_service_cc_proto",
+        "//secretflow_serving/framework:predictor",
+    ],
+)
+
+serving_cc_library(
+    name = "execution_service_impl",
+    srcs = ["execution_service_impl.cc"],
+    hdrs = ["execution_service_impl.h"],
+    deps = [
+        ":execution_core",
+        "//secretflow_serving/server/metrics:default_metrics_registry",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "prediction_service_impl",
+    srcs = ["prediction_service_impl.cc"],
+    hdrs = ["prediction_service_impl.h"],
+    deps = [
+        ":prediction_core",
+        "//secretflow_serving/server/metrics:default_metrics_registry",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "server",
+    srcs = ["server.cc"],
+    hdrs = [
+        "server.h",
+        "version.h",
+    ],
+    deps = [
+        ":execution_service_impl",
+        ":health",
+        ":prediction_service_impl",
+        "//secretflow_serving/config:serving_config_cc_proto",
+        "//secretflow_serving/framework:model_loader",
+        "//secretflow_serving/server/kuscia:config_parser",
+        "//secretflow_serving/server/metrics:default_metrics_registry",
+        "//secretflow_serving/server/metrics:metrics_service",
+        "//secretflow_serving/source",
+        "//secretflow_serving/util:network",
+    ],
+)
+
+serving_cc_binary(
+    name = "secretflow_serving",
+    srcs = ["main.cc"],
+    deps = [
+        ":server",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/core:logging",
+        "@com_google_absl//absl/debugging:failure_signal_handler",
+        "@com_google_absl//absl/debugging:symbolize",
+    ],
+)
+
+filegroup(
+    name = "secretflow_serving_conf",
+    srcs = [
+        "conf/gflags.conf",
+    ],
+)

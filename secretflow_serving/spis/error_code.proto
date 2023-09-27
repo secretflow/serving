@@ -1,0 +1,68 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving.spis;
+
+// ONLY for Reference by ResponseHeader
+// It's subset of google.rpc.Code
+enum ErrorCode {
+  // Not an error; returned on success
+  //
+  // HTTP Mapping: 200 OK
+  OK = 0;
+
+  // The client specified an invalid argument.  Note that this differs
+  // from `FAILED_PRECONDITION`.  `INVALID_ARGUMENT` indicates arguments
+  // that are problematic regardless of the state of the system
+  // (e.g., a malformed file name).
+  //
+  // HTTP Mapping: 400 Bad Request
+  INVALID_ARGUMENT = 3;
+
+  // The deadline expired before the operation could complete. For operations
+  // that change the state of the system, this error may be returned
+  // even if the operation has completed successfully.  For example, a
+  // successful response from a server could have been delayed long
+  // enough for the deadline to expire.
+  //
+  // HTTP Mapping: 504 Gateway Timeout
+  DEADLINE_EXCEEDED = 4;
+
+  // Some requested entity (e.g., file or directory) was not found.
+  //
+  // Note to server developers: if a request is denied for an entire class
+  // of users, such as gradual feature rollout or undocumented whitelist,
+  // `NOT_FOUND` may be used. If a request is denied for some users within
+  // a class of users, such as user-based access control, `PERMISSION_DENIED`
+  // must be used.
+  //
+  // HTTP Mapping: 404 Not Found
+  NOT_FOUND = 5;
+
+  // Internal errors.  This means that some invariants expected by the
+  // underlying system have been broken.  This error code is reserved
+  // for serious errors.
+  //
+  // HTTP Mapping: 500 Internal Server Error
+  INTERNAL_ERROR = 13;
+
+  // The request does not have valid authentication credentials for the
+  // operation.
+  //
+  // HTTP Mapping: 401 Unauthorized
+  UNAUTHENTICATED = 16;
+}

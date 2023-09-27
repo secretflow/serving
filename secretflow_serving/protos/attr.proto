@@ -1,0 +1,113 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving.op;
+
+// Supported attribute types.
+enum AttrType {
+  UNKNOWN_AT_TYEP = 0;
+
+  // Atomic types
+
+  AT_INT32 = 1;
+  AT_INT64 = 2;
+  AT_FLOAT = 3;
+  AT_DOUBLE = 4;
+  AT_STRING = 5;
+  AT_BOOL = 6;
+
+  // List types
+
+  AT_INT32_LIST = 11;
+  AT_INT64_LIST = 12;
+  AT_FLOAT_LIST = 13;
+  AT_DOUBLE_LIST = 14;
+  AT_STRING_LIST = 15;
+  AT_BOOL_LIST = 16;
+}
+
+message Int32List {
+  repeated int32 data = 11;
+}
+
+message Int64List {
+  repeated int64 data = 11;
+}
+
+message FloatList {
+  repeated float data = 11;
+}
+
+message DoubleList {
+  repeated double data = 11;
+}
+
+message StringList {
+  repeated string data = 11;
+}
+
+message BoolList {
+  repeated bool data = 11;
+}
+
+// The value of an attribute
+message AttrValue {
+  oneof value {
+    // INT
+    int32 i32 = 1;
+    int64 i64 = 2;
+    // FLOAT
+    float f = 3;
+    double d = 4;
+    // STRING
+    string s = 5;
+    // BOOL
+    bool b = 6;
+
+    // Lists
+
+    // INTS
+    Int32List i32s = 11;
+    Int64List i64s = 12;
+    // FLOATS
+    FloatList fs = 13;
+    DoubleList ds = 14;
+    // STRINGS
+    StringList ss = 15;
+    // BOOLS
+    BoolList bs = 16;
+  }
+}
+
+// The definition of an attribute.
+message AttrDef {
+  // Must be unique among all attr of the operator.
+  string name = 1;
+
+  // Description of the attribute
+  string desc = 2;
+
+  AttrType type = 3;
+
+  // If True, when AttrValue is not provided or is_na, default_value would
+  // be used. Else, AttrValue must be provided.
+  bool is_optional = 4;
+
+  // A reasonable default for this attribute if it's optional and the user does
+  // not supply a value.  If not, the user must supply a value.
+  AttrValue default_value = 5;
+}

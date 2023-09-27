@@ -1,0 +1,123 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_library(
+    name = "propagator",
+    srcs = ["propagator.cc"],
+    hdrs = ["propagator.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/ops:graph",
+        "//secretflow_serving/ops:op_kernel",
+    ],
+)
+
+serving_cc_library(
+    name = "executor",
+    srcs = ["executor.cc"],
+    hdrs = ["executor.h"],
+    deps = [
+        ":propagator",
+        "//secretflow_serving/ops",
+    ],
+)
+
+serving_cc_test(
+    name = "executor_test",
+    srcs = ["executor_test.cc"],
+    deps = [
+        ":executor",
+        "//secretflow_serving/util:arrow_helper",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "executable",
+    hdrs = ["executable.h"],
+    deps = [
+        ":executor",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+serving_cc_library(
+    name = "executable_impl",
+    srcs = ["executable_impl.cc"],
+    hdrs = ["executable_impl.h"],
+    deps = [
+        ":executable",
+        ":executor",
+    ],
+)
+
+serving_cc_library(
+    name = "predictor",
+    hdrs = ["predictor.h"],
+    deps = [
+        "//secretflow_serving/apis:common_cc_proto",
+        "//secretflow_serving/apis:execution_service_cc_proto",
+        "//secretflow_serving/apis:prediction_service_cc_proto",
+        "//secretflow_serving/server:execution_core",
+    ],
+)
+
+serving_cc_library(
+    name = "predictor_impl",
+    srcs = ["predictor_impl.cc"],
+    hdrs = ["predictor_impl.h"],
+    deps = [
+        ":predictor",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/util:arrow_helper",
+        "//secretflow_serving/util:utils",
+        "@com_github_brpc_brpc//:brpc",
+        "@yacl//yacl/utils:elapsed_timer",
+    ],
+)
+
+serving_cc_test(
+    name = "predictor_impl_test",
+    srcs = ["predictor_impl_test.cc"],
+    deps = [
+        ":predictor_impl",
+    ],
+)
+
+serving_cc_library(
+    name = "interface",
+    hdrs = ["loader.h"],
+    deps = [
+        ":executable",
+        "//secretflow_serving/core:exception",
+    ],
+)
+
+serving_cc_library(
+    name = "model_loader",
+    srcs = ["model_loader.cc"],
+    hdrs = ["model_loader.h"],
+    deps = [
+        ":executable_impl",
+        ":interface",
+        ":predictor_impl",
+        "//secretflow_serving/protos:bundle_cc_proto",
+        "//secretflow_serving/util:sys_util",
+        "//secretflow_serving/util:utils",
+    ],
+)
