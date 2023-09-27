@@ -1,0 +1,81 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/protos/attr.proto";
+
+package secretflow.serving;
+
+// Supported dispatch type
+enum DispatchType {
+  UNKNOWN_DP_TYPE = 0;
+
+  // Dispath all participants.
+  DP_ALL = 1;
+  // Dispath any participant.
+  DP_ANYONE = 2;
+  // DP_SPECIFIED = 3;
+}
+
+// The runtime config of the execution.
+message RuntimeConfig {
+  // The dispatch type of the execution.
+  DispatchType dispatch_type = 1;
+
+  // The execution need run in session(stateful)
+  // TODO: not support yet.
+  bool session_run = 2;
+}
+
+// The definition of a execution. A execution represents a subgraph within a
+// graph that can be scheduled for execution in a specified pattern.
+message ExecutionDef {
+  // Represents the nodes contained in this execution. Note that
+  // these node names should be findable and unique within the node
+  // definitions. One node can only exist in one execution and must exist in
+  // one.
+  repeated string nodes = 1;
+
+  // The runtime config of the execution.
+  RuntimeConfig config = 2;
+}
+
+// The definition of a node.
+message NodeDef {
+  // Must be unique among all nodes of the graph.
+  string name = 1;
+
+  // The operation name.
+  string op = 2;
+
+  // The parent node names of the node. The order of the parent nodes should
+  // match the order of the inputs of the node.
+  repeated string parents = 3;
+
+  // The attribute values configed in the node. Note that this should include
+  // all attrs defined in the corresponding OpDef.
+  map<string, op.AttrValue> attr_values = 4;
+}
+
+// Represents the graph of operations
+message GraphDef {
+  // Version of the graph
+  string version = 1;
+
+  repeated NodeDef node_list = 2;
+
+  repeated ExecutionDef execution_list = 3;
+}

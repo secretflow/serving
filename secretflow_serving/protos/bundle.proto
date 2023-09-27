@@ -1,0 +1,57 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/protos/graph.proto";
+
+package secretflow.serving;
+
+// Support model file format
+enum FileFormatType {
+  UNKNOWN_FF_TYPE = 0;
+
+  // Protobuf
+  FF_PB = 1;
+
+  // Json
+  // It is recommended to use protobuf's official json serialization method to
+  // ensure compatibility
+  FF_JSON = 2;
+}
+
+// Represents an exported secertflow model. It consists of a GraphDef and extra
+// metadata required for serving.
+message ModelBundle {
+  string name = 1;
+
+  string desc = 2;
+
+  GraphDef graph = 3;
+}
+
+// The manifest of the model package. Package format is as follows:
+// model.tar.gz
+//  ├ MANIFIEST
+//  ├ model_file
+//  └ some op meta files
+// MANIFIEST should be json format
+message ModelManifest {
+  // Model bundle file path.
+  string bundle_path = 1;
+
+  // The format type of the model bundle file.
+  FileFormatType bundle_format = 2;
+}

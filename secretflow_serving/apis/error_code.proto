@@ -1,0 +1,46 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving.errors;
+
+enum ErrorCode {
+  // placeholder for proto3 default value, do not use it
+  UNKNOWN = 0;
+
+  // 001-099 for general code
+
+  OK = 1;
+  UNEXPECTED_ERROR = 2;
+  INVALID_ARGUMENT = 3;
+  NETWORK_ERROR = 4;
+  // Some requested entity (e.g., file or directory) was not found.
+  NOT_FOUND = 5;
+  NOT_IMPLEMENTED = 6;
+  LOGIC_ERROR = 7;
+  SERIALIZE_FAILD = 8;
+  DESERIALIZE_FAILD = 9;
+  IO_ERROR = 10;
+
+  // 100-199 for mapping feature service code, see
+  // `secretflow_serving/spis/error_code.proto`
+
+  FS_UNAUTHENTICATED = 100;
+  FS_INVALID_ARGUMENT = 101;
+  FS_DEADLINE_EXCEEDED = 102;
+  FS_NOT_FOUND = 103;
+  FS_INTERNAL_ERROR = 104;
+}

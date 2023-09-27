@@ -1,0 +1,94 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "field_proto",
+    srcs = ["field.proto"],
+)
+
+cc_proto_library(
+    name = "field_cc_proto",
+    deps = [":field_proto"],
+)
+
+proto_library(
+    name = "feature_proto",
+    srcs = ["feature.proto"],
+    deps = [":field_proto"],
+)
+
+cc_proto_library(
+    name = "feature_cc_proto",
+    deps = [":feature_proto"],
+)
+
+proto_library(
+    name = "attr_proto",
+    srcs = ["attr.proto"],
+)
+
+cc_proto_library(
+    name = "attr_cc_proto",
+    deps = [":attr_proto"],
+)
+
+proto_library(
+    name = "op_proto",
+    srcs = ["op.proto"],
+    deps = [":attr_proto"],
+)
+
+cc_proto_library(
+    name = "op_cc_proto",
+    deps = [":op_proto"],
+)
+
+proto_library(
+    name = "graph_proto",
+    srcs = ["graph.proto"],
+    deps = [
+        ":attr_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "graph_cc_proto",
+    deps = [":graph_proto"],
+)
+
+proto_library(
+    name = "bundle_proto",
+    srcs = ["bundle.proto"],
+    deps = [":graph_proto"],
+)
+
+cc_proto_library(
+    name = "bundle_cc_proto",
+    deps = [":bundle_proto"],
+)
+
+proto_library(
+    name = "link_function_proto",
+    srcs = ["link_function.proto"],
+)
+
+cc_proto_library(
+    name = "link_function_cc_proto",
+    deps = [":link_function_proto"],
+)

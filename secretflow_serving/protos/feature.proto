@@ -1,0 +1,59 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/protos/field.proto";
+
+package secretflow.serving;
+
+// The value of a feature
+message FeatureValue {
+  // int list
+  repeated int32 i32s = 1;
+  repeated int64 i64s = 2;
+  // float list
+  repeated float fs = 3;
+  repeated double ds = 4;
+  // string list
+  repeated string ss = 5;
+  // bool list
+  repeated bool bs = 6;
+}
+
+// The definition of a feature field.
+message FeatureField {
+  // Unique name of the feature
+  string name = 1;
+
+  // Field type of the feature
+  FieldType type = 2;
+}
+
+// The definition of a feature
+message Feature {
+  FeatureField field = 1;
+
+  FeatureValue value = 2;
+}
+
+// The param for fetch features
+message FeatureParam {
+  // The serialized datas for query features. Each one for query one row of
+  // features.
+  repeated string query_datas = 1;
+  // Optional. Represents the common part of the query datas.
+  string query_context = 2;
+}

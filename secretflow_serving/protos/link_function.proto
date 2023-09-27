@@ -1,0 +1,59 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving;
+
+enum LinkFucntionType {
+  UNKNOWN_LF_TYPE = 0;
+
+  LF_LOG = 1;
+  LF_LOGIT = 2;
+  LF_INVERSE = 3;
+  LF_LOGIT_V2 = 4;
+  LF_RECIPROCAL = 5;
+  LF_INDENTITY = 6;
+
+  LF_SIGMOID_RAW = 11;
+  // Taylor Maclaurin 1 order.
+  LF_SIGMOID_MM1 = 12;
+  // MinMax approximation 3 order.
+  LF_SIGMOID_MM3 = 13;
+  // Global Approximation.
+  LF_SIGMOID_GA = 14;
+  // Taylor Maclaurin 1 order.
+  LF_SIGMOID_T1 = 15;
+  // Taylor Maclaurin 3 order.
+  LF_SIGMOID_T3 = 16;
+  // Taylor Maclaurin 5 order.
+  LF_SIGMOID_T5 = 17;
+  // Taylor Maclaurin 7 order.
+  LF_SIGMOID_T7 = 18;
+  // Taylor Maclaurin 9 order.
+  LF_SIGMOID_T9 = 19;
+  // Fitting Sigmoid with 7th-order from -6,6
+  LF_SIGMOID_LS7 = 20;
+  // Segmented with two splits.
+  LF_SIGMOID_SEG3 = 21;
+  // Segmented with five splits.
+  LF_SIGMOID_SEG5 = 22;
+  // Dataflow implementation of sigmoid function
+  LF_SIGMOID_DF = 23;
+  // Square Root approximation functions
+  LF_SIGMOID_SR = 24;
+  // LS7 if |x| <= 5.87, else SR.
+  LF_SIGMOID_SEGLS = 25;
+}

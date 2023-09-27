@@ -1,0 +1,63 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+
+#include "secretflow_serving/framework/propagator.h"
+#include "secretflow_serving/ops/graph.h"
+#include "secretflow_serving/ops/op_kernel.h"
+
+namespace secretflow::serving {
+
+struct NodeOutput {
+  std::string node_name;
+  std::shared_ptr<arrow::RecordBatch> table;
+};
+
+struct NodeItem {
+  std::shared_ptr<Node> node;
+  std::shared_ptr<op::OpKernel> op_kernel;
+};
+
+class Executor {
+ public:
+  explicit Executor(const std::shared_ptr<Execution>& execution);
+  ~Executor() = default;
+
+  std::shared_ptr<std::vector<NodeOutput>> Run(
+      std::shared_ptr<
+          std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>& inputs);
+
+  // for entry executor
+  std::shared_ptr<std::vector<NodeOutput>> Run(
+      std::shared_ptr<arrow::RecordBatch>& features);
+
+  const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema() const {
+    return input_feature_schema_;
+  }
+
+ private:
+  std::shared_ptr<Execution> execution_;
+
+  std::vector<std::string> entry_node_names_;
+
+  std::map<std::string, std::shared_ptr<NodeItem>> node_items_;
+
+  std::map<std::string, const std::vector<std::shared_ptr<arrow::Schema>>>
+      input_schema_map_;
+
+  std::shared_ptr<const arrow::Schema> input_feature_schema_;
+};
+
+}  // namespace secretflow::serving

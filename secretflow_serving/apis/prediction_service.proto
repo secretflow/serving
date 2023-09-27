@@ -1,0 +1,82 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/apis/common.proto";
+import "secretflow_serving/apis/status.proto";
+import "secretflow_serving/protos/feature.proto";
+
+package secretflow.serving.apis;
+
+option cc_generic_services = true;
+
+// PredictionService provides access to the serving model.
+service PredictionService {
+  // Predict.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+}
+
+// Result of regression or one class of Classifications
+message Score {
+  // name of the score.
+  string name = 1;
+  // value of the score.
+  double value = 2;
+}
+
+// Result of single predict request.
+message PredictResult {
+  // According to the model, there may be one or multi scores.
+  repeated Score scores = 1;
+}
+
+// Predict request containing one or more requests.
+message PredictRequest {
+  // Custom data. The header will be passed to the downstream system which
+  // implement the feature service spi.
+  Header header = 1;
+
+  // Model service specification.
+  ServiceSpec service_spec = 2;
+
+  // The params for fetch features. Note that this should include all the
+  // parties involved in the prediction.
+  // Key: party's id.
+  // Value: params for fetch features.
+  map<string, FeatureParam> fs_params = 3;
+
+  // Optional.
+  // If defined, the request party will no longer query for the feature but will
+  // use defined fetures in `predefined_features` for the prediction.
+  repeated Feature predefined_features = 4;
+}
+
+// Predict response containing one or more responses.
+message PredictResponse {
+  // Custom data. Passed by the downstream system which implement the feature
+  // service spi.
+  Header header = 1;
+
+  // Staus of this response.
+  Status status = 2;
+
+  // Model service specification.
+  ServiceSpec service_spec = 3;
+
+  // List of the predict result. Returned in the same order as the request's
+  // feature query data.
+  repeated PredictResult results = 4;
+}

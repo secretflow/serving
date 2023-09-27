@@ -1,0 +1,122 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/apis/common.proto";
+import "secretflow_serving/apis/status.proto";
+import "secretflow_serving/protos/feature.proto";
+
+package secretflow.serving.apis;
+
+option cc_generic_services = true;
+
+// ExecutionService provides access to run execution defined in the GraphDef.
+service ExecutionService {
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+}
+
+// Support feature source type
+enum FeatureSourceType {
+  UNKNOWN_FS_TYPE = 0;
+
+  // No need features.
+  FS_NONE = 1;
+  // Fetch features from feature service.
+  FS_SERVICE = 2;
+  // The feature is defined in the request.
+  FS_PREDEFINED = 3;
+}
+
+// Descriptive feature source
+message FeatureSource {
+  // Identifies the source type of the features
+  FeatureSourceType type = 1;
+
+  // Custom parameter for fetch features from feature service or other systems.
+  // Valid when `type==FeatureSourceType::FS_SERVICE`
+  FeatureParam fs_param = 2;
+
+  // Defined features.
+  // Valid when `type==FeatureSourceType::FS_PREDEFINED`
+  repeated Feature predefineds = 3;
+}
+
+// The serialized data of the node input/output.
+message IoData {
+  repeated bytes datas = 1;
+}
+
+// Represents the node input/output data.
+message NodeIo {
+  // Node name.
+  string name = 1;
+
+  repeated IoData ios = 2;
+}
+
+// Execute request task.
+message ExecutionTask {
+  // Specified the execution id.
+  int32 execution_id = 1;
+
+  repeated NodeIo nodes = 2;
+}
+
+// Execute result of the request task.
+message ExecuteResult {
+  // Specified the execution id.
+  int32 execution_id = 1;
+
+  repeated NodeIo nodes = 2;
+}
+
+// Execute request containing one or more requests.
+message ExecuteRequest {
+  // Custom data. The header will be passed to the downstream system which
+  // implement the feature service spi.
+  Header header = 1;
+
+  // Represents the id of the requesting party
+  string requester_id = 2;
+
+  // Model service specification.
+  ServiceSpec service_spec = 3;
+
+  // Represents the session of this execute.
+  string session_id = 4;
+
+  FeatureSource feature_source = 5;
+
+  ExecutionTask task = 6;
+}
+
+// Execute response containing one or more responses.
+message ExecuteResponse {
+  // Custom data. Passed by the downstream system which implement the feature
+  // service spi.
+  Header header = 1;
+
+  // Staus of this response.
+  Status status = 2;
+
+  // Model service specification.
+  ServiceSpec service_spec = 3;
+
+  // Represents the session of this execute.
+  string session_id = 4;
+
+  ExecuteResult result = 5;
+}
