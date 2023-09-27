@@ -1,0 +1,55 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "serving_config_proto",
+    srcs = ["serving_config.proto"],
+    deps = [
+        "//secretflow_serving/config:cluster_config_proto",
+        "//secretflow_serving/config:feature_config_proto",
+        "//secretflow_serving/config:model_config_proto",
+        "//secretflow_serving/config:server_config_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "serving_config_cc_proto",
+    deps = [":serving_config_proto"],
+)
+
+serving_cc_library(
+    name = "config_parser",
+    srcs = ["config_parser.cc"],
+    hdrs = ["config_parser.h"],
+    deps = [
+        ":serving_config_cc_proto",
+        "//secretflow_serving/util:utils",
+        "@com_github_tencent_rapidjson//:rapidjson",
+        "@kuscia//proto/api/v1alpha1/appconfig:app_config_cc_proto",
+    ],
+)
+
+serving_cc_test(
+    name = "config_parser_test",
+    srcs = ["config_parser_test.cc"],
+    deps = [
+        ":config_parser",
+        "@com_github_brpc_brpc//:butil",
+    ],
+)

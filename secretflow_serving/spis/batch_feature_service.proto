@@ -1,0 +1,59 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving.spis;
+
+import "secretflow_serving/protos/feature.proto";
+import "secretflow_serving/spis/common.proto";
+
+option cc_generic_services = true;
+
+// BatchFeatureService provides access to fetch features.
+service BatchFeatureService {
+  rpc BatchFetchFeature(BatchFetchFeatureRequest)
+      returns (BatchFetchFeatureResponse);
+}
+
+// BatchFetchFeature request containing one or more requests.
+message BatchFetchFeatureRequest {
+  // Custom data passed by the Predict request's header.
+  Header header = 1;
+
+  // Model service specification.
+  string model_service_id = 2;
+
+  // The request party id.
+  string party_id = 3;
+
+  // Request feature field list
+  repeated FeatureField feature_fields = 4;
+
+  // Custom query paramters for fetch features
+  FeatureParam param = 5;
+}
+
+// BatchFetchFeatureResponse response containing one or more responses.
+message BatchFetchFeatureResponse {
+  // Custom data.
+  Header header = 1;
+
+  Status status = 2;
+
+  // Should include all the features mentioned in the
+  // BatchFetchFeatureRequest.feature_fields
+  repeated Feature features = 3;
+}

@@ -1,0 +1,61 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_library(
+    name = "exception",
+    hdrs = ["exception.h"],
+    deps = [
+        "//secretflow_serving/apis:error_code_cc_proto",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+serving_cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    deps = [
+        ":exception",
+        "//secretflow_serving/config:logging_config_cc_proto",
+        "@com_github_brpc_brpc//:butil",
+    ],
+)
+
+serving_cc_library(
+    name = "link_func",
+    srcs = ["link_func.cc"],
+    hdrs = ["link_func.h"],
+    deps = [
+        ":exception",
+        "//secretflow_serving/protos:link_function_cc_proto",
+    ],
+)
+
+serving_cc_library(
+    name = "types",
+    hdrs = ["types.h"],
+    deps = [
+        "@com_github_eigenteam_eigen//:eigen3",
+    ],
+)
+
+serving_cc_library(
+    name = "singleton",
+    hdrs = ["singleton.h"],
+)

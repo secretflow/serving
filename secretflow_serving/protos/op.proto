@@ -1,0 +1,61 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "secretflow_serving/protos/attr.proto";
+
+package secretflow.serving.op;
+
+// Define an input/output for operator.
+message IoDef {
+  // Must be unique among all IOs of the operator.
+  string name = 1;
+
+  // Description of the IO
+  string desc = 2;
+}
+
+// Representation operator property
+message OpTag {
+  // The operator's output can be the final result
+  bool returnable = 1;
+
+  // The operator accept the output of operators with different participants and
+  // will somehow merge them.
+  bool mergeable = 2;
+
+  // The operator needs to be executed in session.
+  bool session_run = 3;
+}
+
+// The definition of a operator.
+message OpDef {
+  // Unique name of the op
+  string name = 1;
+
+  // Description of the op
+  string desc = 2;
+
+  // Version of the op
+  string version = 3;
+
+  OpTag tag = 4;
+
+  repeated IoDef inputs = 6;
+  IoDef output = 7;
+
+  repeated AttrDef attrs = 8;
+}

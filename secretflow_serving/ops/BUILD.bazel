@@ -1,0 +1,220 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_library(
+    name = "ops",
+    deps = [
+        ":dot_product",
+        ":merge_y",
+        ":onehot_operator",
+        ":sql_operator",
+    ],
+)
+
+serving_cc_library(
+    name = "node_def_util",
+    srcs = ["node_def_util.cc"],
+    hdrs = ["node_def_util.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:graph_cc_proto",
+    ],
+)
+
+serving_cc_test(
+    name = "node_def_util_test",
+    srcs = ["node_def_util_test.cc"],
+    deps = [
+        ":node_def_util",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "node",
+    srcs = ["node.cc"],
+    hdrs = ["node.h"],
+    deps = [
+        ":op_factory",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:graph_cc_proto",
+    ],
+)
+
+serving_cc_library(
+    name = "graph",
+    srcs = ["graph.cc"],
+    hdrs = ["graph.h"],
+    deps = [
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:graph_cc_proto",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+serving_cc_test(
+    name = "graph_test",
+    srcs = ["graph_test.cc"],
+    deps = [
+        ":graph",
+        ":ops",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "op_kernel",
+    hdrs = ["op_kernel.h"],
+    deps = [
+        ":node",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:op_cc_proto",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+serving_cc_library(
+    name = "op_def_builder",
+    srcs = ["op_def_builder.cc"],
+    hdrs = ["op_def_builder.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:op_cc_proto",
+    ],
+)
+
+serving_cc_library(
+    name = "op_factory",
+    hdrs = ["op_factory.h"],
+    deps = [
+        ":op_def_builder",
+        "//secretflow_serving/core:singleton",
+    ],
+)
+
+serving_cc_test(
+    name = "op_factory_test",
+    srcs = ["op_factory_test.cc"],
+    deps = [
+        ":op_factory",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "op_kernel_factory",
+    hdrs = ["op_kernel_factory.h"],
+    deps = [
+        ":op_kernel",
+        "//secretflow_serving/core:singleton",
+    ],
+)
+
+serving_cc_library(
+    name = "dot_product",
+    srcs = ["dot_product.cc"],
+    hdrs = ["dot_product.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:types",
+        "//secretflow_serving/util:arrow_helper",
+        "//secretflow_serving/util:utils",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "dot_product_test",
+    srcs = ["dot_product_test.cc"],
+    deps = [
+        ":dot_product",
+    ],
+)
+
+serving_cc_library(
+    name = "merge_y",
+    srcs = ["merge_y.cc"],
+    hdrs = ["merge_y.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:link_func",
+        "//secretflow_serving/util:arrow_helper",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "merge_y_test",
+    srcs = ["merge_y_test.cc"],
+    deps = [
+        ":merge_y",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "onehot_operator",
+    srcs = ["onehot_operator.cc"],
+    hdrs = ["onehot_operator.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:types",
+        "//secretflow_serving/ops/onehot:onehot_substitution",
+        "//secretflow_serving/util:arrow_helper",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "onehot_operator_test",
+    srcs = ["onehot_operator_test.cc"],
+    deps = [
+        ":onehot_operator",
+    ],
+)
+
+serving_cc_library(
+    name = "sql_operator",
+    srcs = ["sql_operator.cc"],
+    hdrs = ["sql_operator.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:types",
+        "//secretflow_serving/ops/sql:sql_processor",
+        "//secretflow_serving/util:arrow_helper",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "sql_operator_test",
+    srcs = ["sql_operator_test.cc"],
+    deps = [
+        ":sql_operator",
+    ],
+)
