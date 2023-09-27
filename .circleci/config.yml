@@ -52,7 +52,7 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: secretflow/ubuntu-base-ci:latest
-    resource_class: 2xlarge+
+    resource_class: 2xlarge
     shell: /bin/bash --login -eo pipefail
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
@@ -66,24 +66,18 @@ jobs:
             echo "Canceling workflow as too much time has elapsed"
             curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
       - checkout
-      - restore_cache:
-          name: "Restore build cache"
-          key: serving-build-comp-{{ arch }}-
       - run:
           name: Checkout devtools
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
-          name: Decompress cache
-          command: sh ../devtools/decompress-build-cache.sh serving_build_cache
-      - run:
           name: "build"
-          command: bazel build //... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/serving_build_cache --jobs 20
+          command: bazel build //... -c opt --ui_event_filters=-info,-debug,-warning --jobs 16
       - run:
           name: "test"
           command: |
             set +e
             declare -i test_status
-            bazel test //... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/serving_build_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test //... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -98,17 +92,6 @@ jobs:
             python .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
 
             exit ${test_status}
-      - run:
-          name: Cleanup and compress cache
-          command: |
-            sh ../devtools/clean_disk_cache.sh ~/.cache/serving_build_cache
-            sh ../devtools/compress-build-cache.sh serving_build_cache
-          when: always
-      - save_cache:
-          key: serving-build-comp-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
-          paths:
-            - /root/.cache/serving_build_cache.tar.gz
-          when: always
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -120,10 +103,6 @@ jobs:
 
 workflows:
   unittest-workflow:
-    when:
-      and:
-        - not: << pipeline.parameters.GHA_Action >>
-        - not: << pipeline.parameters.GHA_Meta >>
     jobs:
       - linux_ut
       - lint
