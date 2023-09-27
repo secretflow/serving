@@ -41,7 +41,8 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "Failed to parse config str to json, error=(offset={}, "
                   "code={}), raw str: {}",
-                  doc.GetErrorOffset(), doc.GetParseError(), raw_config_str);
+                  doc.GetErrorOffset(), static_cast<int>(doc.GetParseError()),
+                  raw_config_str);
 
   // get services id
   SERVING_ENFORCE(doc["serving_id"].IsString(),
