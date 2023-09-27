@@ -125,7 +125,7 @@ std::shared_ptr<arrow::RecordBatch> OneHotSubstitution::ApplyTo(
         } else {
           SERVING_THROW(
               secretflow::serving::errors::ErrorCode::INVALID_ARGUMENT,
-              "unknow feature type: {}", col->type_id());
+              "unknow feature type: {}", static_cast<int>(col->type_id()));
         }
         auto categories = Encode(key, value);
         std::for_each(categories.begin(), categories.end(),
