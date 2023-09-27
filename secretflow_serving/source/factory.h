@@ -33,7 +33,7 @@ class SourceFactory : public Singleton<SourceFactory> {
   void Register(SourceType type) {
     std::lock_guard<std::mutex> lock(mutex_);
     YACL_ENFORCE(creators_.find(type) == creators_.end(),
-                 "duplicated creator registered for {}", type);
+                 "duplicated creator registered for {}", SourceType_Name(type));
     creators_.emplace(
         type, [](const ModelConfig& config, const std::string& service_id) {
           return std::make_unique<T>(config, service_id);
