@@ -1,5 +1,7 @@
 # SecretFlow-Serving
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/secretflow/serving/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/secretflow/serving/tree/main)
+
 SecretFlow-Serving is a serving system for  privacy-preserving machine learning models.
 
 ## Serve a model
