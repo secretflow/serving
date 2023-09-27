@@ -324,6 +324,7 @@ class PartyConfig:
     id: str
     feature_mapping: Dict[str, str]
     cluster_ip: str
+    # TODO: make dynamic
     metrics_port: int
     brpc_builtin_service_port: int
     channel_protocol: str
