@@ -96,6 +96,7 @@ jobs:
           name: "integration test"
           command: |
             set +e
+            source ~/miniconda3/bin/activate py3.8
 
             declare -i test_status
 
@@ -106,6 +107,7 @@ jobs:
           name: "accuracy test"
           command: |
             set +e
+            source ~/miniconda3/bin/activate py3.8
 
             declare -i test_status
 
