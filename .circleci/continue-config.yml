@@ -57,8 +57,6 @@ jobs:
             python3 -m pip install -r requirements.txt
             python3 -m pip install -r .ci/requirements-ci.txt
 
-            bazel build //... -c opt --ui_event_filters=-info,-debug,-warning --jobs 16
-
             sh ./build_wheel_entrypoint.sh
       - run:
           name: "test"
