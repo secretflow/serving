@@ -56,6 +56,7 @@ workflows:
   unittest-workflow:
     when:
       and:
+        - not: << pipeline.parameters.GHA_Event >>
         - not: << pipeline.parameters.GHA_Action >>
         - not: << pipeline.parameters.GHA_Meta >>
     jobs:

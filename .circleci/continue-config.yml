@@ -106,7 +106,7 @@ jobs:
           path: integration_test.log
 
 workflows:
-  unittest-workflow:
+  unittest:
     when: << pipeline.parameters.build-and-run >>
     jobs:
       - linux_ut
