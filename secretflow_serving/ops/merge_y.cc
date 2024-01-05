@@ -27,37 +27,31 @@
 namespace secretflow::serving::op {
 
 MergeY::MergeY(OpKernelOptions opts) : OpKernel(std::move(opts)) {
-  link_function_ =
-      GetNodeAttr<std::string>(opts_.node->node_def(), "link_function");
-  ValidateLinkFuncType(link_function_);
+  auto link_function_name =
+      GetNodeAttr<std::string>(opts_.node_def, "link_function");
+  link_function_ = ParseLinkFuncType(link_function_name);
 
   // optional attr
-  GetNodeAttr(opts_.node->node_def(), "yhat_scale", &yhat_scale_);
+  GetNodeAttr(opts_.node_def, "yhat_scale", &yhat_scale_);
 
-  input_col_name_ =
-      GetNodeAttr<std::string>(opts_.node->node_def(), "input_col_name");
+  input_col_name_ = GetNodeAttr<std::string>(opts_.node_def, "input_col_name");
   output_col_name_ =
-      GetNodeAttr<std::string>(opts_.node->node_def(), "output_col_name");
+      GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
 
   BuildInputSchema();
   BuildOutputSchema();
 }
 
-void MergeY::Compute(ComputeContext* ctx) {
+void MergeY::DoCompute(ComputeContext* ctx) {
   // santiy check
-  SERVING_ENFORCE(ctx->inputs->size() == 1, errors::ErrorCode::LOGIC_ERROR);
-  SERVING_ENFORCE(ctx->inputs->front().size() >= 1,
+  SERVING_ENFORCE(ctx->inputs.size() == 1, errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(ctx->inputs.front().size() >= 1,
                   errors::ErrorCode::LOGIC_ERROR);
-  auto num_rows = ctx->inputs->front()[0]->num_rows();
-  for (size_t i = 1; i < ctx->inputs->front().size(); ++i) {
-    auto cur_num_rows = ctx->inputs->front()[i]->num_rows();
-    SERVING_ENFORCE_EQ(num_rows, cur_num_rows);
-  }
 
   // merge partial_y
-  arrow::Datum incremented_datum(ctx->inputs->front()[0]->column(0));
-  for (size_t i = 1; i < ctx->inputs->front().size(); ++i) {
-    auto cur_array = ctx->inputs->front()[i]->column(0);
+  arrow::Datum incremented_datum(ctx->inputs.front()[0]->column(0));
+  for (size_t i = 1; i < ctx->inputs.front().size(); ++i) {
+    auto cur_array = ctx->inputs.front()[i]->column(0);
     SERVING_GET_ARROW_RESULT(arrow::compute::Add(incremented_datum, cur_array),
                              incremented_datum);
   }
@@ -74,7 +68,8 @@ void MergeY::Compute(ComputeContext* ctx) {
   }
   std::shared_ptr<arrow::Array> res_array;
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
-  ctx->output = MakeRecordBatch(output_schema_, num_rows, {res_array});
+  ctx->output =
+      MakeRecordBatch(output_schema_, res_array->length(), {res_array});
 }
 
 void MergeY::BuildInputSchema() {
@@ -91,25 +86,34 @@ void MergeY::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(MERGE_Y, MergeY)
-REGISTER_OP(MERGE_Y, "0.0.1",
+REGISTER_OP(MERGE_Y, "0.0.2",
             "Merge all partial y(score) and apply link function")
     .Returnable()
     .Mergeable()
-    .DoubleAttr("yhat_scale", "", false, true, 1.0d)
+    .DoubleAttr(
+        "yhat_scale",
+        "In order to prevent value overflow, GLM training is performed on the "
+        "scaled y label. So in the prediction process, you need to enlarge "
+        "yhat back to get the real predicted value, `yhat = yhat_scale * "
+        "link(X * W)`",
+        false, true, 1.0)
     .StringAttr(
         "link_function",
-        "optinal value: LF_LOG, LF_LOGIT, LF_INVERSE, LF_LOGIT_V2, "
+        "Type of link function, defined in "
+        "`secretflow_serving/protos/link_function.proto`. Optional value: "
+        "LF_LOG, LF_LOGIT, LF_INVERSE, "
         "LF_RECIPROCAL, "
-        "LF_INDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, "
+        "LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, "
         "LF_SIGMOID_GA, "
         "LF_SIGMOID_T1, LF_SIGMOID_T3, "
         "LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, "
         "LF_SIGMOID_SEG3, "
         "LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS",
         false, false)
-    .StringAttr("input_col_name", "", false, false)
-    .StringAttr("output_col_name", "", false, false)
-    .Input("partial_ys", "")
-    .Output("scores", "");
+    .StringAttr("input_col_name", "The column name of partial_y", false, false)
+    .StringAttr("output_col_name", "The column name of merged score", false,
+                false)
+    .Input("partial_ys", "The list of partial y, data type: `double`")
+    .Output("scores", "The merge result of `partial_ys`, data type: `double`");
 
 }  // namespace secretflow::serving::op

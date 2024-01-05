@@ -1,0 +1,109 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-04 16:56+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../source/intro/tutorial.rst:2
+msgid "Quickstart"
+msgstr "快速开始"
+
+#: ../../source/intro/tutorial.rst:5
+msgid "TL;DR"
+msgstr "简略"
+
+#: ../../source/intro/tutorial.rst:7
+msgid ""
+"Use ``docker-compose`` to deploy a SecretFlow-Serving cluster, the query "
+"the model using the predict API."
+msgstr ""
+"通过使用 ``docker-compose`` 来部署一个SecretFlow-Serving集群，然后通过访问predict "
+"API来请求serving加载的模型。"
+
+#: ../../source/intro/tutorial.rst:11
+msgid "Start SecretFlow-Serving Service"
+msgstr "启动SecretFlow-Serving"
+
+#: ../../source/intro/tutorial.rst:13
+msgid ""
+"You could start SecretFlow-Serving service via `docker-compose "
+"<https://github.com/secretflow/serving/tree/main/examples>`_, it would "
+"deploy and start services as shown in the following figure, it contains "
+"two SecretFlow-Serving from party ``Alice``, ``Bob``."
+msgstr ""
+"你可以通过使用 `docker-compose "
+"<https://github.com/secretflow/serving/tree/main/examples>`_ "
+"来启动和部署服务，如下图所示，其包含两个分别来自 ``Alice`` 和 ``Bob`` 的SecretFlow-Serving"
+
+#: ../../source/intro/tutorial.rst:-1
+msgid "docker-compose deployment for quickstart example"
+msgstr "快速入门示例的 docker-compose 部署"
+
+#: ../../source/intro/tutorial.rst:20
+msgid ""
+"To demonstrate SecretFlow-Serving, we conducted the following simplified "
+"operations:"
+msgstr "为了演示 SecretFlow-Serving，我们进行了以下简化操作："
+
+#: ../../source/intro/tutorial.rst:22
+msgid ""
+"Both parties of Secretflow-Serving use mock feature source to produce "
+"random feature values."
+msgstr "每方的 Secretflow-Serving 均使用仿真特征数据源产生随机的特征值。"
+
+#: ../../source/intro/tutorial.rst:23
+msgid ""
+"The model files in the examples directory are loaded by ``Alice`` and "
+"``Bob``'s Secretflow-Serving respectively。"
+msgstr "examples目录下的模型文件会分别被 ``Alice`` 和 ``Bob`` 的Secretflow-Serving加载使用。"
+
+#: ../../source/intro/tutorial.rst:24
+msgid ""
+"The SecretFlow-Serving is served through the HTTP protocol. However, for "
+"production environments, it is recommended to use HTTPS instead. Please "
+"check :ref:`TLS Configuration <TlsConfig>` for details."
+msgstr ""
+"本示例的SecretFlow-Serving 通过 HTTP 协议提供服务。然而，对于生产环境，建议使用 HTTPS 协议来代替。请查看 "
+":doc:`TLS 配置 <TlsConfig>` 获取详细信息。"
+
+#: ../../source/intro/tutorial.rst:33
+msgid ""
+"Now, the ``Alice``'s SecretFlow-Serving is listening on "
+"``http://localhost:9010``, the ``Bob``'s SecretFlow-Serving is listening "
+"on ``http://localhost:9011``, you could send predict request to it via "
+"curl or other http tools."
+msgstr ""
+"现在，``Alice`` 的 SecretFlow-Serving 监听 ``http://localhost:9010``， ``Bob`` 的"
+" SecretFlow-Serving 监听 "
+"``http://localhost:9011``，你可以通过使用curl或其他http工具向其发送预测请求。"
+
+#: ../../source/intro/tutorial.rst:37
+msgid "Do Predict"
+msgstr "执行预测请求"
+
+#: ../../source/intro/tutorial.rst:39
+msgid "send predict request to ``Alice``"
+msgstr "向 ``Alice`` 发送预测请求"
+
+#: ../../source/intro/tutorial.rst:64
+msgid "send predict request to ``Bob``"
+msgstr "向 ``Bob`` 发送预测请求"
+
+#: ../../source/intro/tutorial.rst:89
+msgid ""
+"Please checkout :ref:`SecretFlow-Serving API <PredictionService>` for the"
+" Predict API details."
+msgstr "请查询 :doc:`SecretFlow-Serving API <PredictionService>` 以获得更多关于预测API的信息。"

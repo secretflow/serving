@@ -67,7 +67,7 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     opts.timeout_ms = rpc_timeout_ms;
   }
   if (connect_timeout_ms > 0) {
-    opts.timeout_ms = connect_timeout_ms;
+    opts.connect_timeout_ms = connect_timeout_ms;
   }
   if (tls_config != nullptr) {
     opts.mutable_ssl_options()->client_cert.certificate =

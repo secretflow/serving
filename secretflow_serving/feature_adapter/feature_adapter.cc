@@ -24,7 +24,7 @@ namespace secretflow::serving::feature {
 FeatureAdapter::FeatureAdapter(
     const FeatureSourceConfig& spec, const std::string& service_id,
     const std::string& party_id,
-    const std::shared_ptr<arrow::Schema>& feature_schema)
+    const std::shared_ptr<const arrow::Schema>& feature_schema)
     : spec_(spec),
       service_id_(service_id),
       party_id_(party_id),
@@ -33,15 +33,21 @@ FeatureAdapter::FeatureAdapter(
 void FeatureAdapter::FetchFeature(const Request& request, Response* response) {
   OnFetchFeature(request, response);
 
-  CheckFeatureValid(response->features);
+  CheckFeatureValid(request, response->features);
 }
 
 void FeatureAdapter::CheckFeatureValid(
+    const Request& request,
     const std::shared_ptr<arrow::RecordBatch>& features) {
   const auto& schema = features->schema();
   SERVING_ENFORCE(schema->Equals(*feature_schema_),
                   errors::ErrorCode::NOT_FOUND,
                   "result schema does not match the request expect.");
+  SERVING_ENFORCE(
+      request.fs_param->query_datas().size() == features->num_rows(),
+      errors::ErrorCode::LOGIC_ERROR,
+      "query row_num {} should be equal to fetched row_num {}",
+      request.fs_param->query_datas().size(), features->num_rows());
 }
 
 }  // namespace secretflow::serving::feature

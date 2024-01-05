@@ -22,166 +22,58 @@ import os
 import subprocess
 import sys
 import tarfile
+import time
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Dict, List
+
+import pyarrow as pa
+from google.protobuf.json_format import MessageToJson
+
+from secretflow_serving_lib import get_op
+from secretflow_serving_lib.attr_pb2 import AttrValue, DoubleList, StringList
+from secretflow_serving_lib.bundle_pb2 import FileFormatType, ModelBundle, ModelManifest
+from secretflow_serving_lib.feature_pb2 import (
+    Feature,
+    FeatureField,
+    FeatureParam,
+    FeatureValue,
+    FieldType,
+)
+from secretflow_serving_lib.graph_pb2 import (
+    DispatchType,
+    ExecutionDef,
+    GraphDef,
+    NodeDef,
+    RuntimeConfig,
+)
+from secretflow_serving_lib.link_function_pb2 import LinkFunctionType
 
 # set up global env
 g_script_name = os.path.abspath(sys.argv[0])
 g_script_dir = os.path.dirname(g_script_name)
 g_repo_dir = os.path.dirname(g_script_dir)
 
-
-class AttrValue:
-    def __init__(self, value, type=None):
-        assert value, "value cannot be null"
-        self.value = value
-        self.type = None
-
-    def to_json(self):
-        def make_dict(type, value):
-            if isinstance(self.value, list):
-                return {self.type: {"data": self.value}}
-            else:
-                return {self.type: self.value}
-
-        if self.type:
-            return make_dict(self.type, self.value)
-
-        def get_attr_prefix(value):
-            if isinstance(value, int):
-                return "i32"
-            elif isinstance(value, float):
-                return "f"
-            elif isinstance(value, bool):
-                return "b"
-            else:
-                return "s"
-
-        if isinstance(self.value, list):
-            assert len(self.value) != 0, "list is None, cannont deduce type"
-            type = get_attr_prefix(self.value[0])
-            return make_dict(type + "s", self.value)
-        else:
-            return {get_attr_prefix(self.value): self.value}
+g_clean_up_service = True
+g_clean_up_files = True
 
 
-class MapAttrValue:
-    def __init__(self, attr_values: Dict[str, AttrValue]):
-        self.data = attr_values
-
-    def to_json(self):
-        return {k: v.to_json() for k, v in self.data.items()}
-
-
-class DispatchType(Enum):
-    UNKNOWN_DP_TYPE = 0
-    DP_ALL = 1
-    DP_ANYONE = 2
+def global_ip_config(index):
+    cluster_ip = ["127.0.0.1:9910", "127.0.0.1:9911"]
+    metrics_port = [10318, 10319]
+    brpc_builtin_port = [10328, 10329]
+    assert index < len(cluster_ip)
+    return {
+        "cluster_ip": cluster_ip[index],
+        "metrics_port": metrics_port[index],
+        "brpc_builtin_service_port": brpc_builtin_port[index],
+    }
 
 
-class RuntimeConfig:
-    def __init__(self, dispatch_type: Enum, session_run: bool):
-        self.dispatch_type = dispatch_type
-        self.session_run = session_run
-
-    def to_json(self):
-        return {
-            "dispatch_type": self.dispatch_type.name,
-            "session_run": self.session_run,
-        }
-
-
-class NodeDef:
-    def __init__(self, name: str, op: str, parents: List[str], data_dict):
-        self.name = name
-        self.op = op
-        self.parents = parents
-        self.attr_values = trans_normal_dict_to_attr_dict(data_dict)
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "op": self.op,
-            "parents": self.parents,
-            "attr_values": self.attr_values.to_json(),
-        }
-
-
-class ExecutionDef:
-    def __init__(self, nodes: List[str], config: RuntimeConfig):
-        self.nodes = nodes
-        self.config = config
-
-    def to_json(self):
-        return {"nodes": self.nodes, "config": self.config.to_json()}
-
-
-class GraphDef:
-    def __init__(
-        self,
-        version: str,
-        node_list: List[NodeDef] = None,
-        execution_list: List[ExecutionDef] = None,
-    ):
-        self.node_list = node_list if node_list else []
-        self.execution_list = execution_list if execution_list else []
-        self.version = version
-
-    def to_json(self):
-        return {
-            "version": self.version,
-            "node_list": [node.to_json() for node in self.node_list],
-            "execution_list": [exe.to_json() for exe in self.execution_list],
-        }
-
-
-class AttrValue:
-    def __init__(self, value, type=None):
-        assert value, "value cannot be null"
-        self.value = value
-        self.type = None
-
-    def to_json(self):
-        def make_dict(type, value):
-            if isinstance(value, list):
-                return {type: {"data": value}}
-            else:
-                return {type: value}
-
-        if self.type:
-            return make_dict(self.type, self.value)
-
-        def get_attr_prefix(value):
-            if isinstance(value, int):
-                return "i32"
-            elif isinstance(value, float):
-                return "d"
-            elif isinstance(value, bool):
-                return "b"
-            else:
-                return "s"
-
-        if isinstance(self.value, list):
-            assert len(self.value) != 0, "list is None, cannont deduce type"
-            type = get_attr_prefix(self.value[0])
-            return make_dict(type + "s", self.value)
-        else:
-            return {get_attr_prefix(self.value): self.value}
-
-
-def trans_normal_dict_to_attr_dict(data_dict):
-    ret = {}
-    for k, v in data_dict.items():
-        ret[k] = AttrValue(v)
-    return MapAttrValue(ret)
-
-
-class JsonModel:
+class ModelBuilder:
     def __init__(self, name, desc, graph_def: GraphDef):
         self.name = name
         self.desc = desc
-        self.graph_json = {"name": name, "desc": desc, "graph": graph_def.to_json()}
+        self.bundle = ModelBundle(name=name, desc=desc, graph=graph_def)
 
     def dump_tar_gz(self, path=".", filename=None):
         if filename is None:
@@ -193,12 +85,15 @@ class JsonModel:
 
         model_graph_filename = "model_graph.json"
 
-        dump_json(
-            {"bundle_path": model_graph_filename, "bundle_format": "FF_JSON"},
+        # dump manifest
+        dump_pb_json_file(
+            ModelManifest(
+                bundle_path=model_graph_filename, bundle_format=FileFormatType.FF_JSON
+            ),
             os.path.join(path, "MANIFEST"),
         )
-
-        dump_json(self.graph_json, os.path.join(path, model_graph_filename))
+        # dump model file
+        dump_pb_json_file(self.bundle, os.path.join(path, model_graph_filename))
 
         with tarfile.open(filename, "w:gz") as model_tar:
             model_tar.add(os.path.join(path, "MANIFEST"), arcname="MANIFEST")
@@ -211,107 +106,86 @@ class JsonModel:
         os.remove(os.path.join(path, "MANIFEST"))
         os.remove(os.path.join(path, model_graph_filename))
         with open(filename, "rb") as ifile:
-            return filename, hashlib.md5(ifile.read()).hexdigest()
+            return filename, hashlib.sha256(ifile.read()).hexdigest()
 
 
-class DotProcutAttr:
-    def __init__(self, weight_dict: Dict[str, float], output_col_name, intercept=None):
-        self.name = "DOT_PRODUCT"
-        self.version = "0.0.1"
-        self.desc = ""
-        self.weight_dict = weight_dict
-        self.feature_names = list(weight_dict.keys())
-        self.feature_weights = list(weight_dict.values())
-        self.output_col_name = output_col_name
-        self.intercept = intercept
+def make_processing_node_def(
+    name,
+    parents,
+    input_schema: pa.Schema,
+    output_schema: pa.Schema,
+    trace_content=None,
+):
+    op_def = get_op("ARROW_PROCESSING")
+    attrs = {
+        "input_schema_bytes": AttrValue(by=input_schema.serialize().to_pybytes()),
+        "output_schema_bytes": AttrValue(by=output_schema.serialize().to_pybytes()),
+        "content_json_flag": AttrValue(b=True),
+    }
+    if trace_content:
+        attrs["trace_content"] = AttrValue(by=trace_content)
 
-    def get_node_attr_map(self):
-        assert self.feature_names
-        assert self.feature_weights
-        assert self.output_col_name
-        ret = {
-            "feature_names": self.feature_names,
-            "feature_weights": self.feature_weights,
-            "output_col_name": self.output_col_name,
-        }
-        if self.intercept:
-            ret["intercept"] = self.intercept
-        return ret
-
-
-class LinkFunction(Enum):
-    LF_LOG = 1
-    LF_LOGIT = 2
-    LF_INVERSE = 3
-    LF_LOGIT_V2 = 4
-    LF_RECIPROCAL = 5
-    LF_INDENTITY = 6
-    LF_SIGMOID_RAW = 11
-    LF_SIGMOID_MM1 = 12
-    LF_SIGMOID_MM3 = 13
-    LF_SIGMOID_GA = 14
-    LF_SIGMOID_T1 = 15
-    LF_SIGMOID_T3 = 16
-    LF_SIGMOID_T5 = 17
-    LF_SIGMOID_T7 = 18
-    LF_SIGMOID_T9 = 19
-    LF_SIGMOID_LS7 = 20
-    LF_SIGMOID_SEG3 = 21
-    LF_SIGMOID_SEG5 = 22
-    LF_SIGMOID_DF = 23
-    LF_SIGMOID_SR = 24
-    LF_SIGMOID_SEGLS = 25
-
-
-class MergeYAttr:
-    def __init__(
-        self,
-        link_function: LinkFunction,
-        input_col_name: str,
-        output_col_name: str,
-        yhat_scale: float = None,
-    ):
-        self.name = "MERGE_Y"
-        self.version = "0.0.1"
-        self.desc = ""
-        self.link_function = link_function
-        self.yhat_scale = yhat_scale
-        self.input_col_name = input_col_name
-        self.output_col_name = output_col_name
-
-    def get_node_attr_map(self):
-        assert self.link_function
-        assert self.input_col_name
-        assert self.output_col_name
-        ret = {
-            "link_function": self.link_function.name,
-            "input_col_name": self.input_col_name,
-            "output_col_name": self.output_col_name,
-        }
-        if self.yhat_scale:
-            ret["yhat_scale"] = self.yhat_scale
-        return ret
+    return NodeDef(
+        name=name,
+        parents=parents,
+        op=op_def.name,
+        attr_values=attrs,
+        op_version=op_def.version,
+    )
 
 
 def make_dot_product_node_def(
-    name, parents, weight_dict, output_col_name, intercept=None
+    name, parents, weight_dict, output_col_name, input_types, intercept=None
 ):
-    dot_op = DotProcutAttr(weight_dict, output_col_name, intercept)
+    op_def = get_op("DOT_PRODUCT")
+    attrs = {
+        "feature_names": AttrValue(ss=StringList(data=list(weight_dict.keys()))),
+        "feature_weights": AttrValue(ds=DoubleList(data=list(weight_dict.values()))),
+        "output_col_name": AttrValue(s=output_col_name),
+        "input_types": AttrValue(ss=StringList(data=input_types)),
+    }
+    if intercept:
+        attrs["intercept"] = AttrValue(d=intercept)
+
     return NodeDef(
-        name, dot_op.name, parents=parents, data_dict=dot_op.get_node_attr_map()
+        name=name,
+        parents=parents,
+        op=op_def.name,
+        attr_values=attrs,
+        op_version=op_def.version,
     )
 
 
 def make_merge_y_node_def(
     name,
     parents,
-    link_function: LinkFunction,
+    link_function: LinkFunctionType,
     input_col_name: str,
     output_col_name: str,
     yhat_scale: float = None,
 ):
-    op = MergeYAttr(link_function, input_col_name, output_col_name, yhat_scale)
-    return NodeDef(name, op.name, parents=parents, data_dict=op.get_node_attr_map())
+    op_def = get_op("MERGE_Y")
+    attrs = {
+        "link_function": AttrValue(s=LinkFunctionType.Name(link_function)),
+        "input_col_name": AttrValue(s=input_col_name),
+        "output_col_name": AttrValue(s=output_col_name),
+    }
+    if yhat_scale:
+        attrs["yhat_scale"] = AttrValue(d=yhat_scale)
+
+    return NodeDef(
+        name=name,
+        parents=parents,
+        op=op_def.name,
+        attr_values=attrs,
+        op_version=op_def.version,
+    )
+
+
+def dump_pb_json_file(pb_obj, file_name, indent=2):
+    json_str = MessageToJson(pb_obj)
+    with open(file_name, "w") as file:
+        file.write(json_str)
 
 
 def dump_json(obj, filename, indent=2):
@@ -357,7 +231,9 @@ class ConfigDumper:
             json.dump({"systemLogPath": os.path.abspath(logging_path)}, ofile, indent=2)
 
     def _dump_model_tar_gz(self, path: str, graph_def: GraphDef):
-        return JsonModel("test_model", "just for test", graph_def).dump_tar_gz(
+        graph_def_str = MessageToJson(graph_def, preserving_proto_field_name=True)
+        print(f"graph_def: \n {graph_def_str}")
+        return ModelBuilder("test_model", "just for test", graph_def).dump_tar_gz(
             path, self.tar_name
         )
 
@@ -382,7 +258,7 @@ class ConfigDumper:
         return {"csv_opts": {"file_path": file_path, "id_name": "id"}}
 
     def _dump_serving_config(
-        self, path: str, config: PartyConfig, model_name: str, model_md5: str
+        self, path: str, config: PartyConfig, model_name: str, model_sha256: str
     ):
         config_dict = {
             "id": self.service_id,
@@ -395,7 +271,7 @@ class ConfigDumper:
                 "modelId": config.model_id,
                 "basePath": os.path.abspath(path),
                 "sourcePath": os.path.abspath(model_name),
-                "sourceMd5": model_md5,
+                "sourceSha256": model_sha256,
                 "sourceType": "ST_FILE",
             },
             "clusterConf": {
@@ -415,10 +291,10 @@ class ConfigDumper:
             if not os.path.exists(config_path):
                 os.makedirs(config_path, exist_ok=True)
             self._dump_logging_config(config_path, os.path.join(config_path, "log"))
-            model_name, model_md5 = self._dump_model_tar_gz(
+            model_name, model_sha256 = self._dump_model_tar_gz(
                 config_path, config.graph_def
             )
-            self._dump_serving_config(config_path, config, model_name, model_md5)
+            self._dump_serving_config(config_path, config, model_name, model_sha256)
 
 
 # for every testcase, there should be a TestConfig instance
@@ -430,6 +306,7 @@ class TestConfig:
         header_dict: Dict[str, str] = None,
         service_spec_id: str = None,
         predefined_features: Dict[str, List[Any]] = None,
+        predefined_types: Dict[str, str] = None,
         log_config_name=None,
         serving_config_name=None,
         tar_name=None,
@@ -437,6 +314,7 @@ class TestConfig:
         self.header_dict = header_dict
         self.service_spec_id = service_spec_id
         self.predefined_features = predefined_features
+        self.predefined_types = predefined_types
         self.model_path = os.path.join(g_script_dir, model_path)
         self.party_config = party_config
         self.log_config_name = (
@@ -447,15 +325,6 @@ class TestConfig:
         )
         self.tar_name = tar_name if tar_name is not None else "model.tar.gz"
         self.background_proc = []
-
-    def get_module_path(self):
-        return self.model_path
-
-    def get_request_loactions(self):
-        return [
-            f"http://{config.cluster_ip}/PredictionService/Predict"
-            for config in self.party_config
-        ]
 
     def dump_config(self):
         ConfigDumper(
@@ -483,7 +352,9 @@ class TestConfig:
         if self.predefined_features:
             pre_features = []
             for name, data_list in self.predefined_features.items():
-                pre_features.append(make_feature(name, data_list))
+                pre_features.append(
+                    make_feature(name, data_list, self.predefined_types[name])
+                )
         else:
             pre_features = None
 
@@ -491,7 +362,7 @@ class TestConfig:
             fs_param = {}
             for config in self.party_config:
                 fs_param[config.id] = FeatureParam(
-                    config.query_datas, config.query_context
+                    query_datas=config.query_datas, query_context=config.query_context
                 )
         else:
             fs_param = None
@@ -500,14 +371,16 @@ class TestConfig:
             self.header_dict, self.service_spec_id, fs_param, pre_features
         )
 
-    def make_curl_cmd(self, party: str):
+    def make_predict_curl_cmd(self, party: str):
         url = None
         for p_cfg in self.party_config:
             if p_cfg.id == party:
                 url = f"http://{p_cfg.cluster_ip}/PredictionService/Predict"
                 break
         if not url:
-            raise Exception(f"{party} is not in TestConfig({config.get_party_ids()})")
+            raise Exception(
+                f"{party} is not in TestConfig({self.config.get_party_ids()})"
+            )
         curl_wrapper = CurlWrapper(
             url=url,
             header="Content-Type: application/json",
@@ -515,9 +388,24 @@ class TestConfig:
         )
         return curl_wrapper.cmd()
 
-    def _exe_cmd(self, cmd, backgroud=False):
+    def make_get_model_info_curl_cmd(self, party: str):
+        url = None
+        for p_cfg in self.party_config:
+            if p_cfg.id == party:
+                url = f"http://{p_cfg.cluster_ip}/ModelService/GetModelInfo"
+                break
+        if not url:
+            raise Exception(f"{party} is not in TestConfig({config.get_party_ids()})")
+        curl_wrapper = CurlWrapper(
+            url=url,
+            header="Content-Type: application/json",
+            data='{}',
+        )
+        return curl_wrapper.cmd()
+
+    def _exe_cmd(self, cmd, background=False):
         print("Execute: ", cmd)
-        if not backgroud:
+        if not background:
             ret = subprocess.run(cmd, shell=True, check=True, capture_output=True)
             ret.check_returncode()
             return ret
@@ -527,112 +415,50 @@ class TestConfig:
             return proc
 
     def finish(self):
-        for proc in self.background_proc:
-            proc.kill()
-            proc.wait()
-        os.system(f"rm -rf {self.model_path}")
+        if g_clean_up_service:
+            for proc in self.background_proc:
+                proc.kill()
+                proc.wait()
+        if g_clean_up_files:
+            os.system(f"rm -rf {self.model_path}")
 
-    def exe_start_server_scripts(self):
-        main_process_name = "//secretflow_serving/server:secretflow_serving"
-        self._exe_cmd(f"bazel build {main_process_name}")
-
-        [
+    def exe_start_server_scripts(self, start_interval_s=0):
+        for arg in self.get_server_start_args():
             self._exe_cmd(
                 f"./bazel-bin/secretflow_serving/server/secretflow_serving {arg}", True
             )
-            for arg in self.get_server_start_args()
-        ]
+            if start_interval_s:
+                time.sleep(start_interval_s)
+
+        # wait 10s for servers be ready
+        time.sleep(10)
 
     def exe_curl_request_scripts(self, party: str):
-        return self._exe_cmd(self.make_curl_cmd(party))
+        return self._exe_cmd(self.make_predict_curl_cmd(party))
+
+    def exe_get_model_info_request_scripts(self, party: str):
+        return self._exe_cmd(self.make_get_model_info_curl_cmd(party))
 
 
-class FeatureParam:
-    def __init__(self, query_datas: List[str], query_context: str = None):
-        self.query_datas = query_datas
-        self.query_context = query_context
+def make_feature(name: str, value: List[Any], f_type: str):
+    assert len(value) != 0
 
-    def to_json(self):
-        ret = {"query_datas": self.query_datas}
-        if self.query_context:
-            ret["query_context"] = self.query_context
-        return ret
+    field_type = FieldType.Value(f_type)
 
-
-class FieldType(Enum):
-    FIELD_BOOL = 1
-    FIELD_INT32 = 2
-    FIELD_INT64 = 3
-    FIELD_FLOAT = 4
-    FIELD_DOUBLE = 5
-    FIELD_STRING = 6
-
-
-class FeatureValue:
-    def __init__(self, data_list, types):
-        self.data_list = data_list
-        assert types in ["i32s", "i64s", "fs", "ds", "ss", "bs"]
-        self.types = types
-
-    def to_json(self):
-        if self.types:
-            return {self.types: self.data_list}
-        assert len(self.data_list) != 0
-        if isinstance(self.data_list[0], int):
-            types = "i32s"
-        elif isinstance(self.data_list[0], float):
-            types = "ds"
-        elif isinstance(self.data_list[0], bool):
-            types = "bs"
-        else:
-            types = "ss"
-        return {types: self.data_list}
-
-
-def make_feature(name: str, value: List[Any], f_type: FieldType = None):
-    type_dict = {
-        FieldType.FIELD_BOOL: "bs",
-        FieldType.FIELD_DOUBLE: "ds",
-        FieldType.FIELD_FLOAT: "fs",
-        FieldType.FIELD_INT32: "i32s",
-        FieldType.FIELD_INT64: "i64s",
-        FieldType.FIELD_STRING: "ss",
-    }
-    if f_type:
-        if f_type == FieldType.FIELD_BOOL:
-            value = [bool(v) for v in value]
-        elif f_type in (FieldType.FIELD_DOUBLE, FieldType.FIELD_FLOAT):
-            value = [float(v) for v in value]
-        elif f_type in (FieldType.FIELD_INT32, FieldType.FIELD_INT64):
-            value = [int(v) for v in value]
-        else:
-            value = [str(v) for v in value]
-        return Feature(name, f_type, FeatureValue(value, type_dict[f_type]))
+    if field_type == FieldType.FIELD_BOOL:
+        f_value = FeatureValue(bs=[bool(v) for v in value])
+    elif field_type == FieldType.FIELD_FLOAT:
+        f_value = FeatureValue(fs=[float(v) for v in value])
+    elif field_type == FieldType.FIELD_DOUBLE:
+        f_value = FeatureValue(ds=[float(v) for v in value])
+    elif field_type == FieldType.FIELD_INT32:
+        f_value = FeatureValue(i32s=[int(v) for v in value])
+    elif field_type == FieldType.FIELD_INT64:
+        f_value = FeatureValue(i64s=[int(v) for v in value])
     else:
-        assert len(value) != 0
-        if isinstance(value[0], int):
-            f_type = FieldType.FIELD_INT64
-        elif isinstance(value[0], float):
-            f_type = FieldType.FIELD_DOUBLE
-        elif isinstance(value[0], bool):
-            f_type = FieldType.FIELD_BOOL
-        else:
-            f_type = FieldType.FIELD_STRING
-            value = [str(v) for v in value]
-        return Feature(name, f_type, FeatureValue(value, type_dict[f_type]))
+        f_value = FeatureValue(ss=[str(v) for v in value])
 
-
-class Feature:
-    def __init__(self, field_name: str, field_type: FieldType, value: FeatureValue):
-        self.name = field_name
-        self.type = field_type
-        self.value = value
-
-    def to_json(self):
-        return {
-            "field": {"name": self.name, "type": self.type.name},
-            "value": self.value.to_json(),
-        }
+    return Feature(field=FeatureField(name=name, type=field_type), value=f_value)
 
 
 class PredictRequest:
@@ -656,10 +482,14 @@ class PredictRequest:
             ret["service_spec"] = {"id": self.service_spec_id}
         if self.party_param_dict:
             ret["fs_params"] = {
-                k: v.to_json() for k, v in self.party_param_dict.items()
+                k: json.loads(MessageToJson(v, preserving_proto_field_name=True))
+                for k, v in self.party_param_dict.items()
             }
         if self.predefined_feature:
-            ret["predefined_features"] = [i.to_json() for i in self.predefined_feature]
+            ret["predefined_features"] = [
+                json.loads(MessageToJson(i, preserving_proto_field_name=True))
+                for i in self.predefined_feature
+            ]
         return json.dumps(ret)
 
 
@@ -677,89 +507,28 @@ class CurlWrapper:
 
 
 # simple test
-def get_example_config(path: str):
-    dot_node_1 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x21": -0.3, "x22": 0.95, "x23": 1.01, "x24": 1.35, "x25": -0.97},
-        output_col_name="y",
-        intercept=1.313,
-    )
-    dot_node_2 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x6": -0.53, "x7": 0.92, "x8": -0.72, "x9": 0.146, "x10": -0.07},
-        output_col_name="y",
-    )
-    merge_y_node = make_merge_y_node_def(
-        "node_merge_y",
-        ["node_dot_product"],
-        LinkFunction.LF_LOGIT_V2,
-        input_col_name="y",
-        output_col_name="score",
-        yhat_scale=1.2,
-    )
-    execution_1 = ExecutionDef(
-        ["node_dot_product"], config=RuntimeConfig(DispatchType.DP_ALL, False)
-    )
-    execution_2 = ExecutionDef(
-        ["node_merge_y"], config=RuntimeConfig(DispatchType.DP_ANYONE, False)
-    )
+class TestCase:
+    def __init__(self, path: str):
+        self.path = path
 
-    alice_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_1, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
-    bob_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_2, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
+    def exec(self):
+        config = self.get_config(self.path)
+        try:
+            self.test(config)
+        finally:
+            config.finish()
 
-    alice_config = PartyConfig(
-        id="alice",
-        feature_mapping={
-            "v24": "x24",
-            "v22": "x22",
-            "v21": "x21",
-            "v25": "x25",
-            "v23": "x23",
-        },
-        cluster_ip="127.0.0.1:9010",
-        metrics_port=10306,
-        brpc_builtin_service_port=10307,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=alice_graph,
-        query_datas=["a"],
-    )
-    bob_config = PartyConfig(
-        id="bob",
-        feature_mapping={"v6": "x6", "v7": "x7", "v8": "x8", "v9": "x9", "v10": "x10"},
-        cluster_ip="127.0.0.1:9011",
-        metrics_port=10308,
-        brpc_builtin_service_port=10309,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=bob_graph,
-        query_datas=["b"],
-    )
-    return TestConfig(
-        path,
-        service_spec_id="integration_test",
-        party_config=[alice_config, bob_config],
-    )
+    def test(config: TestConfig):
+        raise NotImplementedError
+
+    def get_config(self, path: str) -> TestConfig:
+        raise NotImplementedError
 
 
-def simple_mock_test():
-    config = get_example_config("model_path")
-    try:
+class SimpleTest(TestCase):
+    def test(self, config: TestConfig):
         config.dump_config()
         config.exe_start_server_scripts()
-        import time
-
-        time.sleep(1)
         for party in config.get_party_ids():
             res = config.exe_curl_request_scripts(party)
             out = res.stdout.decode()
@@ -769,93 +538,282 @@ def simple_mock_test():
             assert len(res["results"]) == len(
                 config.party_config[0].query_datas
             ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
-    finally:
-        config.finish()
+            model_info = config.exe_get_model_info_request_scripts(party)
+            out = model_info.stdout.decode()
+            print("Model info: ", out)
+
+    def get_config(self, path: str):
+        with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
+            alice_trace_content = f.read()
+
+        processing_node_alice = make_processing_node_def(
+            name="node_processing",
+            parents=[],
+            input_schema=pa.schema(
+                [
+                    ('a', pa.int32()),
+                    ('b', pa.float32()),
+                    ('c', pa.utf8()),
+                    ('x21', pa.float64()),
+                    ('x22', pa.float32()),
+                    ('x23', pa.int8()),
+                    ('x24', pa.int16()),
+                    ('x25', pa.int32()),
+                ]
+            ),
+            output_schema=pa.schema(
+                [
+                    ('a_0', pa.int64()),
+                    ('a_1', pa.int64()),
+                    ('c_0', pa.int64()),
+                    ('b_0', pa.int64()),
+                    ('x21', pa.float64()),
+                    ('x22', pa.float32()),
+                    ('x23', pa.int8()),
+                    ('x24', pa.int16()),
+                    ('x25', pa.int32()),
+                ]
+            ),
+            trace_content=alice_trace_content,
+        )
+        # bob run dummy node (no trace)
+        processing_node_bob = make_processing_node_def(
+            name="node_processing",
+            parents=[],
+            input_schema=pa.schema(
+                [
+                    ('x6', pa.int64()),
+                    ('x7', pa.uint8()),
+                    ('x8', pa.uint16()),
+                    ('x9', pa.uint32()),
+                    ('x10', pa.uint64()),
+                ]
+            ),
+            output_schema=pa.schema(
+                [
+                    ('x6', pa.int64()),
+                    ('x7', pa.uint8()),
+                    ('x8', pa.uint16()),
+                    ('x9', pa.uint32()),
+                    ('x10', pa.uint64()),
+                ]
+            ),
+        )
+
+        dot_node_alice = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=['node_processing'],
+            weight_dict={
+                "x21": -0.3,
+                "x22": 0.95,
+                "x23": 1.01,
+                "x24": 1.35,
+                "x25": -0.97,
+                "a_0": 1.0,
+                "c_0": 1.0,
+                "b_0": 1.0,
+            },
+            output_col_name="y",
+            input_types=[
+                "DT_DOUBLE",
+                "DT_FLOAT",
+                "DT_INT8",
+                "DT_INT16",
+                "DT_INT32",
+                "DT_INT64",
+                "DT_INT64",
+                "DT_INT64",
+            ],
+            intercept=1.313,
+        )
+        dot_node_bob = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=['node_processing'],
+            weight_dict={
+                "x6": -0.53,
+                "x7": 0.92,
+                "x8": -0.72,
+                "x9": 0.146,
+                "x10": -0.07,
+            },
+            input_types=["DT_INT64", "DT_UINT8", "DT_UINT16", "DT_UINT32", "DT_UINT64"],
+            output_col_name="y",
+        )
+        merge_y_node = make_merge_y_node_def(
+            "node_merge_y",
+            ["node_dot_product"],
+            LinkFunctionType.LF_LOGIT,
+            input_col_name="y",
+            output_col_name="score",
+            yhat_scale=1.2,
+        )
+        execution_1 = ExecutionDef(
+            nodes=["node_processing", "node_dot_product"],
+            config=RuntimeConfig(dispatch_type=DispatchType.DP_ALL, session_run=False),
+        )
+        execution_2 = ExecutionDef(
+            nodes=["node_merge_y"],
+            config=RuntimeConfig(
+                dispatch_type=DispatchType.DP_ANYONE, session_run=False
+            ),
+        )
+
+        alice_graph = GraphDef(
+            version="0.0.1",
+            node_list=[processing_node_alice, dot_node_alice, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
+        bob_graph = GraphDef(
+            version="0.0.1",
+            node_list=[processing_node_bob, dot_node_bob, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
+
+        alice_config = PartyConfig(
+            id="alice",
+            feature_mapping={
+                "a": "a",
+                "b": "b",
+                "c": "c",
+                "v24": "x24",
+                "v22": "x22",
+                "v21": "x21",
+                "v25": "x25",
+                "v23": "x23",
+            },
+            **global_ip_config(0),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=alice_graph,
+            query_datas=["a"],
+        )
+        bob_config = PartyConfig(
+            id="bob",
+            feature_mapping={
+                "v6": "x6",
+                "v7": "x7",
+                "v8": "x8",
+                "v9": "x9",
+                "v10": "x10",
+            },
+            **global_ip_config(1),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=bob_graph,
+            query_datas=["b"],
+        )
+        return TestConfig(
+            path,
+            service_spec_id="integration_test",
+            party_config=[alice_config, bob_config],
+        )
 
 
-# predefine_test
-def get_predefine_config(path: str):
-    dot_node_1 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x1": 1.0, "x2": 2.0},
-        output_col_name="y",
-        intercept=0,
-    )
-    dot_node_2 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x1": -1.0, "x2": -2.0},
-        output_col_name="y",
-        intercept=0,
-    )
-    merge_y_node = make_merge_y_node_def(
-        "node_merge_y",
-        ["node_dot_product"],
-        LinkFunction.LF_INDENTITY,
-        input_col_name="y",
-        output_col_name="score",
-        yhat_scale=1.0,
-    )
-    execution_1 = ExecutionDef(
-        ["node_dot_product"], config=RuntimeConfig(DispatchType.DP_ALL, False)
-    )
-    execution_2 = ExecutionDef(
-        ["node_merge_y"], config=RuntimeConfig(DispatchType.DP_ANYONE, False)
-    )
+class PredefinedErrorTest(TestCase):
+    def get_config(self, path: str) -> TestConfig:
+        dot_node_alice = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": 1.0, "x2": 2.0, "x3": 3.0},
+            input_types=["DT_FLOAT", "DT_DOUBLE", "DT_INT32"],
+            output_col_name="y",
+            intercept=0,
+        )
+        dot_node_bob = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": -1.0, "x2": -2.0, "x3": -3.0},
+            input_types=["DT_FLOAT", "DT_DOUBLE", "DT_INT32"],
+            output_col_name="y",
+            intercept=0,
+        )
+        merge_y_node = make_merge_y_node_def(
+            "node_merge_y",
+            ["node_dot_product"],
+            LinkFunctionType.LF_IDENTITY,
+            input_col_name="y",
+            output_col_name="score",
+            yhat_scale=1.0,
+        )
+        execution_1 = ExecutionDef(
+            nodes=["node_dot_product"],
+            config=RuntimeConfig(dispatch_type=DispatchType.DP_ALL, session_run=False),
+        )
+        execution_2 = ExecutionDef(
+            nodes=["node_merge_y"],
+            config=RuntimeConfig(
+                dispatch_type=DispatchType.DP_ANYONE, session_run=False
+            ),
+        )
 
-    alice_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_1, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
-    bob_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_2, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
+        alice_graph = GraphDef(
+            version="0.0.1",
+            node_list=[dot_node_alice, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
+        bob_graph = GraphDef(
+            version="0.0.1",
+            node_list=[dot_node_bob, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
 
-    alice_config = PartyConfig(
-        id="alice",
-        feature_mapping={},
-        cluster_ip="127.0.0.1:9010",
-        metrics_port=10306,
-        brpc_builtin_service_port=10307,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=alice_graph,
-        query_datas=["a", "a", "a"],  # only length matters
-    )
-    bob_config = PartyConfig(
-        id="bob",
-        feature_mapping={},
-        cluster_ip="127.0.0.1:9011",
-        metrics_port=10308,
-        brpc_builtin_service_port=10309,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=bob_graph,
-        query_datas=["a", "a", "a"],  # only length matters
-    )
-    return TestConfig(
-        path,
-        service_spec_id="integration_test",
-        party_config=[alice_config, bob_config],
-        predefined_features={
-            "x1": [1.0, 2.0, 3.4],
-            "x2": [6.0, 7.0, 8.0],
-        },
-    )
+        alice_config = PartyConfig(
+            id="alice",
+            feature_mapping={},
+            **global_ip_config(0),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=alice_graph,
+            query_datas=["a", "a", "a"],  # only length matters
+        )
+        bob_config = PartyConfig(
+            id="bob",
+            feature_mapping={},
+            **global_ip_config(1),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=bob_graph,
+            query_datas=["a", "a", "a"],  # only length matters
+        )
+        return TestConfig(
+            path,
+            service_spec_id="integration_test",
+            party_config=[alice_config, bob_config],
+            predefined_features={
+                "x1": [1.0, 2.0, 3.4],
+                "x2": [6.0, 7.0, 8.0],
+                "x3": [-9, -10, -11],
+            },
+            predefined_types={
+                "x1": "FIELD_FLOAT",
+                "x2": "FIELD_DOUBLE",
+                "x3": "FIELD_INT32",
+            },
+        )
 
-
-def predefine_test():
-    config = get_predefine_config("module_path")
-    try:
+    def test(self, config):
+        new_config = {}
+        for k, v in config.predefined_features.items():
+            v.append(9.9)
+            new_config[k] = v
+        config.predefined_features = new_config
         config.dump_config()
         config.exe_start_server_scripts()
-        import time
 
-        time.sleep(1)
+        for party in config.get_party_ids():
+            res = config.exe_curl_request_scripts(party)
+            out = res.stdout.decode()
+            print("Result: ", out)
+            res = json.loads(out)
+            assert (
+                res["status"]["code"] != 1
+            ), f'return status code({res["status"]["code"]}) should not be OK(1)'
+
+
+class PredefineTest(PredefinedErrorTest):
+    def test(self, config):
+        config.dump_config()
+        config.exe_start_server_scripts()
         results = []
         for party in config.get_party_ids():
             res = config.exe_curl_request_scripts(party)
@@ -869,103 +827,98 @@ def predefine_test():
                 config.party_config[0].query_datas
             ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
             results.append(res)
-        # std::rand in MockAdapater start with same seed at both sides
+        # std::rand in MockAdapter start with same seed at both sides
         for a_score, b_score in zip(results[0]["results"], results[1]["results"]):
             assert a_score["scores"][0]["value"] + b_score["scores"][0]["value"] == 0
-    finally:
-        config.finish()
 
 
-# csv test
-def get_csv_config(path: str):
-    dot_node_1 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x1": 1.0, "x2": 2.0},
-        output_col_name="y",
-        intercept=0,
-    )
-    dot_node_2 = make_dot_product_node_def(
-        name="node_dot_product",
-        parents=[],
-        weight_dict={"x1": -1.0, "x2": -2.0},
-        output_col_name="y",
-        intercept=0,
-    )
-    merge_y_node = make_merge_y_node_def(
-        "node_merge_y",
-        ["node_dot_product"],
-        LinkFunction.LF_INDENTITY,
-        input_col_name="y",
-        output_col_name="score",
-        yhat_scale=1.0,
-    )
-    execution_1 = ExecutionDef(
-        ["node_dot_product"], config=RuntimeConfig(DispatchType.DP_ALL, False)
-    )
-    execution_2 = ExecutionDef(
-        ["node_merge_y"], config=RuntimeConfig(DispatchType.DP_ANYONE, False)
-    )
+class CsvTest(TestCase):
+    def get_config(self, path: str):
+        dot_node_alice = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": 1.0, "x2": 2.0},
+            input_types=["DT_INT8", "DT_UINT8"],
+            output_col_name="y",
+            intercept=0,
+        )
+        dot_node_bob = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": -1.0, "x2": -2.0},
+            input_types=["DT_INT16", "DT_UINT16"],
+            output_col_name="y",
+            intercept=0,
+        )
+        merge_y_node = make_merge_y_node_def(
+            "node_merge_y",
+            ["node_dot_product"],
+            LinkFunctionType.LF_IDENTITY,
+            input_col_name="y",
+            output_col_name="score",
+            yhat_scale=1.0,
+        )
 
-    alice_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_1, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
-    bob_graph = GraphDef(
-        "0.0.1",
-        node_list=[dot_node_2, merge_y_node],
-        execution_list=[execution_1, execution_2],
-    )
+        execution_1 = ExecutionDef(
+            nodes=["node_dot_product"],
+            config=RuntimeConfig(dispatch_type=DispatchType.DP_ALL, session_run=False),
+        )
+        execution_2 = ExecutionDef(
+            nodes=["node_merge_y"],
+            config=RuntimeConfig(
+                dispatch_type=DispatchType.DP_ANYONE, session_run=False
+            ),
+        )
 
-    alice_config = PartyConfig(
-        id="alice",
-        feature_mapping={"v1": "x1", "v2": "x2"},
-        cluster_ip="127.0.0.1:9010",
-        metrics_port=10306,
-        brpc_builtin_service_port=10307,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=alice_graph,
-        query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
-        csv_dict={
-            "id": ["a", "b", "c", "d"],
-            "v1": [1.0, 2.0, 3.0, 4.0],
-            "v2": [5.0, 6.0, 7.0, 8.0],
-        },
-    )
-    bob_config = PartyConfig(
-        id="bob",
-        feature_mapping={"vv2": "x2", "vv3": "x1"},
-        cluster_ip="127.0.0.1:9011",
-        metrics_port=10308,
-        brpc_builtin_service_port=10309,
-        channel_protocol="baidu_std",
-        model_id="integration_model",
-        graph_def=bob_graph,
-        query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
-        csv_dict={
-            "id": ["a", "b", "c"],
-            "vv3": [1.0, 2.0, 3.0],
-            "vv2": [5.0, 6.0, 7.0],
-        },
-    )
-    return TestConfig(
-        path,
-        service_spec_id="integration_test",
-        party_config=[alice_config, bob_config],
-    )
+        alice_graph = GraphDef(
+            version="0.0.1",
+            node_list=[dot_node_alice, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
+        bob_graph = GraphDef(
+            version="0.0.1",
+            node_list=[dot_node_bob, merge_y_node],
+            execution_list=[execution_1, execution_2],
+        )
 
+        alice_config = PartyConfig(
+            id="alice",
+            feature_mapping={"v1": "x1", "v2": "x2"},
+            **global_ip_config(0),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=alice_graph,
+            query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
+            csv_dict={
+                "id": ["a", "b", "c", "d"],
+                "v1": [1, 2, 3, 4],
+                "v2": [5, 6, 7, 8],
+            },
+        )
+        bob_config = PartyConfig(
+            id="bob",
+            feature_mapping={"vv2": "x2", "vv3": "x1"},
+            **global_ip_config(1),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=bob_graph,
+            query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
+            csv_dict={
+                "id": ["a", "b", "c"],
+                "vv3": [1, 2, 3],
+                "vv2": [5, 6, 7],
+            },
+        )
+        return TestConfig(
+            path,
+            service_spec_id="integration_test",
+            party_config=[alice_config, bob_config],
+        )
 
-def csv_test():
-    config = get_csv_config("module_path")
-    try:
+    def test(self, config):
         config.dump_config()
         config.exe_start_server_scripts()
-        import time
 
-        time.sleep(1)
-        results = []
         for party in config.get_party_ids():
             res = config.exe_curl_request_scripts(party)
             out = res.stdout.decode()
@@ -979,11 +932,160 @@ def csv_test():
             ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
             for score in res["results"]:
                 assert score["scores"][0]["value"] == 0, "result should be 0"
-    finally:
-        config.finish()
+
+
+class SpecificTest(TestCase):
+    def get_config(self, path: str):
+        dot_node_alice = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": 1.0, "x2": 2.0},
+            input_types=["DT_DOUBLE", "DT_DOUBLE"],
+            output_col_name="y",
+            intercept=0,
+        )
+        dot_node_bob = make_dot_product_node_def(
+            name="node_dot_product",
+            parents=[],
+            weight_dict={"x1": -1.0, "x2": -2.0},
+            input_types=["DT_DOUBLE", "DT_DOUBLE"],
+            output_col_name="y",
+            intercept=0,
+        )
+        merge_y_node = make_merge_y_node_def(
+            "node_merge_y",
+            ["node_dot_product"],
+            LinkFunctionType.LF_IDENTITY,
+            input_col_name="y",
+            output_col_name="score",
+            yhat_scale=1.0,
+        )
+        dot_node_specific_1 = make_dot_product_node_def(
+            name="node_dot_product_spec",
+            parents=["node_merge_y"],
+            weight_dict={"score": 1.0},
+            input_types=["DT_DOUBLE"],
+            output_col_name="y",
+            intercept=1234.0,
+        )
+        dot_node_specific_2 = make_dot_product_node_def(
+            name="node_dot_product_spec",
+            parents=["node_merge_y"],
+            input_types=["DT_DOUBLE"],
+            weight_dict={"score": 1.0},
+            output_col_name="y",
+            intercept=2468.0,
+        )
+        merge_y_node_res = make_merge_y_node_def(
+            "node_merge_y_res",
+            ["node_dot_product_spec"],
+            LinkFunctionType.LF_IDENTITY,
+            input_col_name="y",
+            output_col_name="score",
+            yhat_scale=1.0,
+        )
+        execution_1 = ExecutionDef(
+            nodes=["node_dot_product"],
+            config=RuntimeConfig(dispatch_type=DispatchType.DP_ALL, session_run=False),
+        )
+        execution_2_alice = ExecutionDef(
+            nodes=["node_merge_y", "node_dot_product_spec", "node_merge_y_res"],
+            config=RuntimeConfig(
+                dispatch_type=DispatchType.DP_SPECIFIED,
+                session_run=False,
+                specific_flag=True,
+            ),
+        )
+
+        execution_2_bob = ExecutionDef(
+            nodes=["node_merge_y", "node_dot_product_spec", "node_merge_y_res"],
+            config=RuntimeConfig(
+                dispatch_type=DispatchType.DP_SPECIFIED, session_run=False
+            ),
+        )
+
+        alice_graph = GraphDef(
+            version="0.0.1",
+            node_list=[
+                dot_node_alice,
+                merge_y_node,
+                dot_node_specific_1,
+                merge_y_node_res,
+            ],
+            execution_list=[
+                execution_1,
+                execution_2_alice,
+            ],
+        )
+        bob_graph = GraphDef(
+            version="0.0.1",
+            node_list=[
+                dot_node_bob,
+                merge_y_node,
+                dot_node_specific_2,
+                merge_y_node_res,
+            ],
+            execution_list=[execution_1, execution_2_bob],
+        )
+
+        alice_config = PartyConfig(
+            id="alice",
+            feature_mapping={"v1": "x1", "v2": "x2"},
+            **global_ip_config(0),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=alice_graph,
+            query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
+            csv_dict={
+                "id": ["a", "b", "c", "d"],
+                "v1": [1.0, 2.0, 3.0, 4.0],
+                "v2": [5.0, 6.0, 7.0, 8.0],
+            },
+        )
+        bob_config = PartyConfig(
+            id="bob",
+            feature_mapping={"vv2": "x2", "vv3": "x1"},
+            **global_ip_config(1),
+            channel_protocol="baidu_std",
+            model_id="integration_model",
+            graph_def=bob_graph,
+            query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
+            csv_dict={
+                "id": ["a", "b", "c"],
+                "vv3": [1.0, 2.0, 3.0],
+                "vv2": [5.0, 6.0, 7.0],
+            },
+        )
+        return TestConfig(
+            path,
+            service_spec_id="integration_test",
+            party_config=[alice_config, bob_config],
+        )
+
+    def test(self, config):
+        config.dump_config()
+        config.exe_start_server_scripts(2)
+
+        for party in config.get_party_ids():
+            res = config.exe_curl_request_scripts(party)
+            out = res.stdout.decode()
+            print("Result: ", out)
+            res = json.loads(out)
+            assert (
+                res["status"]["code"] == 1
+            ), f'return status code({res["status"]["code"]}) is not OK(1)'
+            assert len(res["results"]) == len(
+                config.party_config[0].query_datas
+            ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
+            for score in res["results"]:
+                assert (
+                    score["scores"][0]["value"] == 1234.0
+                ), f'result should be 0, got: {score["scores"][0]["value"]}'
 
 
 if __name__ == "__main__":
-    simple_mock_test()
-    predefine_test()
-    csv_test()
+    SimpleTest('model_path').exec()
+    PredefinedErrorTest('model_path').exec()
+    PredefineTest('model_path').exec()
+    CsvTest('model_path').exec()
+    SpecificTest('model_path').exec()

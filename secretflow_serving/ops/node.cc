@@ -40,8 +40,8 @@ void Node::AddInEdge(const std::shared_ptr<Edge>& in_edge) {
   in_edges_.emplace_back(in_edge);
 }
 
-void Node::SetOutEdge(const std::shared_ptr<Edge>& out_edge) {
-  out_edge_ = out_edge;
+void Node::AddOutEdge(const std::shared_ptr<Edge>& out_edge) {
+  out_edges_.emplace_back(out_edge);
 }
 
 }  // namespace secretflow::serving

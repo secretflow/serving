@@ -14,11 +14,6 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include "arrow/api.h"
-
 #include "secretflow_serving/framework/executor.h"
 
 namespace secretflow::serving {
@@ -30,7 +25,8 @@ class Executable {
 
     // input
     std::shared_ptr<arrow::RecordBatch> features;
-    std::shared_ptr<std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>
+    std::shared_ptr<
+        std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>>
         node_inputs;
 
     // output
@@ -38,13 +34,15 @@ class Executable {
   };
 
  public:
-  explicit Executable() = default;
+  explicit Executable(std::vector<std::shared_ptr<Executor>> executors);
   virtual ~Executable() = default;
 
-  virtual const std::shared_ptr<const arrow::Schema>&
-  GetInputFeatureSchema() = 0;
+  virtual void Run(Task& task);
 
-  virtual void Run(Task& task) = 0;
+  virtual const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema();
+
+ private:
+  std::vector<std::shared_ptr<Executor>> executors_;
 };
 
 }  // namespace secretflow::serving

@@ -43,7 +43,7 @@ class FeatureAdapter {
  public:
   FeatureAdapter(const FeatureSourceConfig& spec, const std::string& service_id,
                  const std::string& party_id,
-                 const std::shared_ptr<arrow::Schema>& feature_schema);
+                 const std::shared_ptr<const arrow::Schema>& feature_schema);
   virtual ~FeatureAdapter() = default;
 
   virtual void FetchFeature(const Request& request, Response* response);
@@ -51,7 +51,8 @@ class FeatureAdapter {
  protected:
   virtual void OnFetchFeature(const Request& request, Response* response) = 0;
 
-  void CheckFeatureValid(const std::shared_ptr<arrow::RecordBatch>& features);
+  void CheckFeatureValid(const Request& request,
+                         const std::shared_ptr<arrow::RecordBatch>& features);
 
  protected:
   FeatureSourceConfig spec_;
@@ -59,7 +60,7 @@ class FeatureAdapter {
   const std::string service_id_;
   const std::string party_id_;
 
-  const std::shared_ptr<arrow::Schema> feature_schema_;
+  const std::shared_ptr<const arrow::Schema> feature_schema_;
 };
 
 }  // namespace secretflow::serving::feature

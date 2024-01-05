@@ -1,0 +1,14 @@
+load("//bazel:serving.bzl", "serving_cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_binary(
+    name = "model_view",
+    srcs = ["main.cc"],
+    deps = [
+        "//secretflow_serving/ops",
+        "//secretflow_serving/ops:graph",
+        "//secretflow_serving/protos:bundle_cc_proto",
+        "//secretflow_serving/util:utils",
+    ],
+)

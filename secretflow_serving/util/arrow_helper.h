@@ -14,11 +14,14 @@
 
 #pragma once
 
+#include <utility>
+
 #include "arrow/api.h"
 #include "google/protobuf/repeated_field.h"
 
 #include "secretflow_serving/core/exception.h"
 
+#include "secretflow_serving/protos/data_type.pb.h"
 #include "secretflow_serving/protos/feature.pb.h"
 
 namespace secretflow::serving {
@@ -38,12 +41,12 @@ namespace secretflow::serving {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR, \
                     __r__.status().message());           \
     } else {                                             \
-      value = __r__.ValueOrDie();                        \
+      value = std::move(__r__.ValueOrDie());             \
     }                                                    \
   } while (false)
 
 inline std::shared_ptr<arrow::RecordBatch> MakeRecordBatch(
-    std::shared_ptr<arrow::Schema> schema, int64_t num_rows,
+    const std::shared_ptr<arrow::Schema>& schema, int64_t num_rows,
     std::vector<std::shared_ptr<arrow::Array>> columns) {
   auto record_batch =
       arrow::RecordBatch::Make(schema, num_rows, std::move(columns));
@@ -51,18 +54,49 @@ inline std::shared_ptr<arrow::RecordBatch> MakeRecordBatch(
   return record_batch;
 }
 
+inline std::shared_ptr<arrow::RecordBatch> MakeRecordBatch(
+    const std::shared_ptr<const arrow::Schema>& schema, int64_t num_rows,
+    std::vector<std::shared_ptr<arrow::Array>> columns) {
+  return MakeRecordBatch(std::const_pointer_cast<arrow::Schema>(schema),
+                         num_rows, std::move(columns));
+}
+
 std::string SerializeRecordBatch(
-    std::shared_ptr<arrow::RecordBatch>& recordBatch);
+    std::shared_ptr<arrow::RecordBatch>& record_batch);
 
 std::shared_ptr<arrow::RecordBatch> DeserializeRecordBatch(
     const std::string& buf);
 
-std::shared_ptr<arrow::DataType> FieldTypeToDataType(FieldType field_type);
+std::shared_ptr<arrow::Schema> DeserializeSchema(const std::string& buf);
 
 FieldType DataTypeToFieldType(
     const std::shared_ptr<arrow::DataType>& data_type);
 
 std::shared_ptr<arrow::RecordBatch> FeaturesToTable(
-    const ::google::protobuf::RepeatedPtrField<Feature>& features);
+    const ::google::protobuf::RepeatedPtrField<Feature>& features,
+    const std::shared_ptr<const arrow::Schema>& target_schema);
+
+inline void CheckArrowDataTypeValid(
+    const std::shared_ptr<arrow::DataType>& data_type) {
+  SERVING_ENFORCE(
+      arrow::is_numeric(data_type->id()) || arrow::is_string(data_type->id()) ||
+          arrow::is_binary(data_type->id()),
+      errors::ErrorCode::LOGIC_ERROR, "unsupported arrow data type: {}",
+      arrow::internal::ToString(data_type->id()));
+  SERVING_ENFORCE(data_type->id() != arrow::Type::HALF_FLOAT,
+                  errors::ErrorCode::LOGIC_ERROR,
+                  "float16(halffloat) is unsupported.");
+}
+
+std::shared_ptr<arrow::DataType> DataTypeToArrowDataType(DataType data_type);
+
+std::shared_ptr<arrow::DataType> DataTypeToArrowDataType(
+    const std::string& data_type);
+
+// Check that all fields in 'dst' can be found in 'src' and that the data type
+// of each field is also consistent.
+void CheckReferenceFields(const std::shared_ptr<arrow::Schema>& src,
+                          const std::shared_ptr<arrow::Schema>& dst,
+                          const std::string& additional_msg = "");
 
 }  // namespace secretflow::serving

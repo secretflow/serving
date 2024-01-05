@@ -24,7 +24,6 @@ ExecutionServiceImpl::ExecutionServiceImpl(
     const std::shared_ptr<ExecutionCore>& execution_core)
     : execution_core_(execution_core),
       stats_({{"handler", "ExecutionService"},
-              {"service_id", execution_core->GetServiceID()},
               {"party_id", execution_core->GetPartyID()}}) {}
 
 void ExecutionServiceImpl::Execute(
@@ -41,21 +40,25 @@ void ExecutionServiceImpl::Execute(
   timer.Pause();
   SPDLOG_DEBUG("execute end, response: {}", response->ShortDebugString());
 
-  RecordMetrics(*request, *response, timer.CountMs());
+  RecordMetrics(*request, *response, timer.CountMs(), "Execute");
 }
 
 void ExecutionServiceImpl::RecordMetrics(const apis::ExecuteRequest& request,
                                          const apis::ExecuteResponse& response,
-                                         double duration_ms) {
+                                         double duration_ms,
+                                         const std::string& action) {
   stats_.api_request_counter_family
       .Add(::prometheus::Labels(
-          {{"code", std::to_string(response.status().code())}}))
+          {{"action", action},
+           {"service_id", request.service_spec().id()},
+           {"code", std::to_string(response.status().code())}}))
       .Increment();
-  stats_.api_request_totol_duration_family
-      .Add(::prometheus::Labels(
-          {{"code", std::to_string(response.status().code())}}))
-      .Increment(duration_ms);
-  stats_.api_request_duration_summary.Observe(duration_ms);
+  stats_.api_request_duration_summary_family
+      .Add(::prometheus::Labels({{"action", action},
+                                 {"service_id", request.service_spec().id()}}),
+           ::prometheus::Summary::Quantiles(
+               {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))
+      .Observe(duration_ms);
 }
 
 ExecutionServiceImpl::Stats::Stats(
@@ -68,21 +71,11 @@ ExecutionServiceImpl::Stats::Stats(
                     "this server.")
               .Labels(labels)
               .Register(*registry)),
-      api_request_totol_duration_family(
-          ::prometheus::BuildCounter()
-              .Name("execution_request_total_duration_family")
-              .Help("total time to process the request in milliseconds")
-              .Labels(labels)
-              .Register(*registry)),
       api_request_duration_summary_family(
           ::prometheus::BuildSummary()
               .Name("execution_request_duration_family")
               .Help("prediction service api request duration in milliseconds")
               .Labels(labels)
-              .Register(*registry)),
-      api_request_duration_summary(api_request_duration_summary_family.Add(
-          ::prometheus::Labels(),
-          ::prometheus::Summary::Quantiles(
-              {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))) {}
+              .Register(*registry)) {}
 
 }  // namespace secretflow::serving

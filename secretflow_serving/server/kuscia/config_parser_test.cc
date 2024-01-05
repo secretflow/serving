@@ -30,7 +30,7 @@ TEST_F(KusciaConfigParserTest, Works) {
   tmpfile.save(1 + R"JSON(
 {
   "serving_id": "kd-1",
-  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceMd5\":\"ba9b4a121e139902e320a18c0610aa99\",\"sourcePath\":\"examples/alice/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceMd5\":\"bdd57c453e64bcf4a9b5fa247a7cffa1\",\"sourcePath\":\"examples/bob/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}}}}",
+  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceSha256\":\"3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522\",\"sourcePath\":\"examples/alice/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceSha256\":\"330192f3a51f9498dd882478bfe08a06501e2ed4aa2543a0fb586180925eb309\",\"sourcePath\":\"examples/bob/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}}}}",
   "cluster_def": "{\"parties\":[{\"name\":\"alice\", \"role\":\"\", \"services\":[{\"portName\":\"service\", \"endpoints\":[\"kd-1-service.alice.svc\"]}, {\"portName\":\"internal\", \"endpoints\":[\"kd-1-internal.alice.svc:53510\"]}, {\"portName\":\"brpc-builtin\", \"endpoints\":[\"kd-1-brpc-builtin.alice.svc:53511\"]}]}, {\"name\":\"bob\", \"role\":\"\", \"services\":[{\"portName\":\"brpc-builtin\", \"endpoints\":[\"kd-1-brpc-builtin.bob.svc:53511\"]}, {\"portName\":\"service\", \"endpoints\":[\"kd-1-service.bob.svc\"]}, {\"portName\":\"internal\", \"endpoints\":[\"kd-1-internal.bob.svc:53510\"]}]}], \"selfPartyIdx\":0, \"selfEndpointIdx\":0}",
   "allocated_ports": "{\"ports\":[{\"name\":\"service\", \"port\":53509, \"scope\":\"Cluster\", \"protocol\":\"HTTP\"}, {\"name\":\"internal\", \"port\":53510, \"scope\":\"Domain\", \"protocol\":\"HTTP\"}, {\"name\":\"brpc-builtin\", \"port\":53511, \"scope\":\"Domain\", \"protocol\":\"HTTP\"}]}",
   "oss_meta": ""
@@ -45,7 +45,8 @@ TEST_F(KusciaConfigParserTest, Works) {
   EXPECT_EQ("glm-test-1", model_config.model_id());
   EXPECT_EQ("/tmp/alice", model_config.base_path());
   EXPECT_EQ(SourceType::ST_FILE, model_config.source_type());
-  EXPECT_EQ("ba9b4a121e139902e320a18c0610aa99", model_config.source_md5());
+  EXPECT_EQ("3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522",
+            model_config.source_sha256());
 
   auto cluster_config = config_parser.cluster_config();
   EXPECT_EQ(2, cluster_config.parties_size());

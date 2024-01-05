@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  serving_alice:
+    image: ${SERVING_IMAGE:-secretflow/serving-anolis8:latest}
+    command:
+      - /root/sf_serving/secretflow_serving
+      - --serving_config_file=/root/sf_serving/examples/alice/serving.config
+      - --logging_config_file=/root/sf_serving/examples/alice/logging.config
+    restart: always
+    network_mode: host
+  serving_bob:
+    image: ${SERVING_IMAGE:-secretflow/serving-anolis8:latest}
+    command:
+      - /root/sf_serving/secretflow_serving
+      - --serving_config_file=/root/sf_serving/examples/bob/serving.config
+      - --logging_config_file=/root/sf_serving/examples/bob/logging.config
+    restart: always
+    network_mode: host

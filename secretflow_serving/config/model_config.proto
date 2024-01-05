@@ -15,17 +15,16 @@
 
 syntax = "proto3";
 
-import "secretflow_serving/config/tls_config.proto";
-
 package secretflow.serving;
 
 // Supported model source type
 enum SourceType {
+  // Placeholder for proto3 default value, do not use it.
   INVALID_SOURCE_TYPE = 0;
 
   // Local filesystem
   ST_FILE = 1;
-  // Oss
+  // S3 OSS
   ST_OSS = 2;
 }
 
@@ -62,8 +61,8 @@ message ModelConfig {
   string source_path = 3;
 
   // Optional.
-  // The expect md5 of the model package
-  string source_md5 = 4;
+  // The expect sha256 of the model package
+  string source_sha256 = 4;
 
   SourceType source_type = 5;
   oneof kind {

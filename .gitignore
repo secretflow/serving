@@ -43,3 +43,10 @@ rpc_data
 
 #python
 *.pyc
+*egg-info
+build/
+dist/
+
+#docs
+_build/
+*.mo
