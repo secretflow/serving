@@ -14,8 +14,6 @@
 
 version: 2.1
 
-setup: true
-
 parameters:
   build-and-run:
     type: boolean
