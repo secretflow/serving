@@ -45,8 +45,18 @@ class OpFactory final : public Singleton<OpFactory> {
     return iter->second;
   }
 
+  std::vector<std::shared_ptr<const OpDef>> GetAllOps() {
+    std::vector<std::shared_ptr<const OpDef>> result;
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& pair : op_defs_) {
+      result.emplace_back(pair.second);
+    }
+    return result;
+  }
+
  private:
-  std::map<std::string, std::shared_ptr<OpDef>> op_defs_;
+  std::unordered_map<std::string, std::shared_ptr<OpDef>> op_defs_;
   std::mutex mutex_;
 };
 
@@ -100,6 +110,13 @@ class OpDefBuilderWrapper {
                         std::move(default_value));
     return *this;
   }
+  OpDefBuilderWrapper& BytesAttr(
+      std::string name, std::string desc, bool is_list, bool is_optional,
+      std::optional<AttrValueType<std::string>> default_value = std::nullopt) {
+    builder_.BytesAttr(std::move(name), std::move(desc), is_list, is_optional,
+                       std::move(default_value));
+    return *this;
+  }
   OpDefBuilderWrapper& Returnable() {
     builder_.Returnable();
     return *this;
@@ -110,6 +127,13 @@ class OpDefBuilderWrapper {
   }
   OpDefBuilderWrapper& Input(std::string name, std::string desc) {
     builder_.Input(std::move(name), std::move(desc));
+    return *this;
+  }
+  OpDefBuilderWrapper& InputList(const std::string& prefix, size_t num,
+                                 std::string desc) {
+    for (size_t i = 0; i != num; ++i) {
+      builder_.Input(prefix + std::to_string(i), desc);
+    }
     return *this;
   }
   OpDefBuilderWrapper& Output(std::string name, std::string desc) {

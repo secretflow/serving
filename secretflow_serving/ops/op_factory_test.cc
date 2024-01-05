@@ -174,7 +174,7 @@ TEST_F(OpFactoryTest, Works) {
     JsonToPb(attr_json_map[actual_attr_def.name()], &expect_attr_def);
     EXPECT_FALSE(expect_attr_def.name().empty());
     EXPECT_FALSE(expect_attr_def.desc().empty());
-    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYEP);
+    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYPE);
 
     EXPECT_EQ(expect_attr_def.name(), actual_attr_def.name());
     EXPECT_EQ(expect_attr_def.desc(), actual_attr_def.desc());
@@ -385,7 +385,7 @@ TEST_F(OpFactoryTest, WorksDefaultValue) {
     JsonToPb(attr_json_map[actual_attr_def.name()], &expect_attr_def);
     EXPECT_FALSE(expect_attr_def.name().empty());
     EXPECT_FALSE(expect_attr_def.desc().empty());
-    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYEP);
+    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYPE);
 
     std::cout << "expect " << expect_attr_def.ShortDebugString() << std::endl;
 

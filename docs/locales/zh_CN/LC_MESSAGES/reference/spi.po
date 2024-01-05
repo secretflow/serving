@@ -1,0 +1,834 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-05 11:07+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../source/reference/spi.md:1
+msgid "SecretFlow-Serving SPI"
+msgstr ""
+
+#: ../../source/reference/spi.md:3
+msgid "Table of Contents"
+msgstr ""
+
+#: ../../source/reference/spi.md:4
+msgid "Services"
+msgstr ""
+
+#: ../../source/reference/spi.md:8
+msgid "[BatchFeatureService](#batchfeatureservice)"
+msgstr ""
+
+#: ../../source/reference/spi.md:22 ../../source/reference/spi.md:95
+msgid "Messages"
+msgstr ""
+
+#: ../../source/reference/spi.md:26
+msgid "[BatchFetchFeatureRequest](#batchfetchfeaturerequest)"
+msgstr ""
+
+#: ../../source/reference/spi.md:27
+msgid "[BatchFetchFeatureResponse](#batchfetchfeatureresponse)"
+msgstr ""
+
+#: ../../source/reference/spi.md:33
+msgid "[Header](#header)"
+msgstr ""
+
+#: ../../source/reference/spi.md:34
+msgid "[Header.DataEntry](#header-dataentry)"
+msgstr ""
+
+#: ../../source/reference/spi.md:35
+msgid "[Status](#status)"
+msgstr ""
+
+#: ../../source/reference/spi.md:44
+msgid "[Feature](#feature)"
+msgstr ""
+
+#: ../../source/reference/spi.md:45
+msgid "[FeatureField](#featurefield)"
+msgstr ""
+
+#: ../../source/reference/spi.md:46
+msgid "[FeatureParam](#featureparam)"
+msgstr ""
+
+#: ../../source/reference/spi.md:47
+msgid "[FeatureValue](#featurevalue)"
+msgstr ""
+
+#: ../../source/reference/spi.md:52 ../../source/reference/spi.md:299
+msgid "Enums"
+msgstr ""
+
+#: ../../source/reference/spi.md:62
+msgid "[ErrorCode](#errorcode)"
+msgstr ""
+
+#: ../../source/reference/spi.md:68
+msgid "[FieldType](#fieldtype)"
+msgstr ""
+
+#: ../../source/reference/spi.md:72
+msgid "[Scalar Value Types](#scalar-value-types)"
+msgstr ""
+
+#: ../../source/reference/spi.md:75
+msgid "{#BatchFeatureService}"
+msgstr ""
+
+#: ../../source/reference/spi.md:76
+msgid "BatchFeatureService"
+msgstr ""
+
+#: ../../source/reference/spi.md:77
+msgid "BatchFeatureService provides access to fetch features."
+msgstr ""
+
+#: ../../source/reference/spi.md:79
+msgid "BatchFetchFeature"
+msgstr ""
+
+#: ../../source/reference/spi.md:81
+msgid ""
+"**rpc** "
+"BatchFetchFeature([BatchFetchFeatureRequest](#batchfetchfeaturerequest))"
+"     [BatchFetchFeatureResponse](#batchfetchfeatureresponse)"
+msgstr ""
+
+#: ../../source/reference/spi.md:99
+msgid "{#BatchFetchFeatureRequest}"
+msgstr ""
+
+#: ../../source/reference/spi.md:100
+msgid "BatchFetchFeatureRequest"
+msgstr ""
+
+#: ../../source/reference/spi.md:101
+msgid "BatchFetchFeature request containing one or more requests. examples:"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Field"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Description"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "header"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ Header](#header )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Custom data passed by the Predict request's header."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "model_service_id"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ string](#string )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Model service specification."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "party_id"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "The request party id."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "feature_fields"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated secretflow.serving.FeatureField](#featurefield )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Request feature field list"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "param"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ secretflow.serving.FeatureParam](#featureparam )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Custom query paramters for fetch features"
+msgstr ""
+
+#: ../../source/reference/spi.md:144
+msgid "{#BatchFetchFeatureResponse}"
+msgstr ""
+
+#: ../../source/reference/spi.md:145
+msgid "BatchFetchFeatureResponse"
+msgstr ""
+
+#: ../../source/reference/spi.md:146
+msgid ""
+"BatchFetchFeatureResponse response containing one or more responses. "
+"examples:"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Custom data."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "status"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ Status](#status )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "none"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "features"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated secretflow.serving.Feature](#feature )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Should include all the features mentioned in the "
+"BatchFetchFeatureRequest.feature_fields"
+msgstr ""
+
+#: ../../source/reference/spi.md:200
+msgid "{#Header}"
+msgstr ""
+
+#: ../../source/reference/spi.md:201
+msgid "Header"
+msgstr ""
+
+#: ../../source/reference/spi.md:202
+msgid "Header containing custom data"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "data"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[map Header.DataEntry](#header-dataentry )"
+msgstr ""
+
+#: ../../source/reference/spi.md:212
+msgid "{#Header.DataEntry}"
+msgstr ""
+
+#: ../../source/reference/spi.md:213
+msgid "Header.DataEntry"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "key"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "value"
+msgstr ""
+
+#: ../../source/reference/spi.md:225
+msgid "{#Status}"
+msgstr ""
+
+#: ../../source/reference/spi.md:226
+msgid "Status"
+msgstr ""
+
+#: ../../source/reference/spi.md:227
+msgid "Represents the status of spi request"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "code"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"code value reference `ErrorCode` in "
+"secretflow_serving/spis/error_code.proto"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "msg"
+msgstr ""
+
+#: ../../source/reference/spi.md:242
+msgid "{#Feature}"
+msgstr ""
+
+#: ../../source/reference/spi.md:243
+msgid "Feature"
+msgstr ""
+
+#: ../../source/reference/spi.md:244
+msgid "The definition of a feature"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "field"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ FeatureField](#featurefield )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ FeatureValue](#featurevalue )"
+msgstr ""
+
+#: ../../source/reference/spi.md:255
+msgid "{#FeatureField}"
+msgstr ""
+
+#: ../../source/reference/spi.md:256
+msgid "FeatureField"
+msgstr ""
+
+#: ../../source/reference/spi.md:257
+msgid "The definition of a feature field."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "name"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Unique name of the feature"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[ FieldType](#fieldtype )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Field type of the feature"
+msgstr ""
+
+#: ../../source/reference/spi.md:268
+msgid "{#FeatureParam}"
+msgstr ""
+
+#: ../../source/reference/spi.md:269
+msgid "FeatureParam"
+msgstr ""
+
+#: ../../source/reference/spi.md:270
+msgid "The param for fetch features"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "query_datas"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated string](#string )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"The serialized datas for query features. Each one for query one row of "
+"features."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "query_context"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Optional. Represents the common part of the query datas."
+msgstr ""
+
+#: ../../source/reference/spi.md:281
+msgid "{#FeatureValue}"
+msgstr ""
+
+#: ../../source/reference/spi.md:282
+msgid "FeatureValue"
+msgstr ""
+
+#: ../../source/reference/spi.md:283
+msgid "The value of a feature"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "i32s"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "int list"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "i64s"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated int64](#int64 )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "fs"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated float](#float )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "float list"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "ds"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated double](#double )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "ss"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "string list"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "bs"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "[repeated bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "bool list"
+msgstr ""
+
+#: ../../source/reference/spi.md:307
+msgid "ErrorCode"
+msgstr ""
+
+#: ../../source/reference/spi.md:308
+msgid "ONLY for Reference by ResponseHeader It's subset of google.rpc.Code"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Name"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Number"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "OK"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "0"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Not an error; returned on success"
+msgstr ""
+
+#: ../../source/reference/spi.md:315
+msgid ""
+"HTTP Mapping: 200 OK | | INVALID_ARGUMENT | 3 | The client specified an "
+"invalid argument. Note that this differs from `FAILED_PRECONDITION`. "
+"`INVALID_ARGUMENT` indicates arguments that are problematic regardless of"
+" the state of the system (e.g., a malformed file name)."
+msgstr ""
+
+#: ../../source/reference/spi.md:318
+msgid ""
+"HTTP Mapping: 400 Bad Request | | DEADLINE_EXCEEDED | 4 | The deadline "
+"expired before the operation could complete. For operations that change "
+"the state of the system, this error may be returned even if the operation"
+" has completed successfully. For example, a successful response from a "
+"server could have been delayed long enough for the deadline to expire."
+msgstr ""
+
+#: ../../source/reference/spi.md:321
+msgid ""
+"HTTP Mapping: 504 Gateway Timeout | | NOT_FOUND | 5 | Some requested "
+"entity (e.g., file or directory) was not found."
+msgstr ""
+
+#: ../../source/reference/spi.md:324
+msgid ""
+"Note to server developers: if a request is denied for an entire class of "
+"users, such as gradual feature rollout or undocumented whitelist, "
+"`NOT_FOUND` may be used. If a request is denied for some users within a "
+"class of users, such as user-based access control, `PERMISSION_DENIED` "
+"must be used."
+msgstr ""
+
+#: ../../source/reference/spi.md:326
+msgid ""
+"HTTP Mapping: 404 Not Found | | INTERNAL_ERROR | 13 | Internal errors. "
+"This means that some invariants expected by the underlying system have "
+"been broken. This error code is reserved for serious errors."
+msgstr ""
+
+#: ../../source/reference/spi.md:329
+msgid ""
+"HTTP Mapping: 500 Internal Server Error | | UNAUTHENTICATED | 16 | The "
+"request does not have valid authentication credentials for the operation."
+msgstr ""
+
+#: ../../source/reference/spi.md:332
+msgid "HTTP Mapping: 401 Unauthorized |"
+msgstr ""
+
+#: ../../source/reference/spi.md:339
+msgid "FieldType"
+msgstr ""
+
+#: ../../source/reference/spi.md:340
+msgid "Supported feature field type."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "UNKNOWN_FIELD_TYPE"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Placeholder for proto3 default value, do not use it."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_BOOL"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "1"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "BOOL"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_INT32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "2"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "INT32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_INT64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "3"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "INT64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_FLOAT"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "4"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FLOAT"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_DOUBLE"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "5"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "DOUBLE"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "FIELD_STRING"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "6"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "STRING"
+msgstr ""
+
+#: ../../source/reference/spi.md:356
+msgid "Scalar Value Types"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ".proto Type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Notes"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "C++ Type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Java Type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Python Type"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"double\" /></div><a name=\"double\" /> double"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "double"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "float"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"float\" /></div><a name=\"float\" /> float"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"int32\" /></div><a name=\"int32\" /> int32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint32 instead."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "int32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "int"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"int64\" /></div><a name=\"int64\" /> int64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint64 instead."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "int64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "long"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "int/long"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"uint32\" /></div><a name=\"uint32\" /> uint32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Uses variable-length encoding."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "uint32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"uint64\" /></div><a name=\"uint64\" /> uint64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "uint64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"sint32\" /></div><a name=\"sint32\" /> sint32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int32s."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"sint64\" /></div><a name=\"sint64\" /> sint64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int64s."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"fixed32\" /></div><a name=\"fixed32\" /> fixed32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Always four bytes. More efficient than uint32 if values are often greater"
+" than 2^28."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"fixed64\" /></div><a name=\"fixed64\" /> fixed64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid ""
+"Always eight bytes. More efficient than uint64 if values are often "
+"greater than 2^56."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"sfixed32\" /></div><a name=\"sfixed32\" /> sfixed32"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Always four bytes."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"sfixed64\" /></div><a name=\"sfixed64\" /> sfixed64"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "Always eight bytes."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"bool\" /></div><a name=\"bool\" /> bool"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "bool"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "boolean"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"string\" /></div><a name=\"string\" /> string"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "A string must always contain UTF-8 encoded or 7-bit ASCII text."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "string"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "String"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "str/unicode"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "<div><h4 id=\"bytes\" /></div><a name=\"bytes\" /> bytes"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "May contain any arbitrary sequence of bytes."
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "ByteString"
+msgstr ""
+
+#: ../../source/reference/spi.md
+msgid "str"
+msgstr ""

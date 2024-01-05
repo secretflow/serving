@@ -16,15 +16,18 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
+
 SECRETFLOW_GIT = "https://github.com/secretflow"
 
-YACL_COMMIT_ID = "ebcc0a27e5cd511bc5f87e97f5695b0b8d07fc74"
+YACL_COMMIT_ID  = "5feaa30e6a2ab3be5a01a7a4ee3c1613d11386d9"
 
-KUSCIA_COMMIT_ID = "fbc6e69433e6320e896f103f2360b17a3863784c"
+KUSCIA_COMMIT_ID  = "75d37fa346830eb4798ff56fcf919de14a9ef657"
+
 
 def sf_serving_deps():
     _bazel_platform()
     _bazel_rules_pkg()
+    _rules_proto_grpc()
 
     _com_github_nelhage_rules_boost()
     _com_github_facebook_zstd()
@@ -39,6 +42,8 @@ def sf_serving_deps():
     _com_github_jupp0r_prometheus_cpp()
     _org_apache_thrift()
     _org_apache_arrow()
+    _com_github_pybind11_bazel()
+    _com_github_pybind11()
 
     # aws s3
     _com_aws_c_common()
@@ -291,10 +296,43 @@ def _org_apache_arrow():
     maybe(
         http_archive,
         name = "org_apache_arrow",
-        sha256 = "f01b76a42ceb30409e7b1953ef64379297dd0c08502547cae6aaafd2c4a4d92e",
-        strip_prefix = "arrow-apache-arrow-12.0.1",
+        sha256 = "07cdb4da6795487c800526b2865c150ab7d80b8512a31793e6a7147c8ccd270f",
+        strip_prefix = "arrow-apache-arrow-14.0.2",
         build_file = "@sf_serving//bazel:arrow.BUILD",
         urls = [
-            "https://github.com/apache/arrow/archive/refs/tags/apache-arrow-12.0.1.tar.gz",
+            "https://github.com/apache/arrow/archive/refs/tags/apache-arrow-14.0.2.tar.gz",
+        ],
+    )
+
+def _com_github_pybind11_bazel():
+    maybe(
+        http_archive,
+        name = "pybind11_bazel",
+        sha256 = "2d3316d89b581966fc11eab9aa9320276baee95c8233c7a8efc7158623a48de0",
+        strip_prefix = "pybind11_bazel-ff261d2e9190955d0830040b20ea59ab9dbe66c8",
+        urls = [
+            "https://github.com/pybind/pybind11_bazel/archive/ff261d2e9190955d0830040b20ea59ab9dbe66c8.zip",
+        ],
+    )
+
+def _com_github_pybind11():
+    maybe(
+        http_archive,
+        name = "pybind11",
+        build_file = "@pybind11_bazel//:pybind11.BUILD",
+        sha256 = "d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c",
+        strip_prefix = "pybind11-2.11.1",
+        urls = [
+            "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.tar.gz",
+        ],
+    )
+
+def _rules_proto_grpc():
+    http_archive(
+        name = "rules_proto_grpc",
+        sha256 = "928e4205f701b7798ce32f3d2171c1918b363e9a600390a25c876f075f1efc0a",
+        strip_prefix = "rules_proto_grpc-4.4.0",
+        urls = [
+            "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/4.4.0/rules_proto_grpc-4.4.0.tar.gz",
         ],
     )

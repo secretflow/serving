@@ -27,12 +27,13 @@ class MockOpKernel0 : public OpKernel {
   explicit MockOpKernel0(OpKernelOptions opts) : OpKernel(std::move(opts)) {
     auto schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64()),
-                       arrow::field("test_field_1", arrow::float64())});
+                       arrow::field("test_field_1", arrow::float64()),
+                       arrow::field("test_field_2", arrow::float64())});
     input_schema_list_ = {schema};
     output_schema_ = schema;
   }
 
-  void Compute(ComputeContext* ctx) override {}
+  void DoCompute(ComputeContext* ctx) override {}
   void BuildInputSchema() override {}
   void BuildOutputSchema() override {}
 };
@@ -41,14 +42,14 @@ class MockOpKernel1 : public OpKernel {
  public:
   explicit MockOpKernel1(OpKernelOptions opts) : OpKernel(std::move(opts)) {
     auto schema =
-        arrow::schema({arrow::field("test_field_0", arrow::float64()),
-                       arrow::field("test_field_1", arrow::float64())});
+        arrow::schema({arrow::field("test_field_1", arrow::float64()),
+                       arrow::field("test_field_0", arrow::float64())});
     input_schema_list_ = {schema};
     output_schema_ =
         arrow::schema({arrow::field("test_field_a", arrow::float64())});
   }
 
-  void Compute(ComputeContext* ctx) override {}
+  void DoCompute(ComputeContext* ctx) override {}
   void BuildInputSchema() override {}
   void BuildOutputSchema() override {}
 };
@@ -62,7 +63,24 @@ class MockOpKernel2 : public OpKernel {
     output_schema_ = schema;
   }
 
-  void Compute(ComputeContext* ctx) override {}
+  void DoCompute(ComputeContext* ctx) override {}
+  void BuildInputSchema() override {}
+  void BuildOutputSchema() override {}
+};
+
+class MockOpKernel3 : public OpKernel {
+ public:
+  explicit MockOpKernel3(OpKernelOptions opts) : OpKernel(std::move(opts)) {
+    auto schema =
+        arrow::schema({arrow::field("test_field_2", arrow::float64()),
+                       arrow::field("test_field_0", arrow::float64())});
+    auto schema1 =
+        arrow::schema({arrow::field("test_field_a", arrow::float64())});
+    input_schema_list_ = {schema, schema1};
+    output_schema_ = schema1;
+  }
+
+  void DoCompute(ComputeContext* ctx) override {}
   void BuildInputSchema() override {}
   void BuildOutputSchema() override {}
 };
@@ -70,6 +88,7 @@ class MockOpKernel2 : public OpKernel {
 REGISTER_OP_KERNEL(TEST_OP_0, MockOpKernel0);
 REGISTER_OP_KERNEL(TEST_OP_1, MockOpKernel1);
 REGISTER_OP_KERNEL(TEST_OP_2, MockOpKernel2);
+REGISTER_OP_KERNEL(TEST_OP_3, MockOpKernel3);
 REGISTER_OP(TEST_OP_0, "0.0.1", "test_desc")
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
@@ -83,6 +102,12 @@ REGISTER_OP(TEST_OP_2, "0.0.1", "test_desc")
     .Returnable()
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
+    .Output("output", "output_desc");
+REGISTER_OP(TEST_OP_3, "0.0.1", "test_desc")
+    .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .Input("input", "input_desc")
+    .Input("input2", "input_desc")
     .Output("output", "output_desc");
 
 class GraphTest : public ::testing::Test {
@@ -118,7 +143,7 @@ TEST_F(GraphTest, Works) {
     {
       "name": "node_c",
       "op": "TEST_OP_1",
-      "parents": [ "node_b" ],
+      "parents": [ "node_a" ],
       "attr_values": {
         "attr_s": {
           "s": "b"
@@ -127,8 +152,18 @@ TEST_F(GraphTest, Works) {
     },
     {
       "name": "node_d",
+      "op": "TEST_OP_3",
+      "parents": [ "node_b", "node_c"  ],
+      "attr_values": {
+        "attr_s": {
+          "s": "b"
+        },
+      },
+    },
+    {
+      "name": "node_e",
       "op": "TEST_OP_2",
-      "parents": [ "node_c" ],
+      "parents": [ "node_d" ],
       "attr_values": {
         "attr_s": {
           "s": "b"
@@ -139,7 +174,7 @@ TEST_F(GraphTest, Works) {
   "execution_list": [
     {
       "nodes": [
-        "node_a", "node_b"
+        "node_a", "node_b", "node_c", "node_d",
       ],
       "config": {
         "dispatch_type": "DP_ALL"
@@ -147,7 +182,7 @@ TEST_F(GraphTest, Works) {
     },
     {
       "nodes": [
-         "node_c", "node_d"
+         "node_e"
       ],
       "config": {
         "dispatch_type": "DP_ANYONE"
@@ -170,8 +205,10 @@ TEST_F(GraphTest, Works) {
   EXPECT_FALSE(execution_list[0]->IsExit());
   EXPECT_EQ(execution_list[0]->GetEntryNodeNum(), 1);
   EXPECT_EQ(execution_list[0]->GetExitNodeNum(), 1);
-  EXPECT_TRUE(execution_list[0]->IsExitNode("node_b"));
+  EXPECT_FALSE(execution_list[0]->IsExitNode("node_b"));
   EXPECT_FALSE(execution_list[0]->IsExitNode("node_a"));
+  EXPECT_FALSE(execution_list[0]->IsExitNode("node_c"));
+  EXPECT_TRUE(execution_list[0]->IsExitNode("node_d"));
 
   EXPECT_TRUE(execution_list[1]);
   EXPECT_EQ(execution_list[1]->id(), 1);
@@ -179,8 +216,7 @@ TEST_F(GraphTest, Works) {
   EXPECT_TRUE(execution_list[1]->IsExit());
   EXPECT_EQ(execution_list[1]->GetEntryNodeNum(), 1);
   EXPECT_EQ(execution_list[1]->GetExitNodeNum(), 1);
-  EXPECT_TRUE(execution_list[1]->IsExitNode("node_d"));
-  EXPECT_FALSE(execution_list[1]->IsExitNode("node_c"));
+  EXPECT_TRUE(execution_list[1]->IsExitNode("node_e"));
 }
 
 struct ErrorParam {
@@ -452,26 +488,6 @@ INSTANTIATE_TEST_SUITE_P(
           "s": "a"
         },
       },
-    },
-    {
-      "name": "node_b",
-      "op": "TEST_OP_1",
-      "parents": [ "node_a" ],
-      "attr_values": {
-        "attr_s": {
-          "s": "b"
-        },
-      },
-    },
-    {
-      "name": "node_c",
-      "op": "TEST_OP_2",
-      "parents": [ "node_b" ],
-      "attr_values": {
-        "attr_s": {
-          "s": "b"
-        },
-      },
     }
   ],
   "execution_list": [
@@ -481,22 +497,6 @@ INSTANTIATE_TEST_SUITE_P(
       ],
       "config": {
         "dispatch_type": "DP_ALL"
-      }
-    },
-    {
-      "nodes": [
-         "node_b"
-      ],
-      "config": {
-        "dispatch_type": "DP_ANYONE"
-      }
-    },
-    {
-      "nodes": [
-         "node_c"
-      ],
-      "config": {
-        "dispatch_type": "DP_ANYONE"
       }
     }
   ]

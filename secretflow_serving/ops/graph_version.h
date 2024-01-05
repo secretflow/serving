@@ -1,0 +1,14 @@
+#pragma once
+
+// Version upgrade when `GraphDef` changed.
+#define SERVING_GRAPH_MAJOR_VERSION 0
+#define SERVING_GRAPH_MINOR_VERSION 1
+#define SERVING_GRAPH_PATCH_VERSION 0
+
+#define SERVING_STR_HELPER(x) #x
+#define SERVING_STR(x) SERVING_STR_HELPER(x)
+
+#define SERVING_GRAPH_VERSION_STRING                            \
+  SERVING_STR(SERVING_GRAPH_MAJOR_VERSION)                      \
+  "." SERVING_STR(SERVING_GRAPH_MINOR_VERSION) "." SERVING_STR( \
+      SERVING_GRAPH_PATCH_VERSION)

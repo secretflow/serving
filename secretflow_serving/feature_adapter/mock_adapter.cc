@@ -34,16 +34,19 @@ std::shared_ptr<arrow::Array> CreateArray(size_t rows, Fn generator) {
 
 }  // namespace
 
-MockAdapater::MockAdapater(const FeatureSourceConfig& spec,
-                           const std::string& service_id,
-                           const std::string& party_id,
-                           const std::shared_ptr<arrow::Schema>& feature_schema)
+MockAdapter::MockAdapter(
+    const FeatureSourceConfig& spec, const std::string& service_id,
+    const std::string& party_id,
+    const std::shared_ptr<const arrow::Schema>& feature_schema)
     : FeatureAdapter(spec, service_id, party_id, feature_schema) {
   SERVING_ENFORCE(spec_.has_mock_opts(), errors::ErrorCode::INVALID_ARGUMENT,
                   "invalid mock options");
+  mock_type_ = spec_.mock_opts().type() != MockDataType::INVALID_MOCK_DATA_TYPE
+                   ? spec_.mock_opts().type()
+                   : MockDataType::MDT_RANDOM;
 }
 
-void MockAdapater::OnFetchFeature(const Request& request, Response* response) {
+void MockAdapter::OnFetchFeature(const Request& request, Response* response) {
   SERVING_ENFORCE(!request.fs_param->query_datas().empty(),
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "get empty feature service query datas.");
@@ -55,23 +58,86 @@ void MockAdapater::OnFetchFeature(const Request& request, Response* response) {
     std::shared_ptr<arrow::Array> array;
     const auto& f = feature_schema_->field(c);
     if (f->type()->id() == arrow::Type::type::BOOL) {
-      const auto generator = [] { return std::rand() % 2; };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED ? 1 : std::rand() % 2;
+      };
       array = CreateArray<arrow::BooleanBuilder, bool>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::INT8) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : (std::rand() % std::numeric_limits<int8_t>::max());
+      };
+      array = CreateArray<arrow::Int8Builder, int8_t>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::UINT8) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : (std::numeric_limits<uint8_t>::max());
+      };
+      array = CreateArray<arrow::UInt8Builder, uint8_t>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::INT16) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : (std::numeric_limits<int16_t>::max());
+      };
+      array = CreateArray<arrow::Int16Builder, int16_t>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::UINT16) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : (std::numeric_limits<uint16_t>::max());
+      };
+      array = CreateArray<arrow::UInt16Builder, uint16_t>(rows, generator);
     } else if (f->type()->id() == arrow::Type::type::INT32) {
-      const auto generator = [] { return std::rand(); };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED ? 1 : std::rand();
+      };
       array = CreateArray<arrow::Int32Builder, int32_t>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::UINT32) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED ? 1 : std::rand();
+      };
+      array = CreateArray<arrow::UInt32Builder, uint32_t>(rows, generator);
     } else if (f->type()->id() == arrow::Type::type::INT64) {
-      const auto generator = [] { return std::rand() * std::rand(); };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED ? 1 : std::rand();
+      };
       array = CreateArray<arrow::Int64Builder, int64_t>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::UINT64) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED ? 1 : std::rand();
+      };
+      array = CreateArray<arrow::UInt64Builder, uint64_t>(rows, generator);
     } else if (f->type()->id() == arrow::Type::type::FLOAT) {
-      const auto generator = [] { return std::rand() / float(RAND_MAX); };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : ((float)std::rand() / float(RAND_MAX));
+      };
       array = CreateArray<arrow::FloatBuilder, float>(rows, generator);
     } else if (f->type()->id() == arrow::Type::type::DOUBLE) {
-      const auto generator = [] { return std::rand() / double(RAND_MAX); };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? 1
+                   : ((double)std::rand() / (RAND_MAX));
+      };
       array = CreateArray<arrow::DoubleBuilder, double>(rows, generator);
     } else if (f->type()->id() == arrow::Type::type::STRING) {
-      const auto generator = [] { return std::to_string(std::rand()); };
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? "1"
+                   : std::to_string(std::rand());
+      };
       array = CreateArray<arrow::StringBuilder, std::string>(rows, generator);
+    } else if (f->type()->id() == arrow::Type::type::BINARY) {
+      const auto generator = [this] {
+        return mock_type_ == MockDataType::MDT_FIXED
+                   ? "1"
+                   : std::to_string(std::rand());
+      };
+      array = CreateArray<arrow::BinaryBuilder, std::string>(rows, generator);
     } else {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR, "unkown field type {}",
                     f->type()->ToString());
@@ -82,6 +148,6 @@ void MockAdapater::OnFetchFeature(const Request& request, Response* response) {
       MakeRecordBatch(feature_schema_, rows, std::move(arrays));
 }
 
-REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kMockOpts, MockAdapater);
+REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kMockOpts, MockAdapter);
 
 }  // namespace secretflow::serving::feature

@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+load("//bazel:serving.bzl", "serving_cc_binary", "serving_cc_library", "serving_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
 serving_cc_library(
     name = "ops",
     deps = [
+        ":arrow_processing",
         ":dot_product",
         ":merge_y",
     ],
@@ -84,7 +85,7 @@ serving_cc_library(
         ":node",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:op_cc_proto",
-        "@org_apache_arrow//:arrow",
+        "//secretflow_serving/util:arrow_helper",
     ],
 )
 
@@ -134,7 +135,6 @@ serving_cc_library(
         ":op_factory",
         ":op_kernel_factory",
         "//secretflow_serving/core:types",
-        "//secretflow_serving/util:arrow_helper",
         "//secretflow_serving/util:utils",
     ],
     alwayslink = True,
@@ -145,6 +145,16 @@ serving_cc_test(
     srcs = ["dot_product_test.cc"],
     deps = [
         ":dot_product",
+        "//secretflow_serving/util:test_utils",
+    ],
+)
+
+serving_cc_binary(
+    name = "dot_product_benchmark",
+    srcs = ["dot_product_benchmark.cc"],
+    deps = [
+        ":dot_product",
+        "@com_github_google_benchmark//:benchmark_main",
     ],
 )
 
@@ -157,7 +167,6 @@ serving_cc_library(
         ":op_factory",
         ":op_kernel_factory",
         "//secretflow_serving/core:link_func",
-        "//secretflow_serving/util:arrow_helper",
     ],
     alwayslink = True,
 )
@@ -169,4 +178,42 @@ serving_cc_test(
         ":merge_y",
         "//secretflow_serving/util:utils",
     ],
+)
+
+serving_cc_binary(
+    name = "merge_y_benchmark",
+    srcs = ["merge_y_benchmark.cc"],
+    deps = [
+        ":merge_y",
+        "//secretflow_serving/util:utils",
+        "@com_github_google_benchmark//:benchmark_main",
+    ],
+)
+
+serving_cc_library(
+    name = "arrow_processing",
+    srcs = ["arrow_processing.cc"],
+    hdrs = ["arrow_processing.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/protos:compute_trace_cc_proto",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "arrow_processing_test",
+    srcs = ["arrow_processing_test.cc"],
+    deps = [
+        ":arrow_processing",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "graph_version",
+    hdrs = ["graph_version.h"],
 )

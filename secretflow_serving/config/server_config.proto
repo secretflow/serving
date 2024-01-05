@@ -44,4 +44,9 @@ message ServerConfig {
   // Server-level max number of requests processed in parallel
   // Default: 0 (unlimited)
   int32 max_concurrency = 14;
+
+  // Number of pthreads that server runs to execute ops.
+  // If this option <= 0, use default value.
+  // Default: #cpu-cores
+  int32 op_exec_worker_num = 15;
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "secretflow_serving/framework/executable_impl.h"
+#include "secretflow_serving/framework/executable.h"
 
 #include "spdlog/spdlog.h"
 
@@ -20,28 +20,27 @@
 
 namespace secretflow::serving {
 
-ExecutableImpl::ExecutableImpl(std::vector<std::shared_ptr<Executor>> executors)
-    : executors_(std::move(executors)) {
-  SERVING_ENFORCE(!executors_.empty(), errors::ErrorCode::LOGIC_ERROR);
-}
+Executable::Executable(std::vector<std::shared_ptr<Executor>> executors)
+    : executors_(std::move(executors)) {}
 
-void ExecutableImpl::Run(Task& task) {
+void Executable::Run(Task& task) {
   SERVING_ENFORCE(task.id < executors_.size(), errors::ErrorCode::LOGIC_ERROR);
   auto executor = executors_[task.id];
   if (task.features) {
     task.outputs = executor->Run(task.features);
   } else {
     SERVING_ENFORCE(!task.node_inputs->empty(), errors::ErrorCode::LOGIC_ERROR);
-    task.outputs = executor->Run(task.node_inputs);
+    task.outputs = executor->Run(*(task.node_inputs));
   }
 
-  SPDLOG_DEBUG("ExecutableImpl::Run end, task.outputs.size:{}",
+  SPDLOG_DEBUG("Executable::Run end, task.outputs.size:{}",
                task.outputs->size());
 }
 
 const std::shared_ptr<const arrow::Schema>&
-ExecutableImpl::GetInputFeatureSchema() {
+Executable::GetInputFeatureSchema() {
   const auto& schema = executors_.front()->GetInputFeatureSchema();
+
   SERVING_ENFORCE(schema, errors::ErrorCode::LOGIC_ERROR);
   return schema;
 }

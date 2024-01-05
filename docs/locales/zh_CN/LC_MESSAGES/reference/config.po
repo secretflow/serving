@@ -1,0 +1,1084 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-04 16:56+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../source/reference/config.md:1
+msgid "SecretFlow-Serving Config"
+msgstr ""
+
+#: ../../source/reference/config.md:3
+msgid "Table of Contents"
+msgstr ""
+
+#: ../../source/reference/config.md:4
+msgid "Services"
+msgstr ""
+
+#: ../../source/reference/config.md:28 ../../source/reference/config.md:131
+msgid "Messages"
+msgstr ""
+
+#: ../../source/reference/config.md:32
+msgid "[ChannelDesc](#channeldesc)"
+msgstr ""
+
+#: ../../source/reference/config.md:33
+msgid "[ClusterConfig](#clusterconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:34
+msgid "[PartyDesc](#partydesc)"
+msgstr ""
+
+#: ../../source/reference/config.md:40
+msgid "[CsvOptions](#csvoptions)"
+msgstr ""
+
+#: ../../source/reference/config.md:41
+msgid "[FeatureSourceConfig](#featuresourceconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:42
+msgid "[HttpOptions](#httpoptions)"
+msgstr ""
+
+#: ../../source/reference/config.md:43
+msgid "[MockOptions](#mockoptions)"
+msgstr ""
+
+#: ../../source/reference/config.md:49
+msgid "[LoggingConfig](#loggingconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:55
+msgid "[FileSourceMeta](#filesourcemeta)"
+msgstr ""
+
+#: ../../source/reference/config.md:56
+msgid "[ModelConfig](#modelconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:57
+msgid "[OSSSourceMeta](#osssourcemeta)"
+msgstr ""
+
+#: ../../source/reference/config.md:63
+msgid "[ServerConfig](#serverconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:64
+msgid "[ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry)"
+msgstr ""
+
+#: ../../source/reference/config.md:70
+msgid "[ServingConfig](#servingconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:76
+msgid "[TlsConfig](#tlsconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:81 ../../source/reference/config.md:369
+msgid "Enums"
+msgstr ""
+
+#: ../../source/reference/config.md:88
+msgid "[MockDataType](#mockdatatype)"
+msgstr ""
+
+#: ../../source/reference/config.md:94
+msgid "[LogLevel](#loglevel)"
+msgstr ""
+
+#: ../../source/reference/config.md:100
+msgid "[SourceType](#sourcetype)"
+msgstr ""
+
+#: ../../source/reference/config.md:113
+msgid "[Scalar Value Types](#scalar-value-types)"
+msgstr ""
+
+#: ../../source/reference/config.md:135
+msgid "{#ChannelDesc}"
+msgstr ""
+
+#: ../../source/reference/config.md:136
+msgid "ChannelDesc"
+msgstr ""
+
+#: ../../source/reference/config.md:137
+msgid "Description for channels between joined parties"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Field"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Description"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "protocol"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ string](#string )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "rpc_timeout_ms"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Max duration of RPC. -1 means wait indefinitely. Default: 2000 (ms)"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "connect_timeout_ms"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Max duration for a connect. -1 means wait indefinitely. Default: 500 (ms)"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "tls_config"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ TlsConfig](#tlsconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "TLS related config."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "handshake_max_retry_cnt"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"When the server starts, model information from all parties will be "
+"collected. At this time, the remote servers may not have started yet, and"
+" we need to retry. And if we connect gateway,the max waiting time for "
+"each operation will be rpc_timeout_ms + handshake_retry_interval_ms. "
+"Maximum number of retries, default: 60"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "handshake_retry_interval_ms"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "time between retries, default: 5000ms"
+msgstr ""
+
+#: ../../source/reference/config.md:152
+msgid "{#ClusterConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:153
+msgid "ClusterConfig"
+msgstr ""
+
+#: ../../source/reference/config.md:154
+msgid "Runtime config for a serving cluster"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "parties"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[repeated PartyDesc](#partydesc )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "none"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "self_id"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "channel_desc"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ ChannelDesc](#channeldesc )"
+msgstr ""
+
+#: ../../source/reference/config.md:166
+msgid "{#PartyDesc}"
+msgstr ""
+
+#: ../../source/reference/config.md:167
+msgid "PartyDesc"
+msgstr ""
+
+#: ../../source/reference/config.md:168
+msgid "Description for a joined party"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "id"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Unique id of the party"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "address"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "e.g. 127.0.0.1:9001"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "listen_address"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Optional. Address will be used if listen_address is empty."
+msgstr ""
+
+#: ../../source/reference/config.md:182
+msgid "{#CsvOptions}"
+msgstr ""
+
+#: ../../source/reference/config.md:183
+msgid "CsvOptions"
+msgstr ""
+
+#: ../../source/reference/config.md:184
+msgid "Options of a csv feature source."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "file_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Input file path, specifies where to load data Note that this will load "
+"all of the data into memory at once"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "id_name"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Id column name, associated with FeatureParam::query_datas Query datas is "
+"a subset of id column"
+msgstr ""
+
+#: ../../source/reference/config.md:195
+msgid "{#FeatureSourceConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:196
+msgid "FeatureSourceConfig"
+msgstr ""
+
+#: ../../source/reference/config.md:197
+msgid "Config for a feature source"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) options.mock_opts"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ MockOptions](#mockoptions )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) options.http_opts"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ HttpOptions](#httpoptions )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) options.csv_opts"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ CsvOptions](#csvoptions )"
+msgstr ""
+
+#: ../../source/reference/config.md:209
+msgid "{#HttpOptions}"
+msgstr ""
+
+#: ../../source/reference/config.md:210
+msgid "HttpOptions"
+msgstr ""
+
+#: ../../source/reference/config.md:211
+msgid ""
+"Options for a http feature source which should implement the feature "
+"service spi. The defined of spi can be found in "
+"secretflow_serving/spis/batch_feature_service.proto"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "endpoint"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "enable_lb"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Whether to enable round robin load balancer."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "timeout_ms"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Max duration of http request. -1 means wait indefinitely. Default: 1000 "
+"(ms)"
+msgstr ""
+
+#: ../../source/reference/config.md:227
+msgid "{#MockOptions}"
+msgstr ""
+
+#: ../../source/reference/config.md:228
+msgid "MockOptions"
+msgstr ""
+
+#: ../../source/reference/config.md:229
+msgid ""
+"Options for a mock feature source. Mock feature source will generates "
+"values(random or fixed, according to type) for the desired features."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ MockDataType](#mockdatatype )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "default MDT_RANDOM"
+msgstr ""
+
+#: ../../source/reference/config.md:243
+msgid "{#LoggingConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:244
+msgid "LoggingConfig"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "system_log_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "system log default value: \"serving.log\""
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "log_level"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ LogLevel](#loglevel )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "default value: LogLevel.INFO_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "max_log_file_size"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Byte. default value: 500 * 1024 * 1024 (500MB)"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "max_log_file_count"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "default value: 10"
+msgstr ""
+
+#: ../../source/reference/config.md:260
+msgid "{#FileSourceMeta}"
+msgstr ""
+
+#: ../../source/reference/config.md:261
+msgid "FileSourceMeta"
+msgstr ""
+
+#: ../../source/reference/config.md:262
+msgid "empty by design"
+msgstr ""
+
+#: ../../source/reference/config.md:267
+msgid "{#ModelConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:268
+msgid "ModelConfig"
+msgstr ""
+
+#: ../../source/reference/config.md:269
+msgid "Config for serving model"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "model_id"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Unique id of the model package"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "base_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Path used to cache and load model package"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "source_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Represent the path of the model package in the model source"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "source_sha256"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Optional. The expect sha256 of the model package"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "source_type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ SourceType](#sourcetype )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) kind.file_source_meta"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ FileSourceMeta](#filesourcemeta )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) kind.oss_source_meta"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ OSSSourceMeta](#osssourcemeta )"
+msgstr ""
+
+#: ../../source/reference/config.md:285
+msgid "{#OSSSourceMeta}"
+msgstr ""
+
+#: ../../source/reference/config.md:286
+msgid "OSSSourceMeta"
+msgstr ""
+
+#: ../../source/reference/config.md:287
+msgid "Options for a S3 Oss model source"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "access_key"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Bucket access key"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "secret_key"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Bucket secret key"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "virtual_hosted"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Whether to use virtual host mode, "
+"https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "bucket"
+msgstr ""
+
+#: ../../source/reference/config.md:303
+msgid "{#ServerConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:304
+msgid "ServerConfig"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "feature_mapping"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[map ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Optional. Feature name mapping rules. Key: source or predefined feature "
+"name Value: model feature name"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Whether to enable tls for server"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "brpc_builtin_service_port"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Brpc builtin service listen port Default: disable service"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "metrics_exposer_port"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Whether `/metrics` service is enable/disable."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "worker_num"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Number of pthreads that server runs on. If this option <= 0, use default "
+"value. Default: #cpu-cores"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "max_concurrency"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Server-level max number of requests processed in parallel Default: 0 "
+"(unlimited)"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "op_exec_worker_num"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Number of pthreads that server runs to execute ops. If this option <= 0, "
+"use default value. Default: #cpu-cores"
+msgstr ""
+
+#: ../../source/reference/config.md:321
+msgid "{#ServerConfig.FeatureMappingEntry}"
+msgstr ""
+
+#: ../../source/reference/config.md:322
+msgid "ServerConfig.FeatureMappingEntry"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "key"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "value"
+msgstr ""
+
+#: ../../source/reference/config.md:336
+msgid "{#ServingConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:337
+msgid "ServingConfig"
+msgstr ""
+
+#: ../../source/reference/config.md:338
+msgid "Related config of serving"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Unique id of the serving service"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "server_conf"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ ServerConfig](#serverconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "model_conf"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ ModelConfig](#modelconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "cluster_conf"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ ClusterConfig](#clusterconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "feature_source_conf"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ FeatureSourceConfig](#featuresourceconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md:354
+msgid "{#TlsConfig}"
+msgstr ""
+
+#: ../../source/reference/config.md:355
+msgid "TlsConfig"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "certificate_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Certificate file path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "private_key_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Private key file path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "ca_file_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"The trusted CA file to verify the peer's certificate If empty, use the "
+"system default CA files"
+msgstr ""
+
+#: ../../source/reference/config.md:375
+msgid "MockDataType"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Name"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Number"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "INVALID_MOCK_DATA_TYPE"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "0"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Placeholder for proto3 default value, do not use it."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "MDT_RANDOM"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "1"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "random value for each feature"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "MDT_FIXED"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "2"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "fixed value for each feature"
+msgstr ""
+
+#: ../../source/reference/config.md:389
+msgid "LogLevel"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "INVALID_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "DEBUG_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "debug"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "INFO_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "info"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "WARN_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "3"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "warn"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "ERROR_LOG_LEVEL"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "4"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "error"
+msgstr ""
+
+#: ../../source/reference/config.md:405
+msgid "SourceType"
+msgstr ""
+
+#: ../../source/reference/config.md:406
+msgid "Supported model source type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "INVALID_SOURCE_TYPE"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "ST_FILE"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Local filesystem"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "ST_OSS"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "S3 OSS"
+msgstr ""
+
+#: ../../source/reference/config.md:424
+msgid "Scalar Value Types"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ".proto Type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Notes"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "C++ Type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Java Type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Python Type"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"double\" /></div><a name=\"double\" /> double"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "double"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "float"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"float\" /></div><a name=\"float\" /> float"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"int32\" /></div><a name=\"int32\" /> int32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint32 instead."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "int32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "int"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"int64\" /></div><a name=\"int64\" /> int64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint64 instead."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "int64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "long"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "int/long"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"uint32\" /></div><a name=\"uint32\" /> uint32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Uses variable-length encoding."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "uint32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"uint64\" /></div><a name=\"uint64\" /> uint64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "uint64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"sint32\" /></div><a name=\"sint32\" /> sint32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int32s."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"sint64\" /></div><a name=\"sint64\" /> sint64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int64s."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"fixed32\" /></div><a name=\"fixed32\" /> fixed32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Always four bytes. More efficient than uint32 if values are often greater"
+" than 2^28."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"fixed64\" /></div><a name=\"fixed64\" /> fixed64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Always eight bytes. More efficient than uint64 if values are often "
+"greater than 2^56."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"sfixed32\" /></div><a name=\"sfixed32\" /> sfixed32"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Always four bytes."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"sfixed64\" /></div><a name=\"sfixed64\" /> sfixed64"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Always eight bytes."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"bool\" /></div><a name=\"bool\" /> bool"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "bool"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "boolean"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"string\" /></div><a name=\"string\" /> string"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "A string must always contain UTF-8 encoded or 7-bit ASCII text."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "string"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "String"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "str/unicode"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "<div><h4 id=\"bytes\" /></div><a name=\"bytes\" /> bytes"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "May contain any arbitrary sequence of bytes."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "ByteString"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "str"
+msgstr ""

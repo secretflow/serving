@@ -32,11 +32,21 @@ TEST_F(MockAdapterTest, Work) {
   FeatureSourceConfig config;
   (void)config.mutable_mock_opts();
 
-  auto model_schema = arrow::schema(
-      {arrow::field("x1", arrow::int32()), arrow::field("x2", arrow::int64()),
-       arrow::field("x3", arrow::float32()),
-       arrow::field("x4", arrow::float64()), arrow::field("x5", arrow::utf8()),
-       arrow::field("x6", arrow::boolean())});
+  auto model_schema = arrow::schema({
+      arrow::field("x1", arrow::int8()),
+      arrow::field("x2", arrow::uint8()),
+      arrow::field("x3", arrow::int16()),
+      arrow::field("x4", arrow::uint16()),
+      arrow::field("x5", arrow::int32()),
+      arrow::field("x6", arrow::uint32()),
+      arrow::field("x7", arrow::int64()),
+      arrow::field("x8", arrow::uint64()),
+      arrow::field("x9", arrow::float32()),
+      arrow::field("x10", arrow::float64()),
+      arrow::field("x11", arrow::boolean()),
+      arrow::field("x12", arrow::utf8()),
+      arrow::field("x13", arrow::binary()),
+  });
 
   auto adapter = FeatureAdapterFactory::GetInstance()->Create(
       config, kTestModelServiceId, kTestPartyId, model_schema);

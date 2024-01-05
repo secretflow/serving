@@ -23,7 +23,7 @@ class DotProduct : public OpKernel {
  public:
   explicit DotProduct(OpKernelOptions opts);
 
-  void Compute(ComputeContext* ctx) override;
+  void DoCompute(ComputeContext* ctx) override;
 
  protected:
   void BuildInputSchema() override;
@@ -32,6 +32,7 @@ class DotProduct : public OpKernel {
 
  private:
   std::vector<std::string> feature_name_list_;
+  std::vector<std::string> feature_type_list_;
 
   std::string output_col_name_;
 

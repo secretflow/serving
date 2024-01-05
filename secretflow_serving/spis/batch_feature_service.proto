@@ -29,6 +29,35 @@ service BatchFeatureService {
 }
 
 // BatchFetchFeature request containing one or more requests.
+// examples:
+// ```json
+//   {
+//     "header": {
+//       "data": {
+//         "custom_str": "id_12345"
+//       },
+//     },
+//     "model_service_id": "test_service_id",
+//     "party_id": "alice",
+//     "feature_fields": [
+//       {
+//         "name": "f1",
+//         "type": 2
+//       },
+//       {
+//         "name": "f2",
+//         "type": 4
+//       }
+//     ]
+//     "param": {
+//       "query_datas": [
+//         "x1",
+//         "x2"
+//       ],
+//       "query_context": "context_x"
+//     }
+//   }
+// ```
 message BatchFetchFeatureRequest {
   // Custom data passed by the Predict request's header.
   Header header = 1;
@@ -47,6 +76,46 @@ message BatchFetchFeatureRequest {
 }
 
 // BatchFetchFeatureResponse response containing one or more responses.
+// examples:
+// ```json
+//   {
+//     "header": {
+//       "data": {
+//         "custom_value": "asdfvb"
+//       }
+//     },
+//     "status": {
+//       "code": 0,
+//       "msg": "success."
+//     },
+//     "features": [
+//       {
+//         "field": {
+//           "name": "f1",
+//           "type": 2
+//         },
+//         "value": {
+//           "i32s": [
+//             123,
+//             234
+//           ]
+//         }
+//       },
+//       {
+//         "field": {
+//           "name": "f2",
+//           "type": 4
+//         },
+//         "value": {
+//           "fs": [
+//             0.123,
+//             1.234
+//           ]
+//         }
+//       }
+//     ]
+//   }
+// ```
 message BatchFetchFeatureResponse {
   // Custom data.
   Header header = 1;

@@ -23,10 +23,10 @@
 
 namespace secretflow::serving::feature {
 
-FileAdapater::FileAdapater(const FeatureSourceConfig& spec,
-                           const std::string& service_id,
-                           const std::string& party_id,
-                           const std::shared_ptr<arrow::Schema>& feature_schema)
+FileAdapter::FileAdapter(
+    const FeatureSourceConfig& spec, const std::string& service_id,
+    const std::string& party_id,
+    const std::shared_ptr<const arrow::Schema>& feature_schema)
     : FeatureAdapter(spec, service_id, party_id, feature_schema) {
   SERVING_ENFORCE(spec_.has_csv_opts(), errors::ErrorCode::INVALID_ARGUMENT,
                   "invalid mock options");
@@ -60,7 +60,7 @@ FileAdapater::FileAdapater(const FeatureSourceConfig& spec,
   SERVING_GET_ARROW_RESULT(csv_reader->Read(), csv_table_);
 }
 
-void FileAdapater::OnFetchFeature(const Request& request, Response* response) {
+void FileAdapter::OnFetchFeature(const Request& request, Response* response) {
   // query data is unique
   const auto& query_datas = request.fs_param->query_datas();
   std::set<std::string> query_data_set(query_datas.begin(), query_datas.end());
@@ -106,6 +106,6 @@ void FileAdapater::OnFetchFeature(const Request& request, Response* response) {
                            response->features);
 }
 
-REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kCsvOpts, FileAdapater);
+REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kCsvOpts, FileAdapter);
 
 }  // namespace secretflow::serving::feature

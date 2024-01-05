@@ -21,13 +21,13 @@
 
 namespace secretflow::serving::feature {
 
-class FileAdapater : public FeatureAdapter {
+class FileAdapter : public FeatureAdapter {
  public:
-  FileAdapater(const FeatureSourceConfig& spec, const std::string& service_id,
-               const std::string& party_id,
-               const std::shared_ptr<arrow::Schema>& feature_schema);
+  FileAdapter(const FeatureSourceConfig& spec, const std::string& service_id,
+              const std::string& party_id,
+              const std::shared_ptr<const arrow::Schema>& feature_schema);
 
-  ~FileAdapater() = default;
+  ~FileAdapter() override = default;
 
  protected:
   void OnFetchFeature(const Request& request, Response* response) override;

@@ -49,4 +49,20 @@ T GetNodeAttr(const NodeDef& node_def, const std::string& attr_name) {
   return value;
 }
 
+bool GetNodeBytesAttr(const NodeDef& node_def, const std::string& attr_name,
+                      std::string* value);
+bool GetNodeBytesAttr(const NodeDef& node_def, const std::string& attr_name,
+                      std::vector<std::string>* value);
+
+inline std::string GetNodeBytesAttr(const NodeDef& node_def,
+                                    const std::string& attr_name) {
+  std::string value;
+  if (!GetNodeBytesAttr(node_def, attr_name, &value)) {
+    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                  "can not get attr:{} from node:{}, op:{}", attr_name,
+                  node_def.name(), node_def.op());
+  }
+  return value;
+}
+
 }  // namespace secretflow::serving::op

@@ -18,11 +18,16 @@ syntax = "proto3";
 package secretflow.serving;
 
 enum LogLevel {
+  // Placeholder for proto3 default value, do not use it.
   INVALID_LOG_LEVEL = 0;
 
+  // debug
   DEBUG_LOG_LEVEL = 1;
+  // info
   INFO_LOG_LEVEL = 2;
+  // warn
   WARN_LOG_LEVEL = 3;
+  // error
   ERROR_LOG_LEVEL = 4;
 }
 

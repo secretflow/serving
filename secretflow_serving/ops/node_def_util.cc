@@ -30,7 +30,7 @@ bool GetAttrValue(const NodeDef& node_def, const std::string& attr_name,
 
 }  // namespace
 
-#define DEFINE_GETT_LIST_ATTR(TYPE, FIELD_LIST, CAST)                     \
+#define DEFINE_GET_LIST_ATTR(TYPE, FIELD_LIST, CAST)                      \
   bool GetNodeAttr(const NodeDef& node_def, const std::string& attr_name, \
                    std::vector<TYPE>* value) {                            \
     AttrValue attr_value;                                                 \
@@ -67,7 +67,7 @@ bool GetAttrValue(const NodeDef& node_def, const std::string& attr_name,
     *value = CAST;                                                        \
     return true;                                                          \
   }                                                                       \
-  DEFINE_GETT_LIST_ATTR(TYPE, FIELD##s, CAST)
+  DEFINE_GET_LIST_ATTR(TYPE, FIELD##s, CAST)
 
 DEFINE_GET_ATTR(std::string, s, v)
 DEFINE_GET_ATTR(int64_t, i64, v)
@@ -76,5 +76,40 @@ DEFINE_GET_ATTR(int32_t, i32, v)
 DEFINE_GET_ATTR(double, d, v)
 DEFINE_GET_ATTR(bool, b, v)
 #undef DEFINE_GET_ATTR
+
+bool GetNodeBytesAttr(const NodeDef& node_def, const std::string& attr_name,
+                      std::string* value) {
+  AttrValue attr_value;
+  if (!GetAttrValue(node_def, attr_name, &attr_value)) {
+    return false;
+  }
+  SERVING_ENFORCE(
+      attr_value.has_by(), errors::ErrorCode::LOGIC_ERROR,
+      "attr_value({}) does not have expected type(bytes) value, node: {}",
+      attr_name, node_def.name());
+  *value = attr_value.by();
+  return true;
+}
+
+bool GetNodeBytesAttr(const NodeDef& node_def, const std::string& attr_name,
+                      std::vector<std::string>* value) {
+  AttrValue attr_value;
+  if (!GetAttrValue(node_def, attr_name, &attr_value)) {
+    return false;
+  }
+  SERVING_ENFORCE(
+      attr_value.has_by(), errors::ErrorCode::LOGIC_ERROR,
+      "attr_value({}) does not have expected type(bytes) value, node: {}",
+      attr_name, node_def.name());
+  SERVING_ENFORCE(!attr_value.bys().data().empty(),
+                  errors::ErrorCode::INVALID_ARGUMENT,
+                  "attr_value({}) type(BytesList) has empty value, node: {}",
+                  attr_name, node_def.name());
+  value->reserve(attr_value.bys().data().size());
+  for (const auto& v : attr_value.bys().data()) {
+    value->emplace_back(v);
+  }
+  return true;
+}
 
 }  // namespace secretflow::serving::op

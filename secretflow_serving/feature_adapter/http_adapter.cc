@@ -29,7 +29,7 @@ namespace secretflow::serving::feature {
 
 namespace {
 
-const size_t kConnectTimoutMs = 500;
+const size_t kConnectTimeoutMs = 500;
 
 const size_t kTimeoutMs = 1000;
 
@@ -59,7 +59,7 @@ errors::ErrorCode MappingErrorCode(int fs_code) {
 HttpFeatureAdapter::HttpFeatureAdapter(
     const FeatureSourceConfig& spec, const std::string& service_id,
     const std::string& party_id,
-    const std::shared_ptr<arrow::Schema>& feature_schema)
+    const std::shared_ptr<const arrow::Schema>& feature_schema)
     : FeatureAdapter(spec, service_id, party_id, feature_schema) {
   SERVING_ENFORCE(spec_.has_http_opts(), errors::ErrorCode::INVALID_ARGUMENT,
                   "invalid http options");
@@ -81,7 +81,7 @@ HttpFeatureAdapter::HttpFeatureAdapter(
       http_opts.endpoint(), "http", http_opts.enable_lb(),
       http_opts.timeout_ms() > 0 ? http_opts.timeout_ms() : kTimeoutMs,
       http_opts.connect_timeout_ms() > 0 ? http_opts.connect_timeout_ms()
-                                         : kConnectTimoutMs,
+                                         : kConnectTimeoutMs,
       http_opts.has_tls_config() ? &http_opts.tls_config() : nullptr);
 }
 
@@ -121,7 +121,7 @@ std::string HttpFeatureAdapter::SerializeRequest(const Request& request) {
   auto status = google::protobuf::util::MessageToJsonString(batch_request,
                                                             &json_str, options);
   if (!status.ok()) {
-    SERVING_THROW(errors::ErrorCode::SERIALIZE_FAILD,
+    SERVING_THROW(errors::ErrorCode::SERIALIZE_FAILED,
                   "serialize fetch feature request failed: {}",
                   status.ToString());
   }
@@ -134,7 +134,7 @@ void HttpFeatureAdapter::DeserializeResponse(const std::string& res_context,
   spis::BatchFetchFeatureResponse batch_response;
   auto status = ::google::protobuf::util::JsonStringToMessage(res_context,
                                                               &batch_response);
-  SERVING_ENFORCE(status.ok(), errors::ErrorCode::DESERIALIZE_FAILD,
+  SERVING_ENFORCE(status.ok(), errors::ErrorCode::DESERIALIZE_FAILED,
                   "deserialize response context({}) failed: {}", res_context,
                   status.ToString());
   SERVING_ENFORCE(batch_response.status().code() == spis::ErrorCode::OK,
@@ -147,7 +147,8 @@ void HttpFeatureAdapter::DeserializeResponse(const std::string& res_context,
 
   response->header->mutable_data()->swap(
       *batch_response.mutable_header()->mutable_data());
-  response->features = FeaturesToTable(batch_response.features());
+  response->features =
+      FeaturesToTable(batch_response.features(), feature_schema_);
 }
 
 REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kHttpOpts,

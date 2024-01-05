@@ -19,21 +19,24 @@
 
 #include "secretflow_serving/feature_adapter/feature_adapter_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/thread_pool.h"
 
 namespace secretflow::serving {
 
 ExecutionCore::ExecutionCore(Options opts)
     : opts_(std::move(opts)),
-      stats_({{"handler", "ExecutionCore"},
-              {"service_id", opts_.id},
-              {"party_id", opts_.party_id}}) {
+      stats_({{"handler", "ExecutionCore"}, {"party_id", opts_.party_id}}) {
   SERVING_ENFORCE(!opts_.id.empty(), errors::ErrorCode::INVALID_ARGUMENT);
   SERVING_ENFORCE(!opts_.party_id.empty(), errors::ErrorCode::INVALID_ARGUMENT);
   SERVING_ENFORCE(opts_.executable, errors::ErrorCode::INVALID_ARGUMENT);
+  SERVING_ENFORCE(opts_.op_exec_workers_num > 0,
+                  errors::ErrorCode::INVALID_ARGUMENT);
+
+  ThreadPool::GetInstance()->Start(opts_.op_exec_workers_num);
 
   // key: model input feature name
   // value: source or predefined feature name
-  std::map<std::string, std::string> model_feature_mapping;
+  std::unordered_map<std::string, std::string> model_feature_mapping;
   valid_feature_mapping_flag_ = false;
   if (opts_.feature_mapping.has_value()) {
     for (const auto& pair : opts_.feature_mapping.value()) {
@@ -47,10 +50,9 @@ ExecutionCore::ExecutionCore(Options opts)
     }
   }
 
-  std::shared_ptr<arrow::Schema> source_schema;
   const auto& model_input_schema = opts_.executable->GetInputFeatureSchema();
   if (model_feature_mapping.empty()) {
-    source_schema = arrow::schema(model_input_schema->fields());
+    source_schema_ = model_input_schema;
   } else {
     arrow::SchemaBuilder builder;
     int num_fields = model_input_schema->num_fields();
@@ -63,14 +65,14 @@ ExecutionCore::ExecutionCore(Options opts)
       SERVING_CHECK_ARROW_STATUS(
           builder.AddField(arrow::field(iter->second, f->type())));
     }
-    SERVING_GET_ARROW_RESULT(builder.Finish(), source_schema);
+    SERVING_GET_ARROW_RESULT(builder.Finish(), source_schema_);
   }
 
   if (opts_.feature_source_config.has_value()) {
-    SPDLOG_INFO("create feature adpater, type:{}",
+    SPDLOG_INFO("create feature adapter, type:{}",
                 static_cast<int>(opts_.feature_source_config->options_case()));
-    feature_adapater_ = feature::FeatureAdapterFactory::GetInstance()->Create(
-        *opts_.feature_source_config, opts_.id, opts_.party_id, source_schema);
+    feature_adapter_ = feature::FeatureAdapterFactory::GetInstance()->Create(
+        *opts_.feature_source_config, opts_.id, opts_.party_id, source_schema_);
   }
 }
 
@@ -81,7 +83,7 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
   try {
     SERVING_ENFORCE(request->service_spec().id() == opts_.id,
                     errors::ErrorCode::INVALID_ARGUMENT,
-                    "invalid service sepc id: {}",
+                    "invalid service spec id: {}",
                     request->service_spec().id());
     response->mutable_service_spec()->CopyFrom(request->service_spec());
 
@@ -102,7 +104,8 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
                       "get empty predefined features.");
       SERVING_ENFORCE(request->task().nodes().empty(),
                       errors::ErrorCode::LOGIC_ERROR);
-      features = FeaturesToTable(request->feature_source().predefineds());
+      features = FeaturesToTable(request->feature_source().predefineds(),
+                                 source_schema_);
     }
     features = ApplyFeatureMappingRule(features);
 
@@ -110,8 +113,8 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     Executable::Task task;
     task.id = request->task().execution_id();
     task.features = features;
-    task.node_inputs = std::make_shared<
-        std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>();
+    task.node_inputs = std::make_shared<std::unordered_map<
+        std::string, std::shared_ptr<op::OpComputeInputs>>>();
     for (const auto& n : request->task().nodes()) {
       auto compute_inputs = std::make_shared<op::OpComputeInputs>();
       for (const auto& io : n.ios()) {
@@ -125,11 +128,10 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     }
     opts_.executable->Run(task);
 
-    for (size_t i = 0; i < task.outputs->size(); ++i) {
-      auto& output = task.outputs->at(i);
-      auto node_io = response->mutable_result()->add_nodes();
+    for (auto& output : *task.outputs) {
+      auto* node_io = response->mutable_result()->add_nodes();
       node_io->set_name(std::move(output.node_name));
-      auto io_data = node_io->add_ios();
+      auto* io_data = node_io->add_ios();
       io_data->add_datas(SerializeRecordBatch(output.table));
     }
     response->mutable_status()->set_code(errors::ErrorCode::OK);
@@ -145,30 +147,36 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
   }
   timer.Pause();
 
-  RecordMetrics(*request, *response, timer.CountMs());
+  RecordMetrics(*request, *response, timer.CountMs(), "Execute");
 
   SPDLOG_DEBUG("execute end, response: {}", response->ShortDebugString());
 }
 
 void ExecutionCore::RecordMetrics(const apis::ExecuteRequest& request,
                                   const apis::ExecuteResponse& response,
-                                  double duration_ms) {
-  std::map<std::string, std::string> labels = {
-      {"code", std::to_string(response.status().code())},
-      {"requester_id", request.requester_id()},
-      {"feature_source_type",
-       FeatureSourceType_Name(request.feature_source().type())}};
-  stats_.execute_request_counter_family.Add(::prometheus::Labels(labels))
+                                  double duration_ms,
+                                  const std::string& action) {
+  stats_.execute_request_counter_family
+      .Add(::prometheus::Labels(
+          {{"service_id", request.service_spec().id()},
+           {"action", action},
+           {"code", std::to_string(response.status().code())},
+           {"requester_id", request.requester_id()},
+           {"feature_source_type",
+            FeatureSourceType_Name(request.feature_source().type())}}))
       .Increment();
-  stats_.execute_request_totol_duration_family.Add(::prometheus::Labels(labels))
-      .Increment(duration_ms);
-  stats_.execute_request_duration_summary.Observe(duration_ms);
+  stats_.execute_request_duration_summary_family
+      .Add(::prometheus::Labels({{"service_id", request.service_spec().id()},
+                                 {"action", action}}),
+           ::prometheus::Summary::Quantiles(
+               {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))
+      .Observe(duration_ms);
 }
 
 std::shared_ptr<arrow::RecordBatch> ExecutionCore::BatchFetchFeatures(
     const apis::ExecuteRequest* request,
     apis::ExecuteResponse* response) const {
-  SERVING_ENFORCE(feature_adapater_, errors::ErrorCode::INVALID_ARGUMENT,
+  SERVING_ENFORCE(feature_adapter_, errors::ErrorCode::INVALID_ARGUMENT,
                   "feature source is not set, please check config.");
 
   yacl::ElapsedTimer timer;
@@ -178,11 +186,15 @@ std::shared_ptr<arrow::RecordBatch> ExecutionCore::BatchFetchFeatures(
     fa_request.fs_param = &request->feature_source().fs_param();
     feature::FeatureAdapter::Response fa_response;
     fa_response.header = response->mutable_header();
-    feature_adapater_->FetchFeature(fa_request, &fa_response);
+    feature_adapter_->FetchFeature(fa_request, &fa_response);
 
+    RecordBatchFeatureMetrics(request->service_spec().id(),
+                              request->requester_id(), errors::ErrorCode::OK,
+                              timer.CountMs());
     return fa_response.features;
   } catch (Exception& e) {
-    RecordBatchFeatureMetrics(request->requester_id(), e.code(),
+    RecordBatchFeatureMetrics(request->service_spec().id(),
+                              request->requester_id(), e.code(),
                               timer.CountMs());
     throw e;
   }
@@ -194,7 +206,7 @@ std::shared_ptr<arrow::RecordBatch> ExecutionCore::ApplyFeatureMappingRule(
     // no need mapping
     return features;
   }
-  auto& feature_mapping = opts_.feature_mapping.value();
+  const auto& feature_mapping = opts_.feature_mapping.value();
 
   int num_cols = features->num_columns();
   const auto& old_schema = features->schema();
@@ -214,16 +226,22 @@ std::shared_ptr<arrow::RecordBatch> ExecutionCore::ApplyFeatureMappingRule(
   return MakeRecordBatch(schema, features->num_rows(), features->columns());
 }
 
-void ExecutionCore::RecordBatchFeatureMetrics(const std::string& requester_id,
+void ExecutionCore::RecordBatchFeatureMetrics(const std::string& service_id,
+                                              const std::string& requester_id,
                                               int code,
                                               double duration_ms) const {
-  std::map<std::string, std::string> labels = {{"requester_id", requester_id},
-                                               {"code", std::to_string(code)}};
-  stats_.fetch_feature_counter_family.Add(::prometheus::Labels(labels))
+  stats_.fetch_feature_counter_family
+      .Add(::prometheus::Labels({{"service_id", service_id},
+                                 {"action", "FetchFeature"},
+                                 {"code", std::to_string(code)},
+                                 {"requester_id", requester_id}}))
       .Increment();
-  stats_.fetch_feature_total_duration_family.Add(::prometheus::Labels(labels))
-      .Increment(duration_ms);
-  stats_.fetch_feature_duration_summary.Observe(duration_ms);
+  stats_.fetch_feature_duration_summary_family
+      .Add(::prometheus::Labels(
+               {{"service_id", service_id}, {"action", "FetchFeature"}}),
+           ::prometheus::Summary::Quantiles(
+               {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))
+      .Observe(duration_ms);
 }
 
 ExecutionCore::Stats::Stats(
@@ -236,34 +254,17 @@ ExecutionCore::Stats::Stats(
                     "this ExecutionCore.")
               .Labels(labels)
               .Register(*registry)),
-      execute_request_totol_duration_family(
-          ::prometheus::BuildCounter()
-              .Name("execution_core_request_total_duration_family")
-              .Help("total time to process the request in milliseconds")
-              .Labels(labels)
-              .Register(*registry)),
       execute_request_duration_summary_family(
           ::prometheus::BuildSummary()
               .Name("execution_core_request_duration_family")
               .Help("prediction service api request duration in milliseconds")
               .Labels(labels)
               .Register(*registry)),
-      execute_request_duration_summary(
-          execute_request_duration_summary_family.Add(
-              ::prometheus::Labels(),
-              ::prometheus::Summary::Quantiles(
-                  {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))),
       fetch_feature_counter_family(
           ::prometheus::BuildCounter()
               .Name("fetch_feature_counter_family")
-              .Help("How many times to fetch remote features sevice by "
+              .Help("How many times to fetch remote features service by "
                     "this ExecutionCore.")
-              .Labels(labels)
-              .Register(*registry)),
-      fetch_feature_total_duration_family(
-          ::prometheus::BuildCounter()
-              .Name("fetch_feature_total_duration_family")
-              .Help("total time of fetching remote features in milliseconds")
               .Labels(labels)
               .Register(*registry)),
       fetch_feature_duration_summary_family(
@@ -271,10 +272,6 @@ ExecutionCore::Stats::Stats(
               .Name("fetch_feature_duration_family")
               .Help("durations of fetching remote features in milliseconds")
               .Labels(labels)
-              .Register(*registry)),
-      fetch_feature_duration_summary(fetch_feature_duration_summary_family.Add(
-          ::prometheus::Labels(),
-          ::prometheus::Summary::Quantiles(
-              {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))) {}
+              .Register(*registry)) {}
 
 }  // namespace secretflow::serving

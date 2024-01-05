@@ -1,0 +1,232 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-04 16:56+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../source/topics/deployment/deployment.rst:3
+msgid "How to deployment SecretFlow-Serving"
+msgstr "如何部署 SecretFlow-Serving"
+
+#: ../../source/topics/deployment/deployment.rst:5
+msgid ""
+"This document describes how to deploy SecretFlow-Serving with docker, "
+"it's basically same with :doc:`/intro/tutorial`, but deployed in multi-"
+"machine."
+msgstr ""
+"此文档说明了如何通过 docker 部署 SecretFlow-Serving，本文档的内容类似 :doc:`/intro/tutorial` "
+"的内容但 SecretFlow-Serving 将会使用多机进行部署。"
+
+#: ../../source/topics/deployment/deployment.rst:7
+msgid ""
+"Before start this doc, we assume that the reader has some experience "
+"using the docker-compose utility. If you are new to Docker Compose, "
+"please consider reviewing the `official Docker Compose overview "
+"<https://docs.docker.com/compose/>`_, or checking out the `Getting "
+"Started guide <https://docs.docker.com/compose/gettingstarted/>`_."
+msgstr ""
+"在开始之前，我们假设读者具有使用 docker-compose 的相关经验。如果您没有相关经验，可以考虑参考 `official Docker "
+"Compose overview <https://docs.docker.com/compose/>`_，或参考 `Getting "
+"Started guide <https://docs.docker.com/compose/gettingstarted/>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:10
+msgid "Deployment Diagram"
+msgstr "部署图"
+
+#: ../../source/topics/deployment/deployment.rst:12
+msgid ""
+"The deployment diagram of the SecretFlow-Serving system that we plan to "
+"deploy is shown as the following figure, it involves a total of two "
+"party, including two parties named ``Alice`` and ``Bob``. We use two "
+"machines to simulate different parties."
+msgstr ""
+"SecretFlow-Serving系统的部署图如下所示，涉及到总共两个参与方，包括名为 ``Alice`` 和 ``Bob`` "
+"的两个参与方。这里使用两台计算机来模拟不同的参与方。"
+
+#: ../../source/topics/deployment/deployment.rst:17
+msgid ""
+"The SecretFlow-Serving is served through the HTTP protocol. It is "
+"recommended to use HTTPS instead in production environments. Please check"
+" :ref:`TLS Configuration <TlsConfig>` for details."
+msgstr ""
+"本示例的SecretFlow-Serving 通过 HTTP 协议提供服务。然而对于生产环境，建议使用 HTTPS 协议来代替。请查看 "
+":ref:`TLS 配置 <TlsConfig>` 获取详细信息。"
+
+#: ../../source/topics/deployment/deployment.rst:20
+msgid "Step 1: Deploy SecretFlow-Serving"
+msgstr "步骤1：部署 SecretFlow-Serving"
+
+#: ../../source/topics/deployment/deployment.rst:22
+msgid ""
+"Here we present how to deploy serving in party ``Alice``, it's same with "
+"party ``Bob``."
+msgstr "这里我们会展示 ``Alice`` 如何部署 serving ，对于 ``Bob`` 流程基本类似。"
+
+#: ../../source/topics/deployment/deployment.rst:25
+msgid "1.1 Create a Workspace"
+msgstr "1.1 创建工作空间"
+
+#: ../../source/topics/deployment/deployment.rst:32
+msgid ""
+"Here, we use the model file from the \"examples\" directory as a "
+"demonstration and place it in the \"serving\" directory. Please replace "
+"the following path with the actual path according to your situation."
+msgstr ""
+"我们这里使用 \"examples\" 目录下的模型包作为示例文件然后将其放置在 \"serving\" "
+"目录下，请根据您的实际情况替换下面命令中的路径地址。"
+
+#: ../../source/topics/deployment/deployment.rst:41
+msgid "For ``Bob`` should use model file `serving/examples/bob/glm-test.tar.gz`."
+msgstr "对 ``Bob`` 来说可以使用 `serving/examples/bob/glm-test.tar.gz` 模型包。"
+
+#: ../../source/topics/deployment/deployment.rst:45
+msgid "1.2 Create Serving config file"
+msgstr "1.2 创建 Serving 配置文件"
+
+#: ../../source/topics/deployment/deployment.rst:47
+msgid ""
+"Create a file called ``serving.config`` in your workspace and paste the "
+"following code in:"
+msgstr "在您的工作空间目录下创建一个名为 ``serving.config`` 的文件，并将下面的内容添加到其的内容中："
+
+#: ../../source/topics/deployment/deployment.rst:92
+msgid "See :ref:`Serving Config <ServingConfig>` for more config information"
+msgstr "请参考 :ref:`Serving Config <ServingConfig>` 来获取更多信息。"
+
+#: ../../source/topics/deployment/deployment.rst:96
+msgid ""
+"The above configuration is referenced from `alice-serving-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_."
+msgstr ""
+"以上配置内容参考自 `alice-serving-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:98
+msgid ""
+"For ``Bob``, you should refer to `bob-serving-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_"
+" ."
+msgstr ""
+"对于 ``Bob`` ，可以参考 `bob-serving-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:102
+msgid "1.3 Create logging config file"
+msgstr "1.3 创建 logging 配置文件"
+
+#: ../../source/topics/deployment/deployment.rst:104
+msgid ""
+"Create a file called ``logging.config`` in your workspace and paste the "
+"following code in:"
+msgstr "在您的工作空间目录下创建一个名为 ``logging.config`` 的文件，并将下面的内容添加到其的内容中："
+
+#: ../../source/topics/deployment/deployment.rst:115
+msgid ""
+"See :ref:`Logging Config <LoggingConfig>` for more logging config "
+"information."
+msgstr ""
+"请参考 :ref:`Logging Config  <LoggingConfig>` 获得更多关于 logging "
+"配置的信息。"
+
+#: ../../source/topics/deployment/deployment.rst:119
+msgid ""
+"The above configuration is referenced from `alice-logging-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/logging.config>`_."
+msgstr ""
+"以上配置内容参考自 `alice-logging-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/logging.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:121
+msgid ""
+"For ``Bob``, you should refer to `bob-logging-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_"
+" ."
+msgstr ""
+"对于 ``Bob`` ，可以参考 `bob-logging-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:125
+msgid "1.4 Create docker-compose file"
+msgstr "1.4 创建 docker-compose 文件"
+
+#: ../../source/topics/deployment/deployment.rst:127
+msgid ""
+"Create a file called ``docker-compose.yaml`` in your workspace and paste "
+"the following code in:"
+msgstr "在您的工作空间目录下创建一个名为 ``docker-compose.yaml`` 文件并将下列内容添加到其中："
+
+#: ../../source/topics/deployment/deployment.rst:149
+msgid ""
+"``__ALICE_PORT__``  is the published port on the host machine which is "
+"used for SecretFlow-Serving service to listen on, you need to replace it "
+"with an accessible port number. In this case, we have designated it as "
+"``9010`` for ``Alice``, ``9011`` for ``Bob``."
+msgstr ""
+"``__ALICE_PORT__`` 是 Alice 的 SecretFlow-Serving "
+"服务在宿主机上的监听端口，您需要用一个可访问的端口号替换它，这里为 ``Alice`` 设置 ``9010``，为 ``Bob`` 设置 "
+"``9011``。"
+
+#: ../../source/topics/deployment/deployment.rst:153
+msgid "Step 2: Start Serving Service"
+msgstr "步骤 2：启动 Serving 服务"
+
+#: ../../source/topics/deployment/deployment.rst:155
+msgid "The file your workspace should be as follows:"
+msgstr "您工作区的文件应如下所示："
+
+#: ../../source/topics/deployment/deployment.rst:164
+msgid "Then you can start serving service by running docker compose up"
+msgstr "然后您可以运行 docker compose up 来启动 serving 服务"
+
+#: ../../source/topics/deployment/deployment.rst:171
+msgid "You can use docker logs to check whether serving works well"
+msgstr "您可以使用 docker logs 检查 serving 是否正常工作"
+
+#: ../../source/topics/deployment/deployment.rst:177
+msgid ""
+"Now, ``Alice`` serving is listening on ``9010``, you can confirm if the "
+"service is ready by accessing the ``/health`` endpoint."
+msgstr ""
+"现在 ``Alice`` 的 serving 服务监听了 ``9010`` 端口，您可以通过访问 ``/health`` "
+"接口来检测服务是否已经准备完成。"
+
+#: ../../source/topics/deployment/deployment.rst:183
+msgid ""
+"When the endpoint returns a status code of ``200``, it means that the "
+"service is ready."
+msgstr "若接口返回状态码 ``200`` 则标志服务已经准备完成。"
+
+#: ../../source/topics/deployment/deployment.rst:186
+msgid "Step 3: Predict Test"
+msgstr "步骤 3：预测测试"
+
+#: ../../source/topics/deployment/deployment.rst:188
+msgid ""
+"Based on the capabilities of `Brpc "
+"<https://brpc.apache.org/docs/server/>`_, serving supports accessing "
+"through various protocols. Here, we are using an HTTP request to test the"
+" predict interface of serving."
+msgstr ""
+"得益于 `Brpc <https://brpc.apache.org/docs/server/>`_ 的能力，serving "
+"能够支持通过多种协议进行访问。这里我们通过发送一个 HTTP 的预测请求来测试服务。"
+
+#: ../../source/topics/deployment/deployment.rst:190
+msgid ""
+"You can read :ref:`SecretFlow-Serving API <PredictionService>` for more "
+"information about serving APIs."
+msgstr ""
+"您可以参考 :ref:`SecretFlow-Serving API <PredictionService>` 获得更多关于 serving API "
+"的信息。"
