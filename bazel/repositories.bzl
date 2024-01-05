@@ -217,12 +217,12 @@ def _com_github_xtensor_xsimd():
     )
 
 def _com_github_nelhage_rules_boost():
-    # use boost 1.77
-    RULES_BOOST_COMMIT = "d104cb7beba996d67ae5826be07aab2d9ca0ee38"
+    # use boost 1.83
+    RULES_BOOST_COMMIT = "cfa585b1b5843993b70aa52707266dc23b3282d0"
     maybe(
         http_archive,
         name = "com_github_nelhage_rules_boost",
-        sha256 = "5b7dbeadf66ae330d660359115f518d012082feec26402af26a7c540f6d0af9f",
+        sha256 = "a7c42df432fae9db0587ff778d84f9dc46519d67a984eff8c79ae35e45f277c1",
         strip_prefix = "rules_boost-%s" % RULES_BOOST_COMMIT,
         urls = [
             "https://github.com/nelhage/rules_boost/archive/%s.tar.gz" % RULES_BOOST_COMMIT,
