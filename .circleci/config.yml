@@ -72,8 +72,7 @@ jobs:
       - run:
           name: "build"
           command: |
-            conda create -n build python=3.8 -y
-            conda activate build
+            source ~/miniconda3/bin/activate py3.8
 
             pip install -r requirements.txt
             pip install -r .ci/requirements-ci.txt
