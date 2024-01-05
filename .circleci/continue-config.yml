@@ -107,5 +107,6 @@ jobs:
 
 workflows:
   unittest-workflow:
+    when: << pipeline.parameters.build-and-run >>
     jobs:
       - linux_ut
