@@ -74,8 +74,8 @@ jobs:
           command: |
             source ~/miniconda3/bin/activate py3.8
 
-            pip install -r requirements.txt
-            pip install -r .ci/requirements-ci.txt
+            python3 -m pip install -r requirements.txt
+            python3 -m pip install -r .ci/requirements-ci.txt
 
             bazel build //... -c opt --ui_event_filters=-info,-debug,-warning --jobs 16
 
@@ -99,7 +99,7 @@ jobs:
 
             declare -i test_status
 
-            python .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
+            python3 .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
 
             exit ${test_status}
       - run:
@@ -109,7 +109,7 @@ jobs:
 
             declare -i test_status
 
-            python .ci/accuracy_test.py 2>&1 | tee accuracy_test.py.log; test_status=${PIPESTATUS[0]}
+            python3 .ci/accuracy_test.py 2>&1 | tee accuracy_test.py.log; test_status=${PIPESTATUS[0]}
 
             exit ${test_status}
       - store_test_results:
