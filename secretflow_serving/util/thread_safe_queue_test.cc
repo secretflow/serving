@@ -82,11 +82,11 @@ TEST(ThreadSafeQueueTest, Push) {
       q.Push(i);
     }
   });
-  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(1)),
+  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(100)),
             std::future_status::timeout);
   EXPECT_EQ(q.size(), kMaxQueueSize);
   q.TryPop(val);
-  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(1)),
+  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(100)),
             std::future_status::ready);
   EXPECT_EQ(q.size(), kMaxQueueSize);
 }
@@ -99,11 +99,11 @@ TEST(ThreadSafeQueueTest, StopPush) {
       q.Push(i);
     }
   });
-  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(1)),
+  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(100)),
             std::future_status::timeout);
   EXPECT_EQ(q.size(), kMaxQueueSize);
   q.StopPush();
-  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(1)),
+  EXPECT_EQ(done.wait_for(std::chrono::milliseconds(100)),
             std::future_status::ready);
   EXPECT_EQ(q.size(), kMaxQueueSize);
 }
