@@ -222,6 +222,10 @@ if not SKIP_BAZEL_CLEAN:
 
 # Default Linux platform tag
 plat_name = "manylinux2014_x86_64"
+if platform.machine() == "aarch64":
+    # Linux aarch64
+    plat_name = "manylinux_2_28_aarch64"
+
 folder_name = "secretflow_serving_lib"
 
 
