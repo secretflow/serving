@@ -191,25 +191,4 @@ TEST_F(NodeDefUtilTest, OneOfError) {
   EXPECT_THROW(JsonToPb(json_content, &node_def), Exception);
 }
 
-TEST_F(NodeDefUtilTest, EmptyList) {
-  std::string json_content = R"JSON(
-{
-  "name": "test_node",
-  "op": "test_op",
-  "attr_values": {
-    "attr_ss": {
-      "ss": {
-        "data": []
-      }
-    }
-  }
-}
-)JSON";
-
-  NodeDef node_def;
-  JsonToPb(json_content, &node_def);
-
-  EXPECT_THROW(GetNodeAttr<std::vector<std::string>>(node_def, "attr_ss"),
-               Exception);
-}
 }  // namespace secretflow::serving::op

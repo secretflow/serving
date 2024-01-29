@@ -62,6 +62,7 @@ class OpDefBuilder final {
   // tag
   OpDefBuilder& Returnable();
   OpDefBuilder& Mergeable();
+  OpDefBuilder& VariableInputs();
 
   // io
   OpDefBuilder& Input(std::string name, std::string desc);
@@ -79,6 +80,7 @@ class OpDefBuilder final {
 
   bool returnable_ = false;
   bool mergeable_ = false;
+  bool variable_inputs_ = false;
 
   std::unordered_map<std::string, AttrDef> attr_defs_;
   std::unordered_map<std::string, IoDef> input_defs_;

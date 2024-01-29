@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-04 16:56+0800\n"
+"POT-Creation-Date: 2024-01-19 20:00+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -142,7 +142,7 @@ msgstr ""
 msgid "[Scalar](#scalar)"
 msgstr ""
 
-#: ../../source/reference/model.md:96 ../../source/reference/model.md:643
+#: ../../source/reference/model.md:96 ../../source/reference/model.md:644
 msgid "Enums"
 msgstr ""
 
@@ -591,6 +591,12 @@ msgid "[repeated IoDef](#iodef )"
 msgstr ""
 
 #: ../../source/reference/model.md
+msgid ""
+"If tag variable_inputs is true, the op should have only one `IoDef` for "
+"inputs, referring to the parameter list."
+msgstr ""
+
+#: ../../source/reference/model.md
 msgid "output"
 msgstr ""
 
@@ -644,15 +650,23 @@ msgstr ""
 msgid "The operator needs to be executed in session."
 msgstr ""
 
-#: ../../source/reference/model.md:333
-msgid "{#ExecutionDef}"
+#: ../../source/reference/model.md
+msgid "variable_inputs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Whether this op has variable input argument. default `false`."
 msgstr ""
 
 #: ../../source/reference/model.md:334
-msgid "ExecutionDef"
+msgid "{#ExecutionDef}"
 msgstr ""
 
 #: ../../source/reference/model.md:335
+msgid "ExecutionDef"
+msgstr ""
+
+#: ../../source/reference/model.md:336
 msgid ""
 "The definition of a execution. A execution represents a subgraph within a"
 " graph that can be scheduled for execution in a specified pattern."
@@ -677,19 +691,19 @@ msgstr ""
 msgid "[ RuntimeConfig](#runtimeconfig )"
 msgstr ""
 
-#: ../../source/reference/model.md ../../source/reference/model.md:423
+#: ../../source/reference/model.md ../../source/reference/model.md:424
 msgid "The runtime config of the execution."
 msgstr ""
 
-#: ../../source/reference/model.md:347
+#: ../../source/reference/model.md:348
 msgid "{#GraphDef}"
 msgstr ""
 
-#: ../../source/reference/model.md:348
+#: ../../source/reference/model.md:349
 msgid "GraphDef"
 msgstr ""
 
-#: ../../source/reference/model.md:349
+#: ../../source/reference/model.md:350
 msgid ""
 "The definition of a Graph. A graph consists of a set of nodes carrying "
 "data and a set of executions that describes the scheduling of the graph."
@@ -715,15 +729,15 @@ msgstr ""
 msgid "[repeated ExecutionDef](#executiondef )"
 msgstr ""
 
-#: ../../source/reference/model.md:362
+#: ../../source/reference/model.md:363
 msgid "{#GraphView}"
 msgstr ""
 
-#: ../../source/reference/model.md:363
+#: ../../source/reference/model.md:364
 msgid "GraphView"
 msgstr ""
 
-#: ../../source/reference/model.md:364
+#: ../../source/reference/model.md:365
 msgid ""
 "The view of a graph is used to display the structure of the graph, "
 "containing only structural information and excluding the data components."
@@ -733,15 +747,15 @@ msgstr ""
 msgid "[repeated NodeView](#nodeview )"
 msgstr ""
 
-#: ../../source/reference/model.md:377
+#: ../../source/reference/model.md:378
 msgid "{#NodeDef}"
 msgstr ""
 
-#: ../../source/reference/model.md:378
+#: ../../source/reference/model.md:379
 msgid "NodeDef"
 msgstr ""
 
-#: ../../source/reference/model.md:379
+#: ../../source/reference/model.md:380
 msgid "The definition of a node."
 msgstr ""
 
@@ -789,11 +803,11 @@ msgstr ""
 msgid "The operator version."
 msgstr ""
 
-#: ../../source/reference/model.md:393
+#: ../../source/reference/model.md:394
 msgid "{#NodeDef.AttrValuesEntry}"
 msgstr ""
 
-#: ../../source/reference/model.md:394
+#: ../../source/reference/model.md:395
 msgid "NodeDef.AttrValuesEntry"
 msgstr ""
 
@@ -809,23 +823,23 @@ msgstr ""
 msgid "[ op.AttrValue](#attrvalue )"
 msgstr ""
 
-#: ../../source/reference/model.md:406
+#: ../../source/reference/model.md:407
 msgid "{#NodeView}"
 msgstr ""
 
-#: ../../source/reference/model.md:407
+#: ../../source/reference/model.md:408
 msgid "NodeView"
 msgstr ""
 
-#: ../../source/reference/model.md:408
+#: ../../source/reference/model.md:409
 msgid "The view of a node, which could be public to other parties"
 msgstr ""
 
-#: ../../source/reference/model.md:421
+#: ../../source/reference/model.md:422
 msgid "{#RuntimeConfig}"
 msgstr ""
 
-#: ../../source/reference/model.md:422
+#: ../../source/reference/model.md:423
 msgid "RuntimeConfig"
 msgstr ""
 
@@ -853,15 +867,15 @@ msgstr ""
 msgid "if dispatch_type is DP_SPECIFIED, only one party should be true"
 msgstr ""
 
-#: ../../source/reference/model.md:437
+#: ../../source/reference/model.md:438
 msgid "{#ModelBundle}"
 msgstr ""
 
-#: ../../source/reference/model.md:438
+#: ../../source/reference/model.md:439
 msgid "ModelBundle"
 msgstr ""
 
-#: ../../source/reference/model.md:439
+#: ../../source/reference/model.md:440
 msgid ""
 "Represents an exported secertflow model. It consists of a GraphDef and "
 "extra metadata required for serving."
@@ -875,15 +889,15 @@ msgstr ""
 msgid "[ GraphDef](#graphdef )"
 msgstr ""
 
-#: ../../source/reference/model.md:452
+#: ../../source/reference/model.md:453
 msgid "{#ModelInfo}"
 msgstr ""
 
-#: ../../source/reference/model.md:453
+#: ../../source/reference/model.md:454
 msgid "ModelInfo"
 msgstr ""
 
-#: ../../source/reference/model.md:454
+#: ../../source/reference/model.md:455
 msgid "Represents a secertflow model without private data."
 msgstr ""
 
@@ -895,15 +909,15 @@ msgstr ""
 msgid "[ GraphView](#graphview )"
 msgstr ""
 
-#: ../../source/reference/model.md:466
+#: ../../source/reference/model.md:467
 msgid "{#ModelManifest}"
 msgstr ""
 
-#: ../../source/reference/model.md:467
+#: ../../source/reference/model.md:468
 msgid "ModelManifest"
 msgstr ""
 
-#: ../../source/reference/model.md:468
+#: ../../source/reference/model.md:469
 msgid ""
 "The manifest of the model package. Package format is as follows: "
 "model.tar.gz  ├ MANIFIEST  ├ model_file  └ some op meta files MANIFIEST "
@@ -930,11 +944,11 @@ msgstr ""
 msgid "The format type of the model bundle file."
 msgstr ""
 
-#: ../../source/reference/model.md:488 ../../source/reference/model.md:566
+#: ../../source/reference/model.md:489 ../../source/reference/model.md:567
 msgid "{#ComputeTrace}"
 msgstr ""
 
-#: ../../source/reference/model.md:489 ../../source/reference/model.md:567
+#: ../../source/reference/model.md:490 ../../source/reference/model.md:568
 msgid "ComputeTrace"
 msgstr ""
 
@@ -950,11 +964,11 @@ msgstr ""
 msgid "[repeated FunctionTrace](#functiontrace )"
 msgstr ""
 
-#: ../../source/reference/model.md:501 ../../source/reference/model.md:579
+#: ../../source/reference/model.md:502 ../../source/reference/model.md:580
 msgid "{#FunctionInput}"
 msgstr ""
 
-#: ../../source/reference/model.md:502 ../../source/reference/model.md:580
+#: ../../source/reference/model.md:503 ../../source/reference/model.md:581
 msgid "FunctionInput"
 msgstr ""
 
@@ -978,11 +992,11 @@ msgstr ""
 msgid "[ Scalar](#scalar )"
 msgstr ""
 
-#: ../../source/reference/model.md:514 ../../source/reference/model.md:592
+#: ../../source/reference/model.md:515 ../../source/reference/model.md:593
 msgid "{#FunctionOutput}"
 msgstr ""
 
-#: ../../source/reference/model.md:515 ../../source/reference/model.md:593
+#: ../../source/reference/model.md:516 ../../source/reference/model.md:594
 msgid "FunctionOutput"
 msgstr ""
 
@@ -990,11 +1004,11 @@ msgstr ""
 msgid "data_id"
 msgstr ""
 
-#: ../../source/reference/model.md:526 ../../source/reference/model.md:604
+#: ../../source/reference/model.md:527 ../../source/reference/model.md:605
 msgid "{#FunctionTrace}"
 msgstr ""
 
-#: ../../source/reference/model.md:527 ../../source/reference/model.md:605
+#: ../../source/reference/model.md:528 ../../source/reference/model.md:606
 msgid "FunctionTrace"
 msgstr ""
 
@@ -1026,15 +1040,15 @@ msgstr ""
 msgid "Output of this function."
 msgstr ""
 
-#: ../../source/reference/model.md:541 ../../source/reference/model.md:619
+#: ../../source/reference/model.md:542 ../../source/reference/model.md:620
 msgid "{#Scalar}"
 msgstr ""
 
-#: ../../source/reference/model.md:542 ../../source/reference/model.md:620
+#: ../../source/reference/model.md:543 ../../source/reference/model.md:621
 msgid "Scalar"
 msgstr ""
 
-#: ../../source/reference/model.md:543 ../../source/reference/model.md:621
+#: ../../source/reference/model.md:544 ../../source/reference/model.md:622
 msgid "Represents a single value with a specific data type."
 msgstr ""
 
@@ -1118,15 +1132,15 @@ msgstr ""
 msgid "DOUBLE"
 msgstr ""
 
-#: ../../source/reference/model.md:647
+#: ../../source/reference/model.md:648
 msgid "{#AttrType}"
 msgstr ""
 
-#: ../../source/reference/model.md:648
+#: ../../source/reference/model.md:649
 msgid "AttrType"
 msgstr ""
 
-#: ../../source/reference/model.md:649
+#: ../../source/reference/model.md:650
 msgid "Supported attribute types."
 msgstr ""
 
@@ -1290,15 +1304,15 @@ msgstr ""
 msgid "BYTES LIST"
 msgstr ""
 
-#: ../../source/reference/model.md:676
+#: ../../source/reference/model.md:677
 msgid "{#DispatchType}"
 msgstr ""
 
-#: ../../source/reference/model.md:677
+#: ../../source/reference/model.md:678
 msgid "DispatchType"
 msgstr ""
 
-#: ../../source/reference/model.md:678
+#: ../../source/reference/model.md:679
 msgid "Supported dispatch type"
 msgstr ""
 
@@ -1330,15 +1344,15 @@ msgstr ""
 msgid "Dispatch specified participant."
 msgstr ""
 
-#: ../../source/reference/model.md:692
+#: ../../source/reference/model.md:693
 msgid "{#FileFormatType}"
 msgstr ""
 
-#: ../../source/reference/model.md:693
+#: ../../source/reference/model.md:694
 msgid "FileFormatType"
 msgstr ""
 
-#: ../../source/reference/model.md:694
+#: ../../source/reference/model.md:695
 msgid "Support model file format"
 msgstr ""
 
@@ -1364,15 +1378,15 @@ msgid ""
 "method to ensure compatibility"
 msgstr ""
 
-#: ../../source/reference/model.md:707
+#: ../../source/reference/model.md:708
 msgid "{#DataType}"
 msgstr ""
 
-#: ../../source/reference/model.md:708
+#: ../../source/reference/model.md:709
 msgid "DataType"
 msgstr ""
 
-#: ../../source/reference/model.md:709
+#: ../../source/reference/model.md:710
 msgid ""
 "Mapping arrow::DataType "
 "`https://arrow.apache.org/docs/cpp/api/datatype.html`."
@@ -1494,11 +1508,11 @@ msgstr ""
 msgid "Variable-length bytes (no guarantee of UTF8-ness)"
 msgstr ""
 
-#: ../../source/reference/model.md:734 ../../source/reference/model.md:751
+#: ../../source/reference/model.md:735 ../../source/reference/model.md:752
 msgid "{#ExtendFunctionName}"
 msgstr ""
 
-#: ../../source/reference/model.md:735 ../../source/reference/model.md:752
+#: ../../source/reference/model.md:736 ../../source/reference/model.md:753
 msgid "ExtendFunctionName"
 msgstr ""
 
@@ -1550,7 +1564,7 @@ msgid ""
 "https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch9SetColumnEiRKNSt10shared_ptrI5FieldEERKNSt10shared_ptrI5ArrayEE"
 msgstr ""
 
-#: ../../source/reference/model.md:767
+#: ../../source/reference/model.md:768
 msgid "Scalar Value Types"
 msgstr ""
 

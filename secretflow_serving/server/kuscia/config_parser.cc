@@ -29,6 +29,21 @@
 
 namespace secretflow::serving::kuscia {
 
+namespace {
+const char* kSpiCertEnv = "SERVING_SPI_CERT";
+const char* kSpiPrivateKeyEnv = "SERVING_SPI_PRIVATE_KEY";
+const char* kSpiCaEnv = "SERVING_SPI_CA";
+
+void DumpFile(const std::string& file_path, const std::string& content) {
+  std::ofstream outfile(file_path);
+  SERVING_ENFORCE(outfile.is_open(), errors::ErrorCode::IO_ERROR,
+                  "cat not open file:{} to dump content.", file_path);
+  outfile << content;
+  outfile.close();
+}
+
+}  // namespace
+
 namespace kusica_proto = ::kuscia::proto::api::v1alpha1::appconfig;
 
 KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
@@ -133,6 +148,32 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
                                 doc["oss_meta"].GetStringLength()};
     OSSSourceMeta oss_meta;
     JsonToPb(oss_meta_str, model_config_.mutable_oss_source_meta());
+  }
+
+  // fill spi tls config
+  if (feature_config_.has_value() && feature_config_->has_http_opts()) {
+    auto* http_opts = feature_config_->mutable_http_opts();
+    if (char* env_p = std::getenv(kSpiCertEnv)) {
+      if (strlen(env_p) != 0) {
+        std::string file_path = "./serving_spi_cert";
+        DumpFile(file_path, env_p);
+        http_opts->mutable_tls_config()->set_certificate_path(file_path);
+      }
+    }
+    if (char* env_p = std::getenv(kSpiPrivateKeyEnv)) {
+      if (strlen(env_p) != 0) {
+        std::string file_path = "./serving_spi_pk";
+        DumpFile(file_path, env_p);
+        http_opts->mutable_tls_config()->set_private_key_path(file_path);
+      }
+    }
+    if (char* env_p = std::getenv(kSpiCaEnv)) {
+      if (strlen(env_p) != 0) {
+        std::string file_path = "./serving_spi_ca";
+        DumpFile(file_path, env_p);
+        http_opts->mutable_tls_config()->set_ca_file_path(file_path);
+      }
+    }
   }
 }
 

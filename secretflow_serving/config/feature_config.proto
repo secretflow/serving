@@ -42,7 +42,7 @@ enum MockDataType {
 // Mock feature source will generates values(random or fixed, according to type)
 // for the desired features.
 message MockOptions {
-  // default MDT_RANDOM
+  // default MDT_FIXED
   MockDataType type = 1;
 }
 

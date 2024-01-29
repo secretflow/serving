@@ -66,15 +66,15 @@ ExecutionServiceImpl::Stats::Stats(
     const std::shared_ptr<::prometheus::Registry>& registry)
     : api_request_counter_family(
           ::prometheus::BuildCounter()
-              .Name("execution_request_count_family")
+              .Name("execution_request_count")
               .Help("How many execution requests are handled by "
                     "this server.")
               .Labels(labels)
               .Register(*registry)),
       api_request_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("execution_request_duration_family")
-              .Help("prediction service api request duration in milliseconds")
+              .Name("execution_request_duration_milliseconds")
+              .Help("execution service api request duration in milliseconds")
               .Labels(labels)
               .Register(*registry)) {}
 

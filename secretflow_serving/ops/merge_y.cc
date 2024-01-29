@@ -32,7 +32,8 @@ MergeY::MergeY(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   link_function_ = ParseLinkFuncType(link_function_name);
 
   // optional attr
-  GetNodeAttr(opts_.node_def, "yhat_scale", &yhat_scale_);
+  yhat_scale_ =
+      GetNodeAttr<double>(opts_.node_def, *opts_.op_def, "yhat_scale");
 
   input_col_name_ = GetNodeAttr<std::string>(opts_.node_def, "input_col_name");
   output_col_name_ =
@@ -43,7 +44,7 @@ MergeY::MergeY(OpKernelOptions opts) : OpKernel(std::move(opts)) {
 }
 
 void MergeY::DoCompute(ComputeContext* ctx) {
-  // santiy check
+  // sanity check
   SERVING_ENFORCE(ctx->inputs.size() == 1, errors::ErrorCode::LOGIC_ERROR);
   SERVING_ENFORCE(ctx->inputs.front().size() >= 1,
                   errors::ErrorCode::LOGIC_ERROR);

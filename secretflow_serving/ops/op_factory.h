@@ -125,6 +125,10 @@ class OpDefBuilderWrapper {
     builder_.Mergeable();
     return *this;
   }
+  OpDefBuilderWrapper& VariableInputs() {
+    builder_.VariableInputs();
+    return *this;
+  }
   OpDefBuilderWrapper& Input(std::string name, std::string desc) {
     builder_.Input(std::move(name), std::move(desc));
     return *this;

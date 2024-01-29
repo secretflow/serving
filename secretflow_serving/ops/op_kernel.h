@@ -48,12 +48,20 @@ struct ComputeContext {
 
 class OpKernel {
  public:
-  explicit OpKernel(OpKernelOptions opts) : opts_(std::move(opts)) {}
+  explicit OpKernel(OpKernelOptions opts) : opts_(std::move(opts)) {
+    num_inputs_ = opts_.op_def->inputs_size();
+    if (opts_.op_def->tag().variable_inputs()) {
+      // The actual number of inputs for op with variable parameters
+      // depends on node's parents.
+      num_inputs_ = opts_.node_def.parents_size();
+    }
+  }
   virtual ~OpKernel() = default;
 
-  size_t GetInputsNum() const { return input_schema_list_.size(); }
+  size_t GetInputsNum() const { return num_inputs_; }
 
   const std::shared_ptr<arrow::Schema>& GetInputSchema(size_t index) const {
+    SERVING_ENFORCE_LT(index, input_schema_list_.size());
     return input_schema_list_[index];
   }
 
@@ -116,7 +124,9 @@ class OpKernel {
  protected:
   OpKernelOptions opts_;
 
+  size_t num_inputs_;
   std::vector<std::shared_ptr<arrow::Schema>> input_schema_list_;
+
   std::shared_ptr<arrow::Schema> output_schema_;
 };
 

@@ -249,27 +249,27 @@ ExecutionCore::Stats::Stats(
     const std::shared_ptr<::prometheus::Registry>& registry)
     : execute_request_counter_family(
           ::prometheus::BuildCounter()
-              .Name("execution_core_request_count_family")
+              .Name("execution_core_request_count")
               .Help("How many execution requests are handled by "
                     "this ExecutionCore.")
               .Labels(labels)
               .Register(*registry)),
       execute_request_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("execution_core_request_duration_family")
-              .Help("prediction service api request duration in milliseconds")
+              .Name("execution_core_request_duration_milliseconds")
+              .Help("ExecutionCore api request duration in milliseconds")
               .Labels(labels)
               .Register(*registry)),
       fetch_feature_counter_family(
           ::prometheus::BuildCounter()
-              .Name("fetch_feature_counter_family")
+              .Name("fetch_feature_counter")
               .Help("How many times to fetch remote features service by "
                     "this ExecutionCore.")
               .Labels(labels)
               .Register(*registry)),
       fetch_feature_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("fetch_feature_duration_family")
+              .Name("fetch_feature_duration_milliseconds")
               .Help("durations of fetching remote features in milliseconds")
               .Labels(labels)
               .Register(*registry)) {}

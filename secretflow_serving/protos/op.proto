@@ -39,6 +39,9 @@ message OpTag {
 
   // The operator needs to be executed in session.
   bool session_run = 3;
+
+  // Whether this op has variable input argument. default `false`.
+  bool variable_inputs = 5;
 }
 
 // The definition of a operator.
@@ -54,6 +57,8 @@ message OpDef {
 
   OpTag tag = 4;
 
+  // If tag variable_inputs is true, the op should have only one `IoDef` for
+  // inputs, referring to the parameter list.
   repeated IoDef inputs = 6;
   IoDef output = 7;
 

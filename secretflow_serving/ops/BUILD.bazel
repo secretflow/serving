@@ -19,6 +19,9 @@ package(default_visibility = ["//visibility:public"])
 serving_cc_library(
     name = "ops",
     deps = [
+        "tree_ensemble_predict",
+        "tree_merge",
+        "tree_select",
         ":arrow_processing",
         ":dot_product",
         ":merge_y",
@@ -32,6 +35,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:graph_cc_proto",
+        "//secretflow_serving/protos:op_cc_proto",
     ],
 )
 
@@ -216,4 +220,78 @@ serving_cc_test(
 serving_cc_library(
     name = "graph_version",
     hdrs = ["graph_version.h"],
+)
+
+serving_cc_library(
+    name = "tree_utils",
+    hdrs = ["tree_utils.h"],
+)
+
+serving_cc_library(
+    name = "tree_select",
+    srcs = ["tree_select.cc"],
+    hdrs = ["tree_select.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        ":tree_utils",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_select_test",
+    srcs = ["tree_select_test.cc"],
+    deps = [
+        ":tree_select",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "tree_merge",
+    srcs = ["tree_merge.cc"],
+    hdrs = ["tree_merge.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        ":tree_utils",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_merge_test",
+    srcs = ["tree_merge_test.cc"],
+    deps = [
+        ":tree_merge",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "tree_ensemble_predict",
+    srcs = ["tree_ensemble_predict.cc"],
+    hdrs = ["tree_ensemble_predict.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:link_func",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_ensemble_predict_test",
+    srcs = ["tree_ensemble_predict_test.cc"],
+    deps = [
+        ":tree_ensemble_predict",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
 )

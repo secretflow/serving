@@ -69,6 +69,9 @@ DotProduct::DotProduct(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   // feature name
   feature_name_list_ =
       GetNodeAttr<std::vector<std::string>>(opts_.node_def, "feature_names");
+  SERVING_ENFORCE(!feature_name_list_.empty(),
+                  errors::ErrorCode::INVALID_ARGUMENT,
+                  "get empty attr:feature_names");
   std::set<std::string> f_name_set;
   for (auto& feature_name : feature_name_list_) {
     SERVING_ENFORCE(f_name_set.emplace(feature_name).second,
@@ -101,7 +104,7 @@ DotProduct::DotProduct(OpKernelOptions opts) : OpKernel(std::move(opts)) {
       GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
 
   // optional attr
-  GetNodeAttr(opts_.node_def, "intercept", &intercept_);
+  intercept_ = GetNodeAttr<double>(opts_.node_def, *opts_.op_def, "intercept");
 
   BuildInputSchema();
   BuildOutputSchema();

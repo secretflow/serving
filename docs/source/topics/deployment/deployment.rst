@@ -97,6 +97,7 @@ See :ref:`Serving Config <ServingConfig>` for more config information
 
   For ``Bob``, you should refer to `bob-serving-config <https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_ .
 
+.. _log_conf_file:
 
 1.3 Create logging config file
 ------------------------------

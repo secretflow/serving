@@ -30,6 +30,8 @@ inline bool CheckStatusOk(const apis::Status& st) {
   }
 }
 
+std::string ReadFileContent(const std::string& file);
+
 void LoadPbFromJsonFile(const std::string& file,
                         ::google::protobuf::Message* message);
 

@@ -60,9 +60,8 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
     const auto& target_schema = first_input_schema_list.front();
     ++iter;
     for (; iter != input_schema_map_.end(); ++iter) {
-      SERVING_ENFORCE(iter->second.size() == 1, errors::ErrorCode::LOGIC_ERROR,
-                      "entry nodes should have one input table({})",
-                      iter->second.size());
+      SERVING_ENFORCE_EQ(iter->second.size(), 1U,
+                         "entry nodes should have only one input table");
       const auto& schema = iter->second.front();
 
       SERVING_ENFORCE_EQ(
