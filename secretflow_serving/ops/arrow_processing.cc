@@ -139,15 +139,14 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
   BuildOutputSchema();
 
   // optional attr
-  std::string trace_content;
-  GetNodeBytesAttr(opts_.node_def, "trace_content", &trace_content);
+  std::string trace_content =
+      GetNodeBytesAttr(opts_.node_def, *opts_.op_def, "trace_content");
   if (trace_content.empty()) {
     dummy_flag_ = true;
     return;
   }
-
-  bool content_json_flag = false;
-  GetNodeAttr(opts_.node_def, "content_json_flag", &content_json_flag);
+  bool content_json_flag =
+      GetNodeAttr<bool>(opts_.node_def, *opts_.op_def, "content_json_flag");
 
   if (content_json_flag) {
     JsonToPb(trace_content, &compute_trace_);
@@ -333,11 +332,25 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
       SERVING_GET_ARROW_RESULT(
           arrow::compute::GetFunctionRegistry()->GetFunction(func.name()),
           arrow_func);
+
       // Noticed, we only allowed scalar type arrow compute function
       SERVING_ENFORCE(
           arrow_func->kind() == arrow::compute::Function::Kind::SCALAR,
           errors::ErrorCode::LOGIC_ERROR, "unsupported arrow compute func:{}",
           func.name());
+
+      // check number of func arguments correct
+      if (!arrow_func->arity().is_varargs) {
+        SERVING_ENFORCE_EQ(func.inputs_size(), arrow_func->arity().num_args,
+                           "The number of input does not match the "
+                           "number required by the function({})",
+                           func.name());
+      } else {
+        SERVING_ENFORCE_GE(func.inputs_size(), arrow_func->arity().num_args,
+                           "The number of input does not meet the "
+                           "minimum number required by the function({})",
+                           func.name());
+      }
 
       // check func options valid
       if (arrow_func->doc().options_required) {

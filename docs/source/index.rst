@@ -21,6 +21,8 @@ SecretFlow-Serving Systems
 - **Overview**:
   :doc:`System overview and architecture </topics/system/intro>`
 
+- **Observability**:
+  :doc:`Logs and Metrics </topics/system/observability>`
 
 Deployment
 ----------

@@ -23,11 +23,15 @@ Node::Node(NodeDef node_def)
     : node_def_(std::move(node_def)),
       op_def_(op::OpFactory::GetInstance()->Get(node_def_.op())) {
   if (node_def_.parents_size() > 0) {
-    SERVING_ENFORCE(node_def_.parents_size() == op_def_->inputs_size(),
-                    errors::ErrorCode::LOGIC_ERROR,
-                    "node({}) input size({}) not fit op({}) input size({})",
-                    node_def_.name(), node_def_.parents_size(), op_def_->name(),
-                    op_def_->inputs_size());
+    if (node_def_.parents_size() != op_def_->inputs_size()) {
+      // check op input is variable
+      if (!op_def_->tag().variable_inputs()) {
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "node({}) input size({}) not fit op({}) input size({})",
+                      node_def_.name(), node_def_.parents_size(),
+                      op_def_->name(), op_def_->inputs_size());
+      }
+    }
   }
   input_nodes_ = {node_def_.parents().begin(), node_def_.parents().end()};
 }

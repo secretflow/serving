@@ -307,7 +307,7 @@ The definition of a operator.
 | desc | [ string](#string ) | Description of the op |
 | version | [ string](#string ) | Version of the op |
 | tag | [ OpTag](#optag ) | none |
-| inputs | [repeated IoDef](#iodef ) | none |
+| inputs | [repeated IoDef](#iodef ) | If tag variable_inputs is true, the op should have only one `IoDef` for inputs, referring to the parameter list. |
 | output | [ IoDef](#iodef ) | none |
 | attrs | [repeated AttrDef](#attrdef ) | none |
  <!-- end Fields -->
@@ -324,6 +324,7 @@ Representation operator property
 | returnable | [ bool](#bool ) | The operator's output can be the final result |
 | mergeable | [ bool](#bool ) | The operator accept the output of operators with different participants and will somehow merge them. |
 | session_run | [ bool](#bool ) | The operator needs to be executed in session. |
+| variable_inputs | [ bool](#bool ) | Whether this op has variable input argument. default `false`. |
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->

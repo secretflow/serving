@@ -245,6 +245,11 @@ OpDefBuilder& OpDefBuilder::Mergeable() {
   return *this;
 }
 
+OpDefBuilder& OpDefBuilder::VariableInputs() {
+  variable_inputs_ = true;
+  return *this;
+}
+
 OpDefBuilder& OpDefBuilder::Input(std::string name, std::string desc) {
   return Io(std::move(name), std::move(desc), false);
 }
@@ -280,6 +285,13 @@ std::shared_ptr<OpDef> OpDefBuilder::Build() const {
   SERVING_ENFORCE(!output_defs_.empty(), errors::ErrorCode::LOGIC_ERROR,
                   "missing output def for op: {}", name_);
 
+  if (variable_inputs_) {
+    SERVING_ENFORCE_EQ(
+        input_defs_.size(), 1U,
+        "there should be only one input def for `variable inputs` op: {}",
+        name_);
+  }
+
   auto op_def = std::make_shared<OpDef>();
   op_def->set_name(name_);
   op_def->set_version(version_);
@@ -287,6 +299,7 @@ std::shared_ptr<OpDef> OpDefBuilder::Build() const {
 
   op_def->mutable_tag()->set_returnable(returnable_);
   op_def->mutable_tag()->set_mergeable(mergeable_);
+  op_def->mutable_tag()->set_variable_inputs(variable_inputs_);
 
   // TODO: check valid
   for (const auto& pair : attr_defs_) {

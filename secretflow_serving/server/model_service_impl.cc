@@ -85,7 +85,7 @@ ModelServiceImpl::Stats::Stats(
               .Register(*registry)),
       api_request_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("model_service_request_duration_seconds")
+              .Name("model_service_request_duration_milliseconds")
               .Help("model service api request duration in "
                     "milliseconds.")
               .Labels(labels)

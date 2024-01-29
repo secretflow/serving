@@ -92,15 +92,15 @@ PredictionServiceImpl::Stats::Stats(
               .Register(*registry)),
       api_request_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("prediction_request_duration_seconds")
+              .Name("prediction_request_duration_milliseconds")
               .Help("prediction service api request duration in milliseconds.")
               .Labels(labels)
               .Register(*registry)),
       predict_counter_family(
           ::prometheus::BuildCounter()
-              .Name("prediction_count")
+              .Name("prediction_sample_count")
               .Help("How many prediction samples are processed by "
-                    "this server.")
+                    "this services.")
               .Labels(labels)
               .Register(*registry)),
       predict_counter(predict_counter_family.Add(::prometheus::Labels{})) {}

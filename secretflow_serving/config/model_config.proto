@@ -24,7 +24,7 @@ enum SourceType {
 
   // Local filesystem
   ST_FILE = 1;
-  // S3 OSS
+  // OSS/AWS S3
   ST_OSS = 2;
 }
 
@@ -32,7 +32,8 @@ message FileSourceMeta {
   // empty by design
 }
 
-// Options for a S3 Oss model source
+// Options for a Oss model source. Serving accesses data services using the AWS
+// S3 protocol.
 message OSSSourceMeta {
   // Bucket access key
   string access_key = 1;

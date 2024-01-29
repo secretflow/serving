@@ -15,30 +15,13 @@
 # limitations under the License.
 
 
-import csv
-import hashlib
 import json
 import os
-import subprocess
 import sys
-import tarfile
-import time
-from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import pyarrow as pa
-from google.protobuf.json_format import MessageToJson
 
-from secretflow_serving_lib import get_op
-from secretflow_serving_lib.attr_pb2 import AttrValue, DoubleList, StringList
-from secretflow_serving_lib.bundle_pb2 import FileFormatType, ModelBundle, ModelManifest
-from secretflow_serving_lib.feature_pb2 import (
-    Feature,
-    FeatureField,
-    FeatureParam,
-    FeatureValue,
-    FieldType,
-)
 from secretflow_serving_lib.graph_pb2 import (
     DispatchType,
     ExecutionDef,
@@ -48,13 +31,17 @@ from secretflow_serving_lib.graph_pb2 import (
 )
 from secretflow_serving_lib.link_function_pb2 import LinkFunctionType
 
-# set up global env
-g_script_name = os.path.abspath(sys.argv[0])
-g_script_dir = os.path.dirname(g_script_name)
-g_repo_dir = os.path.dirname(g_script_dir)
-
-g_clean_up_service = True
-g_clean_up_files = True
+from test_common import (
+    TestCase,
+    TestConfig,
+    PartyConfig,
+    make_processing_node_def,
+    make_dot_product_node_def,
+    make_merge_y_node_def,
+    make_tree_select_node_def,
+    make_tree_merge_node_def,
+    make_tree_ensemble_predict_node_def,
+)
 
 
 def global_ip_config(index):
@@ -69,467 +56,54 @@ def global_ip_config(index):
     }
 
 
-class ModelBuilder:
-    def __init__(self, name, desc, graph_def: GraphDef):
-        self.name = name
-        self.desc = desc
-        self.bundle = ModelBundle(name=name, desc=desc, graph=graph_def)
-
-    def dump_tar_gz(self, path=".", filename=None):
-        if filename is None:
-            filename = "model.tar.gz"
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
-
-        filename = os.path.join(path, filename)
-
-        model_graph_filename = "model_graph.json"
-
-        # dump manifest
-        dump_pb_json_file(
-            ModelManifest(
-                bundle_path=model_graph_filename, bundle_format=FileFormatType.FF_JSON
-            ),
-            os.path.join(path, "MANIFEST"),
-        )
-        # dump model file
-        dump_pb_json_file(self.bundle, os.path.join(path, model_graph_filename))
-
-        with tarfile.open(filename, "w:gz") as model_tar:
-            model_tar.add(os.path.join(path, "MANIFEST"), arcname="MANIFEST")
-            model_tar.add(
-                os.path.join(path, model_graph_filename), arcname=model_graph_filename
-            )
-            print(
-                f'tar: {filename} <- ({os.path.join(path, "MANIFEST")}, {os.path.join(path, model_graph_filename)})'
-            )
-        os.remove(os.path.join(path, "MANIFEST"))
-        os.remove(os.path.join(path, model_graph_filename))
-        with open(filename, "rb") as ifile:
-            return filename, hashlib.sha256(ifile.read()).hexdigest()
-
-
-def make_processing_node_def(
-    name,
-    parents,
-    input_schema: pa.Schema,
-    output_schema: pa.Schema,
-    trace_content=None,
-):
-    op_def = get_op("ARROW_PROCESSING")
-    attrs = {
-        "input_schema_bytes": AttrValue(by=input_schema.serialize().to_pybytes()),
-        "output_schema_bytes": AttrValue(by=output_schema.serialize().to_pybytes()),
-        "content_json_flag": AttrValue(b=True),
-    }
-    if trace_content:
-        attrs["trace_content"] = AttrValue(by=trace_content)
-
-    return NodeDef(
-        name=name,
-        parents=parents,
-        op=op_def.name,
-        attr_values=attrs,
-        op_version=op_def.version,
-    )
-
-
-def make_dot_product_node_def(
-    name, parents, weight_dict, output_col_name, input_types, intercept=None
-):
-    op_def = get_op("DOT_PRODUCT")
-    attrs = {
-        "feature_names": AttrValue(ss=StringList(data=list(weight_dict.keys()))),
-        "feature_weights": AttrValue(ds=DoubleList(data=list(weight_dict.values()))),
-        "output_col_name": AttrValue(s=output_col_name),
-        "input_types": AttrValue(ss=StringList(data=input_types)),
-    }
-    if intercept:
-        attrs["intercept"] = AttrValue(d=intercept)
-
-    return NodeDef(
-        name=name,
-        parents=parents,
-        op=op_def.name,
-        attr_values=attrs,
-        op_version=op_def.version,
-    )
-
-
-def make_merge_y_node_def(
-    name,
-    parents,
-    link_function: LinkFunctionType,
-    input_col_name: str,
-    output_col_name: str,
-    yhat_scale: float = None,
-):
-    op_def = get_op("MERGE_Y")
-    attrs = {
-        "link_function": AttrValue(s=LinkFunctionType.Name(link_function)),
-        "input_col_name": AttrValue(s=input_col_name),
-        "output_col_name": AttrValue(s=output_col_name),
-    }
-    if yhat_scale:
-        attrs["yhat_scale"] = AttrValue(d=yhat_scale)
-
-    return NodeDef(
-        name=name,
-        parents=parents,
-        op=op_def.name,
-        attr_values=attrs,
-        op_version=op_def.version,
-    )
-
-
-def dump_pb_json_file(pb_obj, file_name, indent=2):
-    json_str = MessageToJson(pb_obj)
-    with open(file_name, "w") as file:
-        file.write(json_str)
-
-
-def dump_json(obj, filename, indent=2):
-    with open(filename, "w") as ofile:
-        json.dump(obj, ofile, indent=indent)
-
-
-@dataclass
-class PartyConfig:
-    id: str
-    feature_mapping: Dict[str, str]
-    cluster_ip: str
-    metrics_port: int
-    brpc_builtin_service_port: int
-    channel_protocol: str
-    model_id: str
-    graph_def: GraphDef
-    query_datas: List[str] = None
-    query_context: str = None
-    csv_dict: Dict[str, Any] = None
-
-
-class ConfigDumper:
+class MockFeatureTest(TestCase):
     def __init__(
         self,
-        party_configs: List[PartyConfig],
-        log_config_filename: str,
-        serving_config_filename: str,
-        tar_name: str,
-        service_id: str,
+        path: str,
+        nodes: Dict[str, List[NodeDef]],
+        executions: Dict[str, List[ExecutionDef]],
+        feature_mappings: Dict[str, Dict] = None,
+        specific_party: str = None,
     ):
-        self.service_id = service_id
-        self.party_configs = party_configs
-        self.parties = []
-        self.log_config = log_config_filename
-        self.serving_config = serving_config_filename
-        self.tar_name = tar_name
-        for config in self.party_configs:
-            self.parties.append({"id": config.id, "address": config.cluster_ip})
+        super().__init__(path)
 
-    def _dump_logging_config(self, path: str, logging_path: str):
-        with open(os.path.join(path, self.log_config), "w") as ofile:
-            json.dump({"systemLogPath": os.path.abspath(logging_path)}, ofile, indent=2)
-
-    def _dump_model_tar_gz(self, path: str, graph_def: GraphDef):
-        graph_def_str = MessageToJson(graph_def, preserving_proto_field_name=True)
-        print(f"graph_def: \n {graph_def_str}")
-        return ModelBuilder("test_model", "just for test", graph_def).dump_tar_gz(
-            path, self.tar_name
-        )
-
-    def make_csv_config(self, data_dict: Dict[str, List[Any]], path: str):
-        filename = "feature_source.csv"
-        file_path = os.path.join(path, filename)
-        with open(file_path, "w") as ofile:
-            writer = csv.DictWriter(ofile, fieldnames=list(data_dict.keys()))
-            writer.writeheader()
-            rows = []
-            for key, value in data_dict.items():
-                if len(rows) == 0:
-                    rows = [{} for _ in value]
-                assert len(value) == len(
-                    rows
-                ), f"row count {len(value)} of {key} in data_dict is diff with {len(rows)}."
-                for i in range(len(value)):
-                    rows[i][key] = value[i]
-            print("CSV Rows: ", rows)
-            for row in rows:
-                writer.writerow(row)
-        return {"csv_opts": {"file_path": file_path, "id_name": "id"}}
-
-    def _dump_serving_config(
-        self, path: str, config: PartyConfig, model_name: str, model_sha256: str
-    ):
-        config_dict = {
-            "id": self.service_id,
-            "serverConf": {
-                "featureMapping": config.feature_mapping,
-                "metricsExposerPort": config.metrics_port,
-                "brpcBuiltinServicePort": config.brpc_builtin_service_port,
-            },
-            "modelConf": {
-                "modelId": config.model_id,
-                "basePath": os.path.abspath(path),
-                "sourcePath": os.path.abspath(model_name),
-                "sourceSha256": model_sha256,
-                "sourceType": "ST_FILE",
-            },
-            "clusterConf": {
-                "selfId": config.id,
-                "parties": self.parties,
-                "channel_desc": {"protocol": config.channel_protocol},
-            },
-            "featureSourceConf": self.make_csv_config(config.csv_dict, path)
-            if config.csv_dict
-            else {"mockOpts": {}},
-        }
-        dump_json(config_dict, os.path.join(path, self.serving_config))
-
-    def dump(self, path="."):
-        for config in self.party_configs:
-            config_path = os.path.join(path, config.id)
-            if not os.path.exists(config_path):
-                os.makedirs(config_path, exist_ok=True)
-            self._dump_logging_config(config_path, os.path.join(config_path, "log"))
-            model_name, model_sha256 = self._dump_model_tar_gz(
-                config_path, config.graph_def
+        # build config
+        ip_config_idx = 0
+        party_configs = []
+        for party, node_list in nodes.items():
+            graph = GraphDef(
+                version="0.0.1",
+                node_list=node_list,
+                execution_list=executions[party],
             )
-            self._dump_serving_config(config_path, config, model_name, model_sha256)
-
-
-# for every testcase, there should be a TestConfig instance
-class TestConfig:
-    def __init__(
-        self,
-        model_path: str,
-        party_config: List[PartyConfig],
-        header_dict: Dict[str, str] = None,
-        service_spec_id: str = None,
-        predefined_features: Dict[str, List[Any]] = None,
-        predefined_types: Dict[str, str] = None,
-        log_config_name=None,
-        serving_config_name=None,
-        tar_name=None,
-    ):
-        self.header_dict = header_dict
-        self.service_spec_id = service_spec_id
-        self.predefined_features = predefined_features
-        self.predefined_types = predefined_types
-        self.model_path = os.path.join(g_script_dir, model_path)
-        self.party_config = party_config
-        self.log_config_name = (
-            log_config_name if log_config_name is not None else "logging.config"
-        )
-        self.serving_config_name = (
-            serving_config_name if serving_config_name is not None else "serving.config"
-        )
-        self.tar_name = tar_name if tar_name is not None else "model.tar.gz"
-        self.background_proc = []
-
-    def dump_config(self):
-        ConfigDumper(
-            self.party_config,
-            self.log_config_name,
-            self.serving_config_name,
-            self.tar_name,
-            self.service_spec_id,
-        ).dump(self.model_path)
-
-    def get_server_start_args(self):
-        def merge_path(dir, party_id, filename):
-            return os.path.abspath(os.path.join(dir, party_id, filename))
-
-        return [
-            f"--serving_config_file={merge_path(self.model_path, config.id, self.serving_config_name)} "
-            f"--logging_config_file={merge_path(self.model_path, config.id, self.log_config_name)} "
-            for config in self.party_config
-        ]
-
-    def get_party_ids(self):
-        return [config.id for config in self.party_config]
-
-    def make_request(self):
-        if self.predefined_features:
-            pre_features = []
-            for name, data_list in self.predefined_features.items():
-                pre_features.append(
-                    make_feature(name, data_list, self.predefined_types[name])
+            party_configs.append(
+                PartyConfig(
+                    id=party,
+                    feature_mapping={}
+                    if not feature_mappings
+                    else feature_mappings[party],
+                    **global_ip_config(ip_config_idx),
+                    channel_protocol="baidu_std",
+                    model_id="integration_model",
+                    graph_def=graph,
+                    query_datas=["a"],
                 )
-        else:
-            pre_features = None
-
-        if self.party_config[0].query_datas:
-            fs_param = {}
-            for config in self.party_config:
-                fs_param[config.id] = FeatureParam(
-                    query_datas=config.query_datas, query_context=config.query_context
-                )
-        else:
-            fs_param = None
-
-        return PredictRequest(
-            self.header_dict, self.service_spec_id, fs_param, pre_features
-        )
-
-    def make_predict_curl_cmd(self, party: str):
-        url = None
-        for p_cfg in self.party_config:
-            if p_cfg.id == party:
-                url = f"http://{p_cfg.cluster_ip}/PredictionService/Predict"
-                break
-        if not url:
-            raise Exception(
-                f"{party} is not in TestConfig({self.config.get_party_ids()})"
             )
-        curl_wrapper = CurlWrapper(
-            url=url,
-            header="Content-Type: application/json",
-            data=self.make_request().to_json(),
+            ip_config_idx += 1
+
+        self.config = TestConfig(
+            path,
+            service_spec_id="integration_test_mock_feature",
+            party_config=party_configs,
+            specific_party=specific_party,
         )
-        return curl_wrapper.cmd()
 
-    def make_get_model_info_curl_cmd(self, party: str):
-        url = None
-        for p_cfg in self.party_config:
-            if p_cfg.id == party:
-                url = f"http://{p_cfg.cluster_ip}/ModelService/GetModelInfo"
-                break
-        if not url:
-            raise Exception(f"{party} is not in TestConfig({config.get_party_ids()})")
-        curl_wrapper = CurlWrapper(
-            url=url,
-            header="Content-Type: application/json",
-            data='{}',
-        )
-        return curl_wrapper.cmd()
-
-    def _exe_cmd(self, cmd, background=False):
-        print("Execute: ", cmd)
-        if not background:
-            ret = subprocess.run(cmd, shell=True, check=True, capture_output=True)
-            ret.check_returncode()
-            return ret
-        else:
-            proc = subprocess.Popen(cmd.split(), shell=False)
-            self.background_proc.append(proc)
-            return proc
-
-    def finish(self):
-        if g_clean_up_service:
-            for proc in self.background_proc:
-                proc.kill()
-                proc.wait()
-        if g_clean_up_files:
-            os.system(f"rm -rf {self.model_path}")
-
-    def exe_start_server_scripts(self, start_interval_s=0):
-        for arg in self.get_server_start_args():
-            self._exe_cmd(
-                f"./bazel-bin/secretflow_serving/server/secretflow_serving {arg}", True
-            )
-            if start_interval_s:
-                time.sleep(start_interval_s)
-
-        # wait 10s for servers be ready
-        time.sleep(10)
-
-    def exe_curl_request_scripts(self, party: str):
-        return self._exe_cmd(self.make_predict_curl_cmd(party))
-
-    def exe_get_model_info_request_scripts(self, party: str):
-        return self._exe_cmd(self.make_get_model_info_curl_cmd(party))
-
-
-def make_feature(name: str, value: List[Any], f_type: str):
-    assert len(value) != 0
-
-    field_type = FieldType.Value(f_type)
-
-    if field_type == FieldType.FIELD_BOOL:
-        f_value = FeatureValue(bs=[bool(v) for v in value])
-    elif field_type == FieldType.FIELD_FLOAT:
-        f_value = FeatureValue(fs=[float(v) for v in value])
-    elif field_type == FieldType.FIELD_DOUBLE:
-        f_value = FeatureValue(ds=[float(v) for v in value])
-    elif field_type == FieldType.FIELD_INT32:
-        f_value = FeatureValue(i32s=[int(v) for v in value])
-    elif field_type == FieldType.FIELD_INT64:
-        f_value = FeatureValue(i64s=[int(v) for v in value])
-    else:
-        f_value = FeatureValue(ss=[str(v) for v in value])
-
-    return Feature(field=FeatureField(name=name, type=field_type), value=f_value)
-
-
-class PredictRequest:
-    def __init__(
-        self,
-        header_dict: Dict[str, str] = None,
-        service_spec_id: str = None,
-        party_param_dict: Dict[str, FeatureParam] = None,
-        predefined_feature: List[Feature] = None,
-    ):
-        self.header_dict = header_dict
-        self.service_spec_id = service_spec_id
-        self.party_param_dict = party_param_dict
-        self.predefined_feature = predefined_feature
-
-    def to_json(self):
-        ret = {}
-        if self.header_dict:
-            ret["header"] = {"data": self.header_dict}
-        if self.service_spec_id:
-            ret["service_spec"] = {"id": self.service_spec_id}
-        if self.party_param_dict:
-            ret["fs_params"] = {
-                k: json.loads(MessageToJson(v, preserving_proto_field_name=True))
-                for k, v in self.party_param_dict.items()
-            }
-        if self.predefined_feature:
-            ret["predefined_features"] = [
-                json.loads(MessageToJson(i, preserving_proto_field_name=True))
-                for i in self.predefined_feature
-            ]
-        return json.dumps(ret)
-
-
-class CurlWrapper:
-    def __init__(self, url: str, header: str, data: str):
-        self.url = url
-        self.header = header
-        self.data = data
-
-    def cmd(self):
-        return f'curl --location "{self.url}" --header "{self.header}" --data \'{self.data}\''
-
-    def exe(self):
-        return os.popen(self.cmd())
-
-
-# simple test
-class TestCase:
-    def __init__(self, path: str):
-        self.path = path
-
-    def exec(self):
-        config = self.get_config(self.path)
-        try:
-            self.test(config)
-        finally:
-            config.finish()
-
-    def test(config: TestConfig):
-        raise NotImplementedError
-
-    def get_config(self, path: str) -> TestConfig:
-        raise NotImplementedError
-
-
-class SimpleTest(TestCase):
     def test(self, config: TestConfig):
         config.dump_config()
         config.exe_start_server_scripts()
         for party in config.get_party_ids():
+            if config.specific_party and config.specific_party != party:
+                continue
             res = config.exe_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
@@ -538,175 +112,15 @@ class SimpleTest(TestCase):
             assert len(res["results"]) == len(
                 config.party_config[0].query_datas
             ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
+
             model_info = config.exe_get_model_info_request_scripts(party)
             out = model_info.stdout.decode()
             print("Model info: ", out)
+            res = json.loads(out)
+            assert res["status"]["code"] == 1, "return status code is not OK(1)"
 
-    def get_config(self, path: str):
-        with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
-            alice_trace_content = f.read()
-
-        processing_node_alice = make_processing_node_def(
-            name="node_processing",
-            parents=[],
-            input_schema=pa.schema(
-                [
-                    ('a', pa.int32()),
-                    ('b', pa.float32()),
-                    ('c', pa.utf8()),
-                    ('x21', pa.float64()),
-                    ('x22', pa.float32()),
-                    ('x23', pa.int8()),
-                    ('x24', pa.int16()),
-                    ('x25', pa.int32()),
-                ]
-            ),
-            output_schema=pa.schema(
-                [
-                    ('a_0', pa.int64()),
-                    ('a_1', pa.int64()),
-                    ('c_0', pa.int64()),
-                    ('b_0', pa.int64()),
-                    ('x21', pa.float64()),
-                    ('x22', pa.float32()),
-                    ('x23', pa.int8()),
-                    ('x24', pa.int16()),
-                    ('x25', pa.int32()),
-                ]
-            ),
-            trace_content=alice_trace_content,
-        )
-        # bob run dummy node (no trace)
-        processing_node_bob = make_processing_node_def(
-            name="node_processing",
-            parents=[],
-            input_schema=pa.schema(
-                [
-                    ('x6', pa.int64()),
-                    ('x7', pa.uint8()),
-                    ('x8', pa.uint16()),
-                    ('x9', pa.uint32()),
-                    ('x10', pa.uint64()),
-                ]
-            ),
-            output_schema=pa.schema(
-                [
-                    ('x6', pa.int64()),
-                    ('x7', pa.uint8()),
-                    ('x8', pa.uint16()),
-                    ('x9', pa.uint32()),
-                    ('x10', pa.uint64()),
-                ]
-            ),
-        )
-
-        dot_node_alice = make_dot_product_node_def(
-            name="node_dot_product",
-            parents=['node_processing'],
-            weight_dict={
-                "x21": -0.3,
-                "x22": 0.95,
-                "x23": 1.01,
-                "x24": 1.35,
-                "x25": -0.97,
-                "a_0": 1.0,
-                "c_0": 1.0,
-                "b_0": 1.0,
-            },
-            output_col_name="y",
-            input_types=[
-                "DT_DOUBLE",
-                "DT_FLOAT",
-                "DT_INT8",
-                "DT_INT16",
-                "DT_INT32",
-                "DT_INT64",
-                "DT_INT64",
-                "DT_INT64",
-            ],
-            intercept=1.313,
-        )
-        dot_node_bob = make_dot_product_node_def(
-            name="node_dot_product",
-            parents=['node_processing'],
-            weight_dict={
-                "x6": -0.53,
-                "x7": 0.92,
-                "x8": -0.72,
-                "x9": 0.146,
-                "x10": -0.07,
-            },
-            input_types=["DT_INT64", "DT_UINT8", "DT_UINT16", "DT_UINT32", "DT_UINT64"],
-            output_col_name="y",
-        )
-        merge_y_node = make_merge_y_node_def(
-            "node_merge_y",
-            ["node_dot_product"],
-            LinkFunctionType.LF_LOGIT,
-            input_col_name="y",
-            output_col_name="score",
-            yhat_scale=1.2,
-        )
-        execution_1 = ExecutionDef(
-            nodes=["node_processing", "node_dot_product"],
-            config=RuntimeConfig(dispatch_type=DispatchType.DP_ALL, session_run=False),
-        )
-        execution_2 = ExecutionDef(
-            nodes=["node_merge_y"],
-            config=RuntimeConfig(
-                dispatch_type=DispatchType.DP_ANYONE, session_run=False
-            ),
-        )
-
-        alice_graph = GraphDef(
-            version="0.0.1",
-            node_list=[processing_node_alice, dot_node_alice, merge_y_node],
-            execution_list=[execution_1, execution_2],
-        )
-        bob_graph = GraphDef(
-            version="0.0.1",
-            node_list=[processing_node_bob, dot_node_bob, merge_y_node],
-            execution_list=[execution_1, execution_2],
-        )
-
-        alice_config = PartyConfig(
-            id="alice",
-            feature_mapping={
-                "a": "a",
-                "b": "b",
-                "c": "c",
-                "v24": "x24",
-                "v22": "x22",
-                "v21": "x21",
-                "v25": "x25",
-                "v23": "x23",
-            },
-            **global_ip_config(0),
-            channel_protocol="baidu_std",
-            model_id="integration_model",
-            graph_def=alice_graph,
-            query_datas=["a"],
-        )
-        bob_config = PartyConfig(
-            id="bob",
-            feature_mapping={
-                "v6": "x6",
-                "v7": "x7",
-                "v8": "x8",
-                "v9": "x9",
-                "v10": "x10",
-            },
-            **global_ip_config(1),
-            channel_protocol="baidu_std",
-            model_id="integration_model",
-            graph_def=bob_graph,
-            query_datas=["b"],
-        )
-        return TestConfig(
-            path,
-            service_spec_id="integration_test",
-            party_config=[alice_config, bob_config],
-        )
+    def get_config(self, path: str) -> TestConfig:
+        return self.config
 
 
 class PredefinedErrorTest(TestCase):
@@ -1084,7 +498,870 @@ class SpecificTest(TestCase):
 
 
 if __name__ == "__main__":
-    SimpleTest('model_path').exec()
+    # glm
+    with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
+        alice_trace_content = f.read()
+    MockFeatureTest(
+        path='model_path',
+        nodes={
+            "alice": [
+                make_processing_node_def(
+                    name="node_processing",
+                    parents=[],
+                    input_schema=pa.schema(
+                        [
+                            ('a', pa.int32()),
+                            ('b', pa.float32()),
+                            ('c', pa.utf8()),
+                            ('x21', pa.float64()),
+                            ('x22', pa.float32()),
+                            ('x23', pa.int8()),
+                            ('x24', pa.int16()),
+                            ('x25', pa.int32()),
+                        ]
+                    ),
+                    output_schema=pa.schema(
+                        [
+                            ('a_0', pa.int64()),
+                            ('a_1', pa.int64()),
+                            ('c_0', pa.int64()),
+                            ('b_0', pa.int64()),
+                            ('x21', pa.float64()),
+                            ('x22', pa.float32()),
+                            ('x23', pa.int8()),
+                            ('x24', pa.int16()),
+                            ('x25', pa.int32()),
+                        ]
+                    ),
+                    trace_content=alice_trace_content,
+                ),
+                make_dot_product_node_def(
+                    name="node_dot_product",
+                    parents=['node_processing'],
+                    weight_dict={
+                        "x21": -0.3,
+                        "x22": 0.95,
+                        "x23": 1.01,
+                        "x24": 1.35,
+                        "x25": -0.97,
+                        "a_0": 1.0,
+                        "c_0": 1.0,
+                        "b_0": 1.0,
+                    },
+                    output_col_name="y",
+                    input_types=[
+                        "DT_DOUBLE",
+                        "DT_FLOAT",
+                        "DT_INT8",
+                        "DT_INT16",
+                        "DT_INT32",
+                        "DT_INT64",
+                        "DT_INT64",
+                        "DT_INT64",
+                    ],
+                    intercept=1.313,
+                ),
+                make_merge_y_node_def(
+                    "node_merge_y",
+                    ["node_dot_product"],
+                    LinkFunctionType.LF_LOGIT,
+                    input_col_name="y",
+                    output_col_name="score",
+                    yhat_scale=1.2,
+                ),
+            ],
+            "bob": [
+                # bob run dummy node (no trace)
+                make_processing_node_def(
+                    name="node_processing",
+                    parents=[],
+                    input_schema=pa.schema(
+                        [
+                            ('x6', pa.int64()),
+                            ('x7', pa.uint8()),
+                            ('x8', pa.uint16()),
+                            ('x9', pa.uint32()),
+                            ('x10', pa.uint64()),
+                        ]
+                    ),
+                    output_schema=pa.schema(
+                        [
+                            ('x6', pa.int64()),
+                            ('x7', pa.uint8()),
+                            ('x8', pa.uint16()),
+                            ('x9', pa.uint32()),
+                            ('x10', pa.uint64()),
+                        ]
+                    ),
+                ),
+                make_dot_product_node_def(
+                    name="node_dot_product",
+                    parents=['node_processing'],
+                    weight_dict={
+                        "x6": -0.53,
+                        "x7": 0.92,
+                        "x8": -0.72,
+                        "x9": 0.146,
+                        "x10": -0.07,
+                    },
+                    input_types=[
+                        "DT_INT64",
+                        "DT_UINT8",
+                        "DT_UINT16",
+                        "DT_UINT32",
+                        "DT_UINT64",
+                    ],
+                    output_col_name="y",
+                ),
+                make_merge_y_node_def(
+                    "node_merge_y",
+                    ["node_dot_product"],
+                    LinkFunctionType.LF_LOGIT,
+                    input_col_name="y",
+                    output_col_name="score",
+                    yhat_scale=1.2,
+                ),
+            ],
+        },
+        executions={
+            "alice": [
+                ExecutionDef(
+                    nodes=["node_processing", "node_dot_product"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=["node_merge_y"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ANYONE, session_run=False
+                    ),
+                ),
+            ],
+            "bob": [
+                ExecutionDef(
+                    nodes=["node_processing", "node_dot_product"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=["node_merge_y"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ANYONE, session_run=False
+                    ),
+                ),
+            ],
+        },
+        feature_mappings={
+            "alice": {
+                "a": "a",
+                "b": "b",
+                "c": "c",
+                "v24": "x24",
+                "v22": "x22",
+                "v21": "x21",
+                "v25": "x25",
+                "v23": "x23",
+            },
+            "bob": {
+                "v6": "x6",
+                "v7": "x7",
+                "v8": "x8",
+                "v9": "x9",
+                "v10": "x10",
+            },
+        },
+    ).exec()
+
+    # sgb
+    MockFeatureTest(
+        path='sgb_model',
+        nodes={
+            "alice": [
+                make_tree_select_node_def(
+                    name="node_tree_select_0",
+                    parents=[],
+                    output_col_name="selects",
+                    root_node_id=0,
+                    feature_dict={
+                        "x1": "DT_FLOAT",
+                        "x2": "DT_INT16",
+                        "x3": "DT_INT8",
+                        "x4": "DT_UINT8",
+                        "x5": "DT_DOUBLE",
+                        "x6": "DT_INT64",
+                        "x7": "DT_INT16",
+                        "x8": "DT_FLOAT",
+                        "x9": "DT_FLOAT",
+                        "x10": "DT_FLOAT",
+                    },
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": -0.154862225,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 2,
+                            "splitValue": -0.208345324,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 2,
+                            "splitValue": 0.301087976,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 1,
+                            "splitValue": -0.300848633,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 2,
+                            "splitValue": 0.0800122,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": -0.116178043,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": 0.16241236,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": -0.418656051,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": -0.0926064253,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": 0.15993154,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": 0.358381808,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": -0.104386188,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": -1,
+                            "leafWeight": 0.194736511,
+                        },
+                    ],
+                ),
+                make_tree_select_node_def(
+                    name="node_tree_select_1",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={
+                        "x1": "DT_FLOAT",
+                        "x2": "DT_INT16",
+                        "x3": "DT_INT8",
+                        "x4": "DT_UINT8",
+                        "x5": "DT_DOUBLE",
+                        "x6": "DT_INT64",
+                        "x7": "DT_INT16",
+                        "x8": "DT_FLOAT",
+                        "x9": "DT_FLOAT",
+                        "x10": "DT_FLOAT",
+                    },
+                    root_node_id=0,
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 6,
+                            "splitValue": -0.261598617,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 4,
+                            "splitValue": -0.0992445946,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 4,
+                            "splitValue": 0.3885355,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 2,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 1,
+                            "splitValue": 0.149844646,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 1,
+                            "splitValue": 0.0529966354,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": -0.196025193,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": 0.0978358239,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": -0.381145447,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": -0.0979942083,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": 0.117580406,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": 0.302539676,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": 0.171336576,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                            "leafWeight": -0.125806138,
+                        },
+                    ],
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_0",
+                    ["node_tree_select_0"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                    leaf_node_weights={
+                        7: -0.116178043,
+                        8: 0.16241236,
+                        9: -0.418656051,
+                        10: -0.0926064253,
+                        11: 0.15993154,
+                        12: 0.358381808,
+                        13: -0.104386188,
+                        14: 0.194736511,
+                    },
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_1",
+                    ["node_tree_select_1"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                    leaf_node_weights={
+                        7: -0.196025193,
+                        8: 0.0978358239,
+                        9: -0.381145447,
+                        10: -0.0979942083,
+                        11: 0.117580406,
+                        12: 0.302539676,
+                        13: 0.171336576,
+                        14: -0.125806138,
+                    },
+                ),
+                make_tree_ensemble_predict_node_def(
+                    "node_tree_ensemble_predict",
+                    ["node_tree_merge_0", "node_tree_merge_1"],
+                    input_col_name="weights",
+                    output_col_name="scores",
+                    num_trees=2,
+                    func_type='LF_SIGMOID_RAW',
+                ),
+            ],
+            "bob": [
+                make_tree_select_node_def(
+                    name="node_tree_select_0",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={
+                        "x11": "DT_FLOAT",
+                        "x12": "DT_INT16",
+                        "x13": "DT_INT8",
+                        "x14": "DT_UINT8",
+                        "x15": "DT_DOUBLE",
+                        "x16": "DT_INT64",
+                        "x17": "DT_INT16",
+                        "x18": "DT_FLOAT",
+                        "x19": "DT_FLOAT",
+                        "x20": "DT_FLOAT",
+                    },
+                    root_node_id=0,
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 9,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": -0.107344508,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": 0.210497797,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                    ],
+                ),
+                make_tree_select_node_def(
+                    name="node_tree_select_1",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={
+                        "x11": "DT_FLOAT",
+                        "x12": "DT_INT16",
+                        "x13": "DT_INT8",
+                        "x14": "DT_UINT8",
+                        "x15": "DT_DOUBLE",
+                        "x16": "DT_INT64",
+                        "x17": "DT_INT16",
+                        "x18": "DT_FLOAT",
+                        "x19": "DT_FLOAT",
+                        "x20": "DT_FLOAT",
+                    },
+                    root_node_id=0,
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 9,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 4,
+                            "splitValue": -0.548508525,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 3,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 9,
+                            "splitValue": -0.405750543,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                    ],
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_0",
+                    ["node_tree_select_0"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_1",
+                    ["node_tree_select_1"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                ),
+                make_tree_ensemble_predict_node_def(
+                    "node_tree_ensemble_predict",
+                    ["node_tree_merge_0", "node_tree_merge_1"],
+                    input_col_name="weights",
+                    output_col_name="scores",
+                    num_trees=2,
+                    func_type='LF_SIGMOID_RAW',
+                ),
+            ],
+        },
+        executions={
+            "alice": [
+                ExecutionDef(
+                    nodes=["node_tree_select_0", "node_tree_select_1"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=[
+                        "node_tree_merge_0",
+                        "node_tree_merge_1",
+                        "node_tree_ensemble_predict",
+                    ],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_SPECIFIED,
+                        session_run=False,
+                        specific_flag=True,
+                    ),
+                ),
+            ],
+            "bob": [
+                ExecutionDef(
+                    nodes=["node_tree_select_0", "node_tree_select_1"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=[
+                        "node_tree_merge_0",
+                        "node_tree_merge_1",
+                        "node_tree_ensemble_predict",
+                    ],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_SPECIFIED, session_run=False
+                    ),
+                ),
+            ],
+        },
+        specific_party="alice",
+    ).exec()
+
     PredefinedErrorTest('model_path').exec()
     PredefineTest('model_path').exec()
     CsvTest('model_path').exec()

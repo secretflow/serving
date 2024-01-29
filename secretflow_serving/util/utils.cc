@@ -23,7 +23,6 @@
 
 namespace secretflow::serving {
 
-namespace {
 std::string ReadFileContent(const std::string& file) {
   if (!std::filesystem::exists(file)) {
     SERVING_THROW(errors::ErrorCode::IO_ERROR, "can not find file: {}", file);
@@ -34,7 +33,6 @@ std::string ReadFileContent(const std::string& file) {
   return std::string((std::istreambuf_iterator<char>(file_is)),
                      std::istreambuf_iterator<char>());
 }
-}  // namespace
 
 void LoadPbFromJsonFile(const std::string& file,
                         ::google::protobuf::Message* message) {
