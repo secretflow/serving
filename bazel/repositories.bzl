@@ -16,13 +16,11 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-
 SECRETFLOW_GIT = "https://github.com/secretflow"
 
-YACL_COMMIT_ID  = "e3401da07d8aa2f3fe2238e8563e5f573036a594"
+YACL_COMMIT_ID = "e3401da07d8aa2f3fe2238e8563e5f573036a594"
 
-KUSCIA_COMMIT_ID  = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
-
+KUSCIA_COMMIT_ID = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
 
 def sf_serving_deps():
     _bazel_platform()
