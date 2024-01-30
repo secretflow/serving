@@ -50,7 +50,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   linux_aarch64_publish:
     docker:
