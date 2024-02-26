@@ -58,7 +58,8 @@ message ModelConfig {
   // Path used to cache and load model package
   string base_path = 2;
 
-  // Represent the path of the model package in the model source
+  // The path to the model package in the data source, where the content format
+  // may vary depending on the `source_type`
   string source_path = 3;
 
   // Optional.

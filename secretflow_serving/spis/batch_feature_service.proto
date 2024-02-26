@@ -35,11 +35,11 @@ service BatchFeatureService {
 //     "header": {
 //       "data": {
 //         "custom_str": "id_12345"
-//       },
+//       }
 //     },
-//     "model_service_id": "test_service_id",
-//     "party_id": "alice",
-//     "feature_fields": [
+//     "modelServiceId":  "test_service_id",
+//     "partyId": "alice",
+//     "featureFields": [
 //       {
 //         "name": "f1",
 //         "type": 2
@@ -48,13 +48,13 @@ service BatchFeatureService {
 //         "name": "f2",
 //         "type": 4
 //       }
-//     ]
+//     ],
 //     "param": {
-//       "query_datas": [
+//       "queryDatas": [
 //         "x1",
 //         "x2"
 //       ],
-//       "query_context": "context_x"
+//       "queryContext": "context_x"
 //     }
 //   }
 // ```

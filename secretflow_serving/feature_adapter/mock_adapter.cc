@@ -67,6 +67,15 @@ void MockAdapter::OnFetchFeature(const Request& request, Response* response) {
                : std::to_string(rand_gen() % 100);
   };
 
+  if (cols == 0) {
+    // no feature needed, just return simple record_batch
+    auto array =
+        CreateArray<arrow::Int32Builder, int32_t>(rows, []() { return 1; });
+    response->features = MakeRecordBatch(
+        arrow::schema({arrow::field("x1", arrow::int32())}), rows, {array});
+    return;
+  }
+
   for (size_t c = 0; c < cols; ++c) {
     std::shared_ptr<arrow::Array> array;
     const auto& f = feature_schema_->field(c);

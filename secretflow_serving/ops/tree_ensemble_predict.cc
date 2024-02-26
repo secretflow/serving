@@ -90,7 +90,10 @@ void TreeEnsemblePredict::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(TREE_ENSEMBLE_PREDICT, TreeEnsemblePredict)
-REGISTER_OP(TREE_ENSEMBLE_PREDICT, "0.0.1", "")
+REGISTER_OP(TREE_ENSEMBLE_PREDICT, "0.0.1",
+            "Accept the weighted results from multiple trees (`TREE_SELECT` + "
+            "`TREE_MERGE`), merge them, and obtain the final prediction result "
+            "of the tree ensemble.")
     .VariableInputs()
     .Returnable()
     .StringAttr("input_col_name", "The column name of tree weight", false,

@@ -317,9 +317,31 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
+        service_id="bin_onehot_glm_alice_no_feature",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/bin_onehot_glm_alice_no_feature',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
         service_id="bin_sgb",
         parties=['alice', 'bob'],
         case_dir='.ci/test_data/bin_sgb',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '17', '18'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="bin_sgb_alice_no_feature",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/bin_sgb_alice_no_feature',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -335,5 +357,38 @@ if __name__ == "__main__":
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '17', '18'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="xgb_alice_no_feature",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/xgb_alice_no_feature',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '17', '18'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="sgd",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/sgd',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="sgd_alice_no_feature",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/sgd_alice_no_feature',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
         score_col_name='pred',
     ).exec()

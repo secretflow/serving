@@ -34,7 +34,7 @@ class TreeMerge : public OpKernel {
   std::string input_col_name_;
   std::string output_col_name_;
 
-  std::vector<double> bfs_weights_ = {};
+  std::vector<double> weights_ = {};
 };
 
 }  // namespace secretflow::serving::op

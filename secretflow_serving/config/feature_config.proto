@@ -53,6 +53,7 @@ message HttpOptions {
   string endpoint = 1;
 
   // Whether to enable round robin load balancer.
+  // Default: False
   bool enable_lb = 2;
 
   // Max duration for a connect. -1 means wait indefinitely.

@@ -43,13 +43,6 @@ TEST_F(TreeMergeTest, Works) {
     "output_col_name": {
       "s": "weights"
     },
-    "leaf_node_ids": {
-      "i32s": {
-        "data": [
-          7, 8, 9, 10, 11, 12, 13, 14
-        ]
-      }
-    },
     "leaf_weights": {
       "ds": {
         "data": [
@@ -95,10 +88,12 @@ TEST_F(TreeMergeTest, Works) {
   std::vector<uint8_t> alice_select_0 = {0, /*01100000*/ (1 << 5) | (1 << 6)};
   std::vector<uint8_t> bob_select_0 = {
       0, /*11000011*/ 1 | (1 << 1) | (1 << 6) | (1 << 7)};
+  std::vector<uint8_t> carol_select_0 = {};
 
   std::vector<uint8_t> alice_select_1 = {0, /*00000101*/ 1 | (1 << 2)};
   std::vector<uint8_t> bob_select_1 = {
       0, /*11001100*/ (1 << 2) | (1 << 3) | (1 << 6) | (1 << 7)};
+  std::vector<uint8_t> carol_select_1 = {};
 
   {
     std::shared_ptr<arrow::Array> alice_array;
@@ -117,14 +112,24 @@ TEST_F(TreeMergeTest, Works) {
         bob_builder.Append(bob_select_1.data(), bob_select_1.size()));
     SERVING_CHECK_ARROW_STATUS(bob_builder.Finish(&bob_array));
 
+    std::shared_ptr<arrow::Array> carol_array;
+    arrow::BinaryBuilder carol_builder;
+    SERVING_CHECK_ARROW_STATUS(
+        carol_builder.Append(carol_select_0.data(), carol_select_0.size()));
+    SERVING_CHECK_ARROW_STATUS(
+        carol_builder.Append(carol_select_1.data(), carol_select_1.size()));
+    SERVING_CHECK_ARROW_STATUS(carol_builder.Finish(&carol_array));
+
     auto alice_input =
         MakeRecordBatch(arrow::schema(input_fields), 2, {alice_array});
     auto bob_input =
         MakeRecordBatch(arrow::schema(input_fields), 2, {bob_array});
+    auto carol_input =
+        MakeRecordBatch(arrow::schema(input_fields), 2, {carol_array});
 
     compute_ctx.inputs.emplace_back(
-        std::vector<std::shared_ptr<arrow::RecordBatch>>{alice_input,
-                                                         bob_input});
+        std::vector<std::shared_ptr<arrow::RecordBatch>>{alice_input, bob_input,
+                                                         carol_input});
   }
 
   // expect result
@@ -197,39 +202,9 @@ TEST_P(TreeMergeExceptionTest, Constructor) {
                Exception);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TreeMergeExceptionTestSuite, TreeMergeExceptionTest,
-    ::testing::Values(
-        /*leaf_node_ids and leaf_weights num mismatch*/ Param{R"JSON(
-{
-  "name": "test_node",
-  "op": "TREE_MERGE",
-  "attr_values": {
-    "input_col_name": {
-      "s": "selects"
-    },
-    "output_col_name": {
-      "s": "weights"
-    },
-    "leaf_node_ids": {
-      "i32s": {
-        "data": [
-          7, 8, 9, 10, 11, 12
-        ]
-      }
-    },
-    "leaf_weights": {
-      "ds": {
-        "data": [
-          -0.116178043, 0.16241236, -0.418656051, -0.0926064253, 0.15993154, 0.358381808, -0.104386188, 0.194736511
-        ]
-      }
-    }
-  },
-  "op_version": "0.0.1"
-}
-)JSON"},
-        /*missing input_col_name*/ Param{R"JSON(
+INSTANTIATE_TEST_SUITE_P(TreeMergeExceptionTestSuite, TreeMergeExceptionTest,
+                         ::testing::Values(
+                             /*missing input_col_name*/ Param{R"JSON(
 {
   "name": "test_node",
   "op": "TREE_MERGE",
@@ -255,7 +230,7 @@ INSTANTIATE_TEST_SUITE_P(
   "op_version": "0.0.1"
 }
 )JSON"},
-        /*missing output_col_name*/ Param{R"JSON(
+                             /*missing output_col_name*/ Param{R"JSON(
 {
   "name": "test_node",
   "op": "TREE_MERGE",

@@ -132,7 +132,7 @@
 
 
 
-{#ChannelDesc}
+
 ### ChannelDesc
 Description for channels between joined parties
 
@@ -149,7 +149,7 @@ Description for channels between joined parties
  <!-- end HasFields -->
 
 
-{#ClusterConfig}
+
 ### ClusterConfig
 Runtime config for a serving cluster
 
@@ -163,7 +163,7 @@ Runtime config for a serving cluster
  <!-- end HasFields -->
 
 
-{#PartyDesc}
+
 ### PartyDesc
 Description for a joined party
 
@@ -179,7 +179,7 @@ Description for a joined party
 
 
 
-{#CsvOptions}
+
 ### CsvOptions
 Options of a csv feature source.
 
@@ -192,7 +192,7 @@ Options of a csv feature source.
  <!-- end HasFields -->
 
 
-{#FeatureSourceConfig}
+
 ### FeatureSourceConfig
 Config for a feature source
 
@@ -206,7 +206,7 @@ Config for a feature source
  <!-- end HasFields -->
 
 
-{#HttpOptions}
+
 ### HttpOptions
 Options for a http feature source which should implement the feature service
 spi. The defined of spi can be found in
@@ -216,7 +216,7 @@ secretflow_serving/spis/batch_feature_service.proto
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | endpoint | [ string](#string ) | none |
-| enable_lb | [ bool](#bool ) | Whether to enable round robin load balancer. |
+| enable_lb | [ bool](#bool ) | Whether to enable round robin load balancer. Default: False |
 | connect_timeout_ms | [ int32](#int32 ) | Max duration for a connect. -1 means wait indefinitely. Default: 500 (ms) |
 | timeout_ms | [ int32](#int32 ) | Max duration of http request. -1 means wait indefinitely. Default: 1000 (ms) |
 | tls_config | [ TlsConfig](#tlsconfig ) | TLS related config. |
@@ -224,7 +224,7 @@ secretflow_serving/spis/batch_feature_service.proto
  <!-- end HasFields -->
 
 
-{#MockOptions}
+
 ### MockOptions
 Options for a mock feature source.
 Mock feature source will generates values(random or fixed, according to type)
@@ -233,16 +233,16 @@ for the desired features.
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| type | [ MockDataType](#mockdatatype ) | default MDT_RANDOM |
+| type | [ MockDataType](#mockdatatype ) | default MDT_FIXED |
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->
 
 
 
-{#LoggingConfig}
-### LoggingConfig
 
+### LoggingConfig
+Serving log config options
 
 
 | Field | Type | Description |
@@ -257,14 +257,14 @@ for the desired features.
 
 
 
-{#FileSourceMeta}
+
 ### FileSourceMeta
 empty by design
 
  <!-- end HasFields -->
 
 
-{#ModelConfig}
+
 ### ModelConfig
 Config for serving model
 
@@ -273,7 +273,7 @@ Config for serving model
 | ----- | ---- | ----------- |
 | model_id | [ string](#string ) | Unique id of the model package |
 | base_path | [ string](#string ) | Path used to cache and load model package |
-| source_path | [ string](#string ) | Represent the path of the model package in the model source |
+| source_path | [ string](#string ) | The path to the model package in the data source, where the content format may vary depending on the `source_type` |
 | source_sha256 | [ string](#string ) | Optional. The expect sha256 of the model package |
 | source_type | [ SourceType](#sourcetype ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.file_source_meta | [ FileSourceMeta](#filesourcemeta ) | none |
@@ -282,9 +282,10 @@ Config for serving model
  <!-- end HasFields -->
 
 
-{#OSSSourceMeta}
+
 ### OSSSourceMeta
-Options for a S3 Oss model source
+Options for a Oss model source. Serving accesses data services using the AWS
+S3 protocol.
 
 
 | Field | Type | Description |
@@ -300,7 +301,7 @@ Options for a S3 Oss model source
 
 
 
-{#ServerConfig}
+
 ### ServerConfig
 
 
@@ -318,7 +319,7 @@ Options for a S3 Oss model source
  <!-- end HasFields -->
 
 
-{#ServerConfig.FeatureMappingEntry}
+
 ### ServerConfig.FeatureMappingEntry
 
 
@@ -333,7 +334,7 @@ Options for a S3 Oss model source
 
 
 
-{#ServingConfig}
+
 ### ServingConfig
 Related config of serving
 
@@ -351,7 +352,7 @@ Related config of serving
 
 
 
-{#TlsConfig}
+
 ### TlsConfig
 
 
@@ -387,7 +388,7 @@ Related config of serving
 
 
 ### LogLevel
-
+Serving log level
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -409,7 +410,7 @@ Supported model source type
 | ---- | ------ | ----------- |
 | INVALID_SOURCE_TYPE | 0 | Placeholder for proto3 default value, do not use it. |
 | ST_FILE | 1 | Local filesystem |
-| ST_OSS | 2 | S3 OSS |
+| ST_OSS | 2 | OSS/AWS S3 |
 
 
  <!-- end Enums -->

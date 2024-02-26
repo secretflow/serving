@@ -93,9 +93,9 @@ See :ref:`Serving Config <ServingConfig>` for more config information
 
 .. note::
 
-  The above configuration is referenced from `alice-serving-config <https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_.
-
-  For ``Bob``, you should refer to `bob-serving-config <https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_ .
+  * The above configuration is referenced from `alice-serving-config <https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_.
+  * For ``Bob``, you should refer to `bob-serving-config <https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_ .
+  * **Note** `mockOpts` is configured here for a mock feature data source, which will provide simulated feature data to support the model prediction process. In actual use, please provide feature data in the form of a feature service by implementing the :ref:`SecretFlow-Serving Feature Service SPI <BatchFeatureService>`.
 
 .. _log_conf_file:
 

@@ -87,7 +87,8 @@ class OpKernel {
         SERVING_ENFORCE_EQ(rows, input_table->num_rows(),
                            "rows of all inputs tables should be equal");
 
-        if (!input_table->schema()->Equals(input_schema_list_[edge_index])) {
+        if (input_schema_list_[edge_index]->num_fields() > 0 &&
+            !input_table->schema()->Equals(input_schema_list_[edge_index])) {
           // reshape real input base on kernel input_schema
           std::vector<std::shared_ptr<arrow::Array>> sorted_arrays;
           for (int i = 0; i < input_schema_list_[edge_index]->num_fields();

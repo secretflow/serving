@@ -32,7 +32,6 @@ build --copt=-fPIC
 build --copt=-fstack-protector-strong
 build:linux --copt=-Wl,-z,noexecstack
 
-
 test --keep_going
 test --test_output=errors
 test --test_timeout=1800

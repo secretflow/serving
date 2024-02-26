@@ -147,7 +147,6 @@
 
  <!-- end services -->
 
-{#ExecutionService}
 ## ExecutionService
 ExecutionService provides access to run execution defined in the GraphDef.
 
@@ -160,7 +159,6 @@ ExecutionService provides access to run execution defined in the GraphDef.
  <!-- end methods -->
  <!-- end services -->
 
-{#metrics}
 ## metrics
 
 
@@ -173,7 +171,6 @@ ExecutionService provides access to run execution defined in the GraphDef.
  <!-- end methods -->
  <!-- end services -->
 
-{#ModelService}
 ## ModelService
 ModelService provides operation ralated to models.
 
@@ -186,7 +183,6 @@ ModelService provides operation ralated to models.
  <!-- end methods -->
  <!-- end services -->
 
-{#PredictionService}
 ## PredictionService
 PredictionService provides access to the serving model.
 
@@ -208,7 +204,7 @@ Predict.
 
 
 
-{#Header}
+
 ### Header
 Header containing custom data
 
@@ -220,7 +216,7 @@ Header containing custom data
  <!-- end HasFields -->
 
 
-{#Header.DataEntry}
+
 ### Header.DataEntry
 
 
@@ -233,7 +229,7 @@ Header containing custom data
  <!-- end HasFields -->
 
 
-{#ServiceSpec}
+
 ### ServiceSpec
 Metadata for an predict or execute request.
 
@@ -249,7 +245,7 @@ Metadata for an predict or execute request.
 
 
 
-{#ExecuteRequest}
+
 ### ExecuteRequest
 Execute request containing one or more requests.
 
@@ -266,7 +262,7 @@ Execute request containing one or more requests.
  <!-- end HasFields -->
 
 
-{#ExecuteResponse}
+
 ### ExecuteResponse
 Execute response containing one or more responses.
 
@@ -282,7 +278,7 @@ Execute response containing one or more responses.
  <!-- end HasFields -->
 
 
-{#ExecuteResult}
+
 ### ExecuteResult
 Execute result of the request task.
 
@@ -295,7 +291,7 @@ Execute result of the request task.
  <!-- end HasFields -->
 
 
-{#ExecutionTask}
+
 ### ExecutionTask
 Execute request task.
 
@@ -308,7 +304,7 @@ Execute request task.
  <!-- end HasFields -->
 
 
-{#FeatureSource}
+
 ### FeatureSource
 Descriptive feature source
 
@@ -322,7 +318,7 @@ Descriptive feature source
  <!-- end HasFields -->
 
 
-{#IoData}
+
 ### IoData
 The serialized data of the node input/output.
 
@@ -334,7 +330,7 @@ The serialized data of the node input/output.
  <!-- end HasFields -->
 
 
-{#NodeIo}
+
 ### NodeIo
 Represents the node input/output data.
 
@@ -349,14 +345,14 @@ Represents the node input/output data.
 
 
 
-{#MetricsRequest}
+
 ### MetricsRequest
 
 
  <!-- end HasFields -->
 
 
-{#MetricsResponse}
+
 ### MetricsResponse
 
 
@@ -365,7 +361,7 @@ Represents the node input/output data.
 
 
 
-{#GetModelInfoRequest}
+
 ### GetModelInfoRequest
 
 
@@ -378,7 +374,7 @@ Represents the node input/output data.
  <!-- end HasFields -->
 
 
-{#GetModelInfoResponse}
+
 ### GetModelInfoResponse
 
 
@@ -395,7 +391,7 @@ Represents the node input/output data.
 
 
 
-{#PredictRequest}
+
 ### PredictRequest
 Predict request containing one or more requests.
 examples:
@@ -439,7 +435,7 @@ examples:
  <!-- end HasFields -->
 
 
-{#PredictRequest.FsParamsEntry}
+
 ### PredictRequest.FsParamsEntry
 
 
@@ -452,7 +448,7 @@ examples:
  <!-- end HasFields -->
 
 
-{#PredictResponse}
+
 ### PredictResponse
 Predict response containing one or more responses.
 examples:
@@ -496,7 +492,7 @@ examples:
  <!-- end HasFields -->
 
 
-{#PredictResult}
+
 ### PredictResult
 Result of single predict request.
 
@@ -508,7 +504,7 @@ Result of single predict request.
  <!-- end HasFields -->
 
 
-{#Score}
+
 ### Score
 Result of regression or one class of Classifications
 
@@ -523,7 +519,7 @@ Result of regression or one class of Classifications
 
 
 
-{#Status}
+
 ### Status
 Represents the status of a request
 
@@ -538,7 +534,7 @@ Represents the status of a request
 
 
 
-{#Feature}
+
 ### Feature
 The definition of a feature
 
@@ -551,7 +547,7 @@ The definition of a feature
  <!-- end HasFields -->
 
 
-{#FeatureField}
+
 ### FeatureField
 The definition of a feature field.
 
@@ -564,7 +560,7 @@ The definition of a feature field.
  <!-- end HasFields -->
 
 
-{#FeatureParam}
+
 ### FeatureParam
 The param for fetch features
 
@@ -577,7 +573,7 @@ The param for fetch features
  <!-- end HasFields -->
 
 
-{#FeatureValue}
+
 ### FeatureValue
 The value of a feature
 

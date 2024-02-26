@@ -70,4 +70,31 @@ TEST_F(MockAdapterTest, Work) {
   EXPECT_EQ(kTestParamNum, response.features->num_rows());
 }
 
+TEST_F(MockAdapterTest, WorkNoFeature) {
+  FeatureSourceConfig config;
+  (void)config.mutable_mock_opts();
+
+  auto model_schema = arrow::schema({});
+
+  auto adapter = FeatureAdapterFactory::GetInstance()->Create(
+      config, kTestModelServiceId, kTestPartyId, model_schema);
+
+  FeatureParam fs_param;
+  for (size_t i = 0; i < kTestParamNum; ++i) {
+    fs_param.add_query_datas(std::to_string(i));
+  }
+  fs_param.set_query_context(kTestContext);
+  FeatureAdapter::Request request;
+  request.fs_param = &fs_param;
+
+  FeatureAdapter::Response response;
+
+  ASSERT_NO_THROW(adapter->FetchFeature(request, &response));
+  ASSERT_TRUE(response.features);
+
+  // check schema and rows
+  auto schema = response.features->schema();
+  EXPECT_EQ(kTestParamNum, response.features->num_rows());
+}
+
 }  // namespace secretflow::serving::feature

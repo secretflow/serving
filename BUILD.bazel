@@ -20,11 +20,13 @@ pkg_tar(
         "//examples:data",
         "//secretflow_serving/server:secretflow_serving",
         "//secretflow_serving/server:secretflow_serving_conf",
+        "//secretflow_serving/tools/model_view",
     ],
     extension = "tar.gz",
     package_dir = "sf_serving",
     remap_paths = {
         "secretflow_serving/server/": "",
+        "secretflow_serving/tools/": "tools/",
     },
     strip_prefix = "./",
 )

@@ -40,9 +40,11 @@ void FeatureAdapter::CheckFeatureValid(
     const Request& request,
     const std::shared_ptr<arrow::RecordBatch>& features) {
   const auto& schema = features->schema();
-  SERVING_ENFORCE(schema->Equals(*feature_schema_),
-                  errors::ErrorCode::NOT_FOUND,
-                  "result schema does not match the request expect.");
+  if (feature_schema_->num_fields() > 0) {
+    SERVING_ENFORCE(schema->Equals(*feature_schema_),
+                    errors::ErrorCode::NOT_FOUND,
+                    "result schema does not match the request expect.");
+  }
   SERVING_ENFORCE(
       request.fs_param->query_datas().size() == features->num_rows(),
       errors::ErrorCode::LOGIC_ERROR,

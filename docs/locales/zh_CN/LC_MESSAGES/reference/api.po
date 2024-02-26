@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 11:07+0800\n"
+"POT-Creation-Date: 2024-02-19 12:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../source/reference/api.md:1
 msgid "SecretFlow-Serving API"
@@ -45,7 +45,7 @@ msgstr ""
 msgid "[PredictionService](#predictionservice)"
 msgstr ""
 
-#: ../../source/reference/api.md:43 ../../source/reference/api.md:207
+#: ../../source/reference/api.md:43 ../../source/reference/api.md:203
 msgid "Messages"
 msgstr ""
 
@@ -145,7 +145,7 @@ msgstr ""
 msgid "[FeatureValue](#featurevalue)"
 msgstr ""
 
-#: ../../source/reference/api.md:108 ../../source/reference/api.md:598
+#: ../../source/reference/api.md:108 ../../source/reference/api.md:594
 msgid "Enums"
 msgstr ""
 
@@ -166,102 +166,82 @@ msgid "[Scalar Value Types](#scalar-value-types)"
 msgstr ""
 
 #: ../../source/reference/api.md:150
-msgid "{#ExecutionService}"
-msgstr ""
-
-#: ../../source/reference/api.md:151
 msgid "ExecutionService"
 msgstr ""
 
-#: ../../source/reference/api.md:152
+#: ../../source/reference/api.md:151
 msgid "ExecutionService provides access to run execution defined in the GraphDef."
 msgstr ""
 
-#: ../../source/reference/api.md:154
+#: ../../source/reference/api.md:153
 msgid "Execute"
 msgstr ""
 
-#: ../../source/reference/api.md:156
+#: ../../source/reference/api.md:155
 msgid ""
 "**rpc** Execute([ExecuteRequest](#executerequest))     "
 "[ExecuteResponse](#executeresponse)"
 msgstr ""
 
-#: ../../source/reference/api.md:163
-msgid "{#metrics}"
-msgstr ""
-
-#: ../../source/reference/api.md:164
+#: ../../source/reference/api.md:162
 msgid "metrics"
 msgstr ""
 
-#: ../../source/reference/api.md:167
+#: ../../source/reference/api.md:165
 msgid "default_method"
 msgstr ""
 
-#: ../../source/reference/api.md:169
+#: ../../source/reference/api.md:167
 msgid ""
 "**rpc** default_method([MetricsRequest](#metricsrequest))     "
 "[MetricsResponse](#metricsresponse)"
 msgstr ""
 
-#: ../../source/reference/api.md:176
-msgid "{#ModelService}"
-msgstr ""
-
-#: ../../source/reference/api.md:177
+#: ../../source/reference/api.md:174
 msgid "ModelService"
 msgstr ""
 
-#: ../../source/reference/api.md:178
+#: ../../source/reference/api.md:175
 msgid "ModelService provides operation ralated to models."
 msgstr ""
 
-#: ../../source/reference/api.md:180
+#: ../../source/reference/api.md:177
 msgid "GetModelInfo"
 msgstr ""
 
-#: ../../source/reference/api.md:182
+#: ../../source/reference/api.md:179
 msgid ""
 "**rpc** GetModelInfo([GetModelInfoRequest](#getmodelinforequest))     "
 "[GetModelInfoResponse](#getmodelinforesponse)"
 msgstr ""
 
-#: ../../source/reference/api.md:189
-msgid "{#PredictionService}"
-msgstr ""
-
-#: ../../source/reference/api.md:190
+#: ../../source/reference/api.md:186
 msgid "PredictionService"
 msgstr ""
 
-#: ../../source/reference/api.md:191
+#: ../../source/reference/api.md:187
 msgid "PredictionService provides access to the serving model."
 msgstr ""
 
-#: ../../source/reference/api.md:193
+#: ../../source/reference/api.md:189
 msgid "Predict"
 msgstr ""
 
-#: ../../source/reference/api.md:195
+#: ../../source/reference/api.md:191
 msgid ""
 "**rpc** Predict([PredictRequest](#predictrequest))     "
 "[PredictResponse](#predictresponse)"
 msgstr ""
 
-#: ../../source/reference/api.md:198
+#: ../../source/reference/api.md:194
 msgid "Predict."
 msgstr ""
 
-#: ../../source/reference/api.md:211
-msgid "{#Header}"
-msgstr ""
-
-#: ../../source/reference/api.md:212
+#: ../../source/reference/api.md:208
 msgid "Header"
 msgstr ""
 
-#: ../../source/reference/api.md:213
+#: ../../source/reference/api.md:209
 msgid "Header containing custom data"
 msgstr ""
 
@@ -289,11 +269,7 @@ msgstr ""
 msgid "none"
 msgstr ""
 
-#: ../../source/reference/api.md:223
-msgid "{#Header.DataEntry}"
-msgstr ""
-
-#: ../../source/reference/api.md:224
+#: ../../source/reference/api.md:220
 msgid "Header.DataEntry"
 msgstr ""
 
@@ -309,15 +285,11 @@ msgstr ""
 msgid "value"
 msgstr ""
 
-#: ../../source/reference/api.md:236
-msgid "{#ServiceSpec}"
-msgstr ""
-
-#: ../../source/reference/api.md:237
+#: ../../source/reference/api.md:233
 msgid "ServiceSpec"
 msgstr ""
 
-#: ../../source/reference/api.md:238
+#: ../../source/reference/api.md:234
 msgid "Metadata for an predict or execute request."
 msgstr ""
 
@@ -329,15 +301,11 @@ msgstr ""
 msgid "The id of the model service."
 msgstr ""
 
-#: ../../source/reference/api.md:252
-msgid "{#ExecuteRequest}"
-msgstr ""
-
-#: ../../source/reference/api.md:253
+#: ../../source/reference/api.md:249
 msgid "ExecuteRequest"
 msgstr ""
 
-#: ../../source/reference/api.md:254
+#: ../../source/reference/api.md:250
 msgid "Execute request containing one or more requests."
 msgstr ""
 
@@ -399,15 +367,11 @@ msgstr ""
 msgid "[ ExecutionTask](#executiontask )"
 msgstr ""
 
-#: ../../source/reference/api.md:269
-msgid "{#ExecuteResponse}"
-msgstr ""
-
-#: ../../source/reference/api.md:270
+#: ../../source/reference/api.md:266
 msgid "ExecuteResponse"
 msgstr ""
 
-#: ../../source/reference/api.md:271
+#: ../../source/reference/api.md:267
 msgid "Execute response containing one or more responses."
 msgstr ""
 
@@ -437,15 +401,11 @@ msgstr ""
 msgid "[ ExecuteResult](#executeresult )"
 msgstr ""
 
-#: ../../source/reference/api.md:285
-msgid "{#ExecuteResult}"
-msgstr ""
-
-#: ../../source/reference/api.md:286
+#: ../../source/reference/api.md:282
 msgid "ExecuteResult"
 msgstr ""
 
-#: ../../source/reference/api.md:287
+#: ../../source/reference/api.md:283
 msgid "Execute result of the request task."
 msgstr ""
 
@@ -469,27 +429,19 @@ msgstr ""
 msgid "[repeated NodeIo](#nodeio )"
 msgstr ""
 
-#: ../../source/reference/api.md:298
-msgid "{#ExecutionTask}"
-msgstr ""
-
-#: ../../source/reference/api.md:299
+#: ../../source/reference/api.md:295
 msgid "ExecutionTask"
 msgstr ""
 
-#: ../../source/reference/api.md:300
+#: ../../source/reference/api.md:296
 msgid "Execute request task."
 msgstr ""
 
-#: ../../source/reference/api.md:311
-msgid "{#FeatureSource}"
-msgstr ""
-
-#: ../../source/reference/api.md:312
+#: ../../source/reference/api.md:308
 msgid "FeatureSource"
 msgstr ""
 
-#: ../../source/reference/api.md:313
+#: ../../source/reference/api.md:309
 msgid "Descriptive feature source"
 msgstr ""
 
@@ -531,15 +483,11 @@ msgstr ""
 msgid "Defined features. Valid when `type==FeatureSourceType::FS_PREDEFINED`"
 msgstr ""
 
-#: ../../source/reference/api.md:325
-msgid "{#IoData}"
-msgstr ""
-
-#: ../../source/reference/api.md:326
+#: ../../source/reference/api.md:322
 msgid "IoData"
 msgstr ""
 
-#: ../../source/reference/api.md:327
+#: ../../source/reference/api.md:323
 msgid "The serialized data of the node input/output."
 msgstr ""
 
@@ -551,15 +499,11 @@ msgstr ""
 msgid "[repeated bytes](#bytes )"
 msgstr ""
 
-#: ../../source/reference/api.md:337
-msgid "{#NodeIo}"
-msgstr ""
-
-#: ../../source/reference/api.md:338
+#: ../../source/reference/api.md:334
 msgid "NodeIo"
 msgstr ""
 
-#: ../../source/reference/api.md:339
+#: ../../source/reference/api.md:335
 msgid "Represents the node input/output data."
 msgstr ""
 
@@ -579,27 +523,15 @@ msgstr ""
 msgid "[repeated IoData](#iodata )"
 msgstr ""
 
-#: ../../source/reference/api.md:352
-msgid "{#MetricsRequest}"
-msgstr ""
-
-#: ../../source/reference/api.md:353
+#: ../../source/reference/api.md:349
 msgid "MetricsRequest"
 msgstr ""
 
-#: ../../source/reference/api.md:359
-msgid "{#MetricsResponse}"
-msgstr ""
-
-#: ../../source/reference/api.md:360
+#: ../../source/reference/api.md:356
 msgid "MetricsResponse"
 msgstr ""
 
-#: ../../source/reference/api.md:368
-msgid "{#GetModelInfoRequest}"
-msgstr ""
-
-#: ../../source/reference/api.md:369
+#: ../../source/reference/api.md:365
 msgid "GetModelInfoRequest"
 msgstr ""
 
@@ -607,11 +539,7 @@ msgstr ""
 msgid "Custom data."
 msgstr ""
 
-#: ../../source/reference/api.md:381
-msgid "{#GetModelInfoResponse}"
-msgstr ""
-
-#: ../../source/reference/api.md:382
+#: ../../source/reference/api.md:378
 msgid "GetModelInfoResponse"
 msgstr ""
 
@@ -623,15 +551,11 @@ msgstr ""
 msgid "[ secretflow.serving.ModelInfo](#modelinfo )"
 msgstr ""
 
-#: ../../source/reference/api.md:398
-msgid "{#PredictRequest}"
-msgstr ""
-
-#: ../../source/reference/api.md:399
+#: ../../source/reference/api.md:395
 msgid "PredictRequest"
 msgstr ""
 
-#: ../../source/reference/api.md:400
+#: ../../source/reference/api.md:396
 msgid "Predict request containing one or more requests. examples:"
 msgstr ""
 
@@ -661,23 +585,15 @@ msgid ""
 "prediction."
 msgstr ""
 
-#: ../../source/reference/api.md:442
-msgid "{#PredictRequest.FsParamsEntry}"
-msgstr ""
-
-#: ../../source/reference/api.md:443
+#: ../../source/reference/api.md:439
 msgid "PredictRequest.FsParamsEntry"
 msgstr ""
 
-#: ../../source/reference/api.md:455
-msgid "{#PredictResponse}"
-msgstr ""
-
-#: ../../source/reference/api.md:456
+#: ../../source/reference/api.md:452
 msgid "PredictResponse"
 msgstr ""
 
-#: ../../source/reference/api.md:457
+#: ../../source/reference/api.md:453
 msgid "Predict response containing one or more responses. examples:"
 msgstr ""
 
@@ -695,15 +611,11 @@ msgid ""
 "feature query data."
 msgstr ""
 
-#: ../../source/reference/api.md:499
-msgid "{#PredictResult}"
-msgstr ""
-
-#: ../../source/reference/api.md:500
+#: ../../source/reference/api.md:496
 msgid "PredictResult"
 msgstr ""
 
-#: ../../source/reference/api.md:501
+#: ../../source/reference/api.md:497
 msgid "Result of single predict request."
 msgstr ""
 
@@ -719,15 +631,11 @@ msgstr ""
 msgid "According to the model, there may be one or multi scores."
 msgstr ""
 
-#: ../../source/reference/api.md:511
-msgid "{#Score}"
-msgstr ""
-
-#: ../../source/reference/api.md:512
+#: ../../source/reference/api.md:508
 msgid "Score"
 msgstr ""
 
-#: ../../source/reference/api.md:513
+#: ../../source/reference/api.md:509
 msgid "Result of regression or one class of Classifications"
 msgstr ""
 
@@ -745,15 +653,11 @@ msgstr ""
 msgid "The value of the score."
 msgstr ""
 
-#: ../../source/reference/api.md:526
-msgid "{#Status}"
-msgstr ""
-
-#: ../../source/reference/api.md:527
+#: ../../source/reference/api.md:523
 msgid "Status"
 msgstr ""
 
-#: ../../source/reference/api.md:528
+#: ../../source/reference/api.md:524
 msgid "Represents the status of a request"
 msgstr ""
 
@@ -773,15 +677,11 @@ msgstr ""
 msgid "The msg of this status."
 msgstr ""
 
-#: ../../source/reference/api.md:541
-msgid "{#Feature}"
-msgstr ""
-
-#: ../../source/reference/api.md:542
+#: ../../source/reference/api.md:538
 msgid "Feature"
 msgstr ""
 
-#: ../../source/reference/api.md:543
+#: ../../source/reference/api.md:539
 msgid "The definition of a feature"
 msgstr ""
 
@@ -797,15 +697,11 @@ msgstr ""
 msgid "[ FeatureValue](#featurevalue )"
 msgstr ""
 
-#: ../../source/reference/api.md:554
-msgid "{#FeatureField}"
-msgstr ""
-
-#: ../../source/reference/api.md:555
+#: ../../source/reference/api.md:551
 msgid "FeatureField"
 msgstr ""
 
-#: ../../source/reference/api.md:556
+#: ../../source/reference/api.md:552
 msgid "The definition of a feature field."
 msgstr ""
 
@@ -821,15 +717,11 @@ msgstr ""
 msgid "Field type of the feature"
 msgstr ""
 
-#: ../../source/reference/api.md:567
-msgid "{#FeatureParam}"
-msgstr ""
-
-#: ../../source/reference/api.md:568
+#: ../../source/reference/api.md:564
 msgid "FeatureParam"
 msgstr ""
 
-#: ../../source/reference/api.md:569
+#: ../../source/reference/api.md:565
 msgid "The param for fetch features"
 msgstr ""
 
@@ -855,15 +747,11 @@ msgstr ""
 msgid "Optional. Represents the common part of the query datas."
 msgstr ""
 
-#: ../../source/reference/api.md:580
-msgid "{#FeatureValue}"
-msgstr ""
-
-#: ../../source/reference/api.md:581
+#: ../../source/reference/api.md:577
 msgid "FeatureValue"
 msgstr ""
 
-#: ../../source/reference/api.md:582
+#: ../../source/reference/api.md:578
 msgid "The value of a feature"
 msgstr ""
 
@@ -927,7 +815,7 @@ msgstr ""
 msgid "bool list"
 msgstr ""
 
-#: ../../source/reference/api.md:604
+#: ../../source/reference/api.md:600
 msgid "ErrorCode"
 msgstr ""
 
@@ -1083,11 +971,11 @@ msgstr ""
 msgid "104"
 msgstr ""
 
-#: ../../source/reference/api.md:632
+#: ../../source/reference/api.md:628
 msgid "FeatureSourceType"
 msgstr ""
 
-#: ../../source/reference/api.md:633
+#: ../../source/reference/api.md:629
 msgid "Support feature source type"
 msgstr ""
 
@@ -1119,11 +1007,11 @@ msgstr ""
 msgid "The feature is defined in the request."
 msgstr ""
 
-#: ../../source/reference/api.md:655
+#: ../../source/reference/api.md:651
 msgid "FieldType"
 msgstr ""
 
-#: ../../source/reference/api.md:656
+#: ../../source/reference/api.md:652
 msgid "Supported feature field type."
 msgstr ""
 
@@ -1183,7 +1071,7 @@ msgstr ""
 msgid "STRING"
 msgstr ""
 
-#: ../../source/reference/api.md:672
+#: ../../source/reference/api.md:668
 msgid "Scalar Value Types"
 msgstr ""
 

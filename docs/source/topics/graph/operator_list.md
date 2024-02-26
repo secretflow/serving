@@ -6,7 +6,7 @@ SecretFlow-Serving Operator List
 ================================
 
 
-Last update: Thu Dec 28 14:28:43 2023
+Last update: Fri Feb 23 15:15:32 2024
 ## MERGE_Y
 
 
@@ -112,3 +112,112 @@ Replay secretflow compute functions
 |Name|Description|
 | :--- | :--- |
 |output||
+
+## TREE_SELECT
+
+
+Operator version: 0.0.1
+
+Obtaining the local prediction path information of the decision tree using input features.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|split_values|node split value, goes left when less than it. valid when `is_leaf == false`|Double List|Y||
+|split_feature_idxs|The list of split feature index, `-1` means feature not belong to party or not valid|Integer32 List|Y||
+|lchild_ids|The left child node id list, `-1` means not valid|Integer32 List|Y||
+|leaf_node_ids|The leaf node ids list. The order must remain consistent with the sequence in `TREE_MERGE.leaf_weights`.|Integer32 List|Y||
+|rchild_ids|The right child node id list, `-1` means not valid|Integer32 List|Y||
+|root_node_id|The id of the root tree node|Integer32|N|Default: 0.|
+|output_col_name|Column name of tree select|String|Y||
+|input_feature_types|List of input feature data types. Optional value: DT_UINT8, DT_INT8, DT_UINT16, DT_INT16, DT_UINT32, DT_INT32, DT_UINT64, DT_INT64, DT_FLOAT, DT_DOUBLE|String List|Y||
+|node_ids|The id list of the tree node|Integer32 List|Y||
+|input_feature_names|List of feature names|String List|Y||
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|features|Input feature table|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|select|The local prediction path information of the decision tree.|
+
+## TREE_MERGE
+
+
+Operator version: 0.0.1
+
+Merge the `TREE_SELECT` output from multiple parties to obtain a unique prediction path and return the result weights.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|leaf_weights|The weight list for leaf node, If party does not possess weights. The attr can be omitted.|Double List|N|Default: [].|
+|output_col_name|The column name of tree predict score|String|Y||
+|input_col_name|The column name of selects|String|Y||
+
+### Tags
+
+
+|Name|Description|
+| :--- | :--- |
+|mergeable|The operator accept the output of operators with different participants and will somehow merge them.|
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|selects|Input tree selects|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|score|The prediction result of tree.|
+
+## TREE_ENSEMBLE_PREDICT
+
+
+Operator version: 0.0.1
+
+Accept the weighted results from multiple trees (`TREE_SELECT` + `TREE_MERGE`), merge them, and obtain the final prediction result of the tree ensemble.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|num_trees|The number of ensemble's tree|Integer32|Y||
+|output_col_name|The column name of tree ensemble predict score|String|Y||
+|algo_func|Optional value: LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|N|Default: LF_IDENTITY.|
+|input_col_name|The column name of tree weight|String|Y||
+
+### Tags
+
+
+|Name|Description|
+| :--- | :--- |
+|returnable|The operator's output can be the final result|
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|*args|variable inputs, accept tree's weights|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|score|The prediction result of tree ensemble.|

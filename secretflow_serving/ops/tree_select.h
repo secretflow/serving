@@ -40,6 +40,8 @@ class TreeSelect : public OpKernel {
   std::map<int32_t, TreeNode> nodes_;
   std::set<size_t> used_feature_idx_list_;
 
+  bool dummy_flag_ = false;
+
   size_t num_leaf_ = 0;
 };
 

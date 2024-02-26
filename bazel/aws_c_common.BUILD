@@ -26,6 +26,7 @@ serving_cmake_external(
     cache_entries = {
         "CMAKE_INSTALL_LIBDIR": "lib",
         "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
+        "BUILD_TESTING": "OFF",
     },
     # throw maybe-uninitialized error with --config=asan that set global fsanitize flag
     env = {"CFLAGS": "-Wno-maybe-uninitialized"},
