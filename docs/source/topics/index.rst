@@ -10,12 +10,14 @@ Topics
 
    system/intro
    system/observability
+   system/feature_service
 
 .. toctree::
    :maxdepth: 2
    :caption: deployment
 
    deployment/deployment
+   deployment/serving_on_kuscia
 
 .. toctree::
    :maxdepth: 2

@@ -24,11 +24,15 @@ SecretFlow-Serving Systems
 - **Observability**:
   :doc:`Logs and Metrics </topics/system/observability>`
 
+- **FeatureSource**:
+  :doc:`Feature Service </topics/system/feature_service>`
+
 Deployment
 ----------
 
 - **Guides**:
-  :doc:`How to deploy an SecretFlow-Serving cluster</topics/deployment/deployment>`
+  :doc:`How to deploy an SecretFlow-Serving cluster</topics/deployment/deployment>` |
+  :doc:`Serving on Kuscia</topics/deployment/serving_on_kuscia>`
 
 - **Reference**:
   :doc:`SecretFlow-Serving service API </reference/api>` |

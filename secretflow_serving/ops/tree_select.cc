@@ -46,7 +46,8 @@ TreeSelect::TreeSelect(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   output_col_name_ =
       GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
   // root node id
-  root_node_id_ = GetNodeAttr<int32_t>(opts_.node_def, "root_node_id");
+  root_node_id_ =
+      GetNodeAttr<int32_t>(opts_.node_def, *opts_.op_def, "root_node_id");
 
   // build tree nodes
   auto node_ids = GetNodeAttr<std::vector<int32_t>>(opts_.node_def, "node_ids");
@@ -57,10 +58,22 @@ TreeSelect::TreeSelect(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   auto rchild_ids =
       GetNodeAttr<std::vector<int32_t>>(opts_.node_def, "rchild_ids");
   CheckAttrValueDuplicate(rchild_ids, "rchild_ids", -1);
-  auto leaf_flags =
-      GetNodeAttr<std::vector<bool>>(opts_.node_def, "leaf_flags");
+  auto leaf_node_ids =
+      GetNodeAttr<std::vector<int32_t>>(opts_.node_def, "leaf_node_ids");
   auto split_feature_idx_list =
       GetNodeAttr<std::vector<int32_t>>(opts_.node_def, "split_feature_idxs");
+  auto split_values =
+      GetNodeAttr<std::vector<double>>(opts_.node_def, "split_values");
+  SERVING_ENFORCE(node_ids.size() == lchild_ids.size() &&
+                      node_ids.size() == rchild_ids.size() &&
+                      node_ids.size() == split_feature_idx_list.size() &&
+                      node_ids.size() == split_values.size(),
+                  errors::ErrorCode::LOGIC_ERROR,
+                  "The length of attr value `node_ids` `lchild_ids` "
+                  "`rchild_ids`"
+                  "`split_feature_idxs` `split_values` "
+                  "should be same.");
+
   std::for_each(split_feature_idx_list.begin(), split_feature_idx_list.end(),
                 [&](const auto& idx) {
                   if (idx >= 0) {
@@ -69,34 +82,29 @@ TreeSelect::TreeSelect(OpKernelOptions opts) : OpKernel(std::move(opts)) {
                     used_feature_idx_list_.emplace(idx);
                   }
                 });
-  auto split_values =
-      GetNodeAttr<std::vector<double>>(opts_.node_def, "split_values");
-  SERVING_ENFORCE(node_ids.size() == lchild_ids.size() &&
-                      node_ids.size() == rchild_ids.size() &&
-                      node_ids.size() == leaf_flags.size() &&
-                      node_ids.size() == split_feature_idx_list.size() &&
-                      node_ids.size() == split_values.size(),
-                  errors::ErrorCode::LOGIC_ERROR,
-                  "The length of attr value `node_ids` `lchild_ids` "
-                  "`rchild_ids` `leaf_flags` "
-                  "`split_feature_idxs` `split_values` "
-                  "should be same.");
+
+  num_leaf_ = leaf_node_ids.size();
+  std::map<int32_t, int32_t> leaf_idx_map;
+  for (size_t idx = 0; idx < leaf_node_ids.size(); ++idx) {
+    leaf_idx_map.emplace(leaf_node_ids[idx], idx);
+  }
+
   for (size_t i = 0; i < node_ids.size(); ++i) {
-    TreeNode node{.id = node_ids[i],
-                  .lchild_id = lchild_ids[i],
-                  .rchild_id = rchild_ids[i],
-                  .is_leaf = leaf_flags[i],
-                  .split_feature_idx = split_feature_idx_list[i],
-                  .split_value = split_values[i]};
+    auto leaf_it = leaf_idx_map.find(node_ids[i]);
+    TreeNode node{
+        .id = node_ids[i],
+        .lchild_id = lchild_ids[i],
+        .rchild_id = rchild_ids[i],
+        .is_leaf = leaf_it != leaf_idx_map.end(),
+        .split_feature_idx = split_feature_idx_list[i],
+        .split_value = split_values[i],
+        .leaf_index = leaf_it != leaf_idx_map.end() ? leaf_it->second : -1};
     nodes_.emplace(node_ids[i], std::move(node));
   }
 
-  int32_t index = 0;
-  for (auto& p : nodes_) {
-    if (p.second.is_leaf) {
-      ++num_leaf_;
-      p.second.leaf_bfs_index = index++;
-    }
+  if (nodes_.empty()) {
+    // no feature, no tree
+    dummy_flag_ = true;
   }
 
   BuildInputSchema();
@@ -107,6 +115,20 @@ void TreeSelect::DoCompute(ComputeContext* ctx) {
   SERVING_ENFORCE(ctx->inputs.size() == 1, errors::ErrorCode::LOGIC_ERROR);
   SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                   errors::ErrorCode::LOGIC_ERROR);
+
+  if (dummy_flag_) {
+    // no tree, just return empty.
+    std::shared_ptr<arrow::Array> res_array;
+    arrow::BinaryBuilder builder;
+    for (int64_t row = 0; row < ctx->inputs.front().front()->num_rows();
+         ++row) {
+      SERVING_CHECK_ARROW_STATUS(builder.Append(""));
+    }
+    SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
+    ctx->output = MakeRecordBatch(
+        output_schema_, ctx->inputs.front().front()->num_rows(), {res_array});
+    return;
+  }
 
   std::map<size_t, std::shared_ptr<arrow::Array>> input_features;
   for (const auto& idx : used_feature_idx_list_) {
@@ -137,9 +159,8 @@ void TreeSelect::DoCompute(ComputeContext* ctx) {
       SERVING_ENFORCE(it != nodes_.end(), errors::ErrorCode::LOGIC_ERROR);
       const auto& node = it->second;
       if (node.is_leaf) {
-        SERVING_ENFORCE(node.leaf_bfs_index != -1,
-                        errors::ErrorCode::LOGIC_ERROR);
-        pred_select.SetLeafSelected(node.leaf_bfs_index);
+        SERVING_ENFORCE(node.leaf_index != -1, errors::ErrorCode::LOGIC_ERROR);
+        pred_select.SetLeafSelected(node.leaf_index);
       } else {
         if (node.split_feature_idx < 0) {
           // split feature not belong to this party, both side could be
@@ -197,17 +218,20 @@ REGISTER_OP(TREE_SELECT, "0.0.1",
                 "DT_INT64, DT_FLOAT, DT_DOUBLE",
                 true, false)
     .StringAttr("output_col_name", "Column name of tree select", false, false)
-    .Int32Attr("root_node_id", "The id of the root tree node", false, false)
+    .Int32Attr("root_node_id", "The id of the root tree node", false, true, 0)
     .Int32Attr("node_ids", "The id list of the tree node", true, false)
     .Int32Attr("lchild_ids",
                "The left child node id list, `-1` means not valid", true, false)
     .Int32Attr("rchild_ids",
                "The right child node id list, `-1` means not valid", true,
                false)
-    .BoolAttr("leaf_flags", "The leaf flag list of the nodes", true, false)
     .Int32Attr("split_feature_idxs",
                "The list of split feature index, `-1` means feature not belong "
                "to party or not valid",
+               true, false)
+    .Int32Attr("leaf_node_ids",
+               "The leaf node ids list. The order must remain consistent with "
+               "the sequence in `TREE_MERGE.leaf_weights`.",
                true, false)
     .DoubleAttr(
         "split_values",

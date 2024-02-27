@@ -72,7 +72,6 @@
 - [Scalar Value Types](#scalar-value-types)
 
 
-{#BatchFeatureService}
 ## BatchFeatureService
 BatchFeatureService provides access to fetch features.
 
@@ -96,7 +95,7 @@ BatchFeatureService provides access to fetch features.
 
 
 
-{#BatchFetchFeatureRequest}
+
 ### BatchFetchFeatureRequest
 BatchFetchFeature request containing one or more requests.
 examples:
@@ -105,11 +104,11 @@ examples:
     "header": {
       "data": {
         "custom_str": "id_12345"
-      },
+      }
     },
-    "model_service_id": "test_service_id",
-    "party_id": "alice",
-    "feature_fields": [
+    "modelServiceId":  "test_service_id",
+    "partyId": "alice",
+    "featureFields": [
       {
         "name": "f1",
         "type": 2
@@ -118,13 +117,13 @@ examples:
         "name": "f2",
         "type": 4
       }
-    ]
+    ],
     "param": {
-      "query_datas": [
+      "queryDatas": [
         "x1",
         "x2"
       ],
-      "query_context": "context_x"
+      "queryContext": "context_x"
     }
   }
 ```
@@ -141,7 +140,7 @@ examples:
  <!-- end HasFields -->
 
 
-{#BatchFetchFeatureResponse}
+
 ### BatchFetchFeatureResponse
 BatchFetchFeatureResponse response containing one or more responses.
 examples:
@@ -197,7 +196,7 @@ examples:
 
 
 
-{#Header}
+
 ### Header
 Header containing custom data
 
@@ -209,7 +208,7 @@ Header containing custom data
  <!-- end HasFields -->
 
 
-{#Header.DataEntry}
+
 ### Header.DataEntry
 
 
@@ -222,7 +221,7 @@ Header containing custom data
  <!-- end HasFields -->
 
 
-{#Status}
+
 ### Status
 Represents the status of spi request
 
@@ -239,7 +238,7 @@ Represents the status of spi request
 
 
 
-{#Feature}
+
 ### Feature
 The definition of a feature
 
@@ -252,7 +251,7 @@ The definition of a feature
  <!-- end HasFields -->
 
 
-{#FeatureField}
+
 ### FeatureField
 The definition of a feature field.
 
@@ -265,7 +264,7 @@ The definition of a feature field.
  <!-- end HasFields -->
 
 
-{#FeatureParam}
+
 ### FeatureParam
 The param for fetch features
 
@@ -278,7 +277,7 @@ The param for fetch features
  <!-- end HasFields -->
 
 
-{#FeatureValue}
+
 ### FeatureValue
 The value of a feature
 

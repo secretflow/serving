@@ -69,9 +69,6 @@ DotProduct::DotProduct(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   // feature name
   feature_name_list_ =
       GetNodeAttr<std::vector<std::string>>(opts_.node_def, "feature_names");
-  SERVING_ENFORCE(!feature_name_list_.empty(),
-                  errors::ErrorCode::INVALID_ARGUMENT,
-                  "get empty attr:feature_names");
   std::set<std::string> f_name_set;
   for (auto& feature_name : feature_name_list_) {
     SERVING_ENFORCE(f_name_set.emplace(feature_name).second,
@@ -95,9 +92,13 @@ DotProduct::DotProduct(OpKernelOptions opts) : OpKernel(std::move(opts)) {
                      feature_name_list_.size(), feature_weight_list.size(),
                      opts_.node_def.name(), opts_.node_def.op());
 
-  weights_ = Double::ColVec::Zero(feature_weight_list.size());
-  for (size_t i = 0; i < feature_weight_list.size(); i++) {
-    weights_[i] = feature_weight_list[i];
+  if (feature_name_list_.empty()) {
+    no_feature_ = true;
+  } else {
+    weights_ = Double::ColVec::Zero(feature_weight_list.size());
+    for (size_t i = 0; i < feature_weight_list.size(); i++) {
+      weights_[i] = feature_weight_list[i];
+    }
   }
 
   output_col_name_ =
@@ -115,9 +116,14 @@ void DotProduct::DoCompute(ComputeContext* ctx) {
   SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                   errors::ErrorCode::LOGIC_ERROR);
 
-  auto features = TableToMatrix(ctx->inputs.front().front());
+  Double::ColVec score_vec;
+  if (!no_feature_) {
+    auto features = TableToMatrix(ctx->inputs.front().front());
+    score_vec = features * weights_;
+  } else {
+    score_vec = Double::ColVec::Zero(ctx->inputs.front().front()->num_rows());
+  }
 
-  Double::ColVec score_vec = features * weights_;
   score_vec.array() += intercept_;
 
   std::shared_ptr<arrow::Array> array;

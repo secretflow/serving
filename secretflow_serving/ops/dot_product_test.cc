@@ -176,6 +176,122 @@ TEST_F(DotProductTest, Works) {
       expect_score_array, arrow::EqualOptions::Defaults().atol(epsilon)));
 }
 
+TEST_F(DotProductTest, WorksNoFeature) {
+  std::string json_content = R"JSON(
+{
+  "name": "test_node",
+  "op": "DOT_PRODUCT",
+  "attr_values": {
+    "feature_names": {
+      "ss": {
+        "data": []
+      }
+    },
+    "input_types": {
+      "ss": {
+        "data": []
+      }
+    },
+    "feature_weights": {
+      "ds": {
+        "data": []
+      }
+    },
+    "output_col_name": {
+      "s": "score",
+    },
+    "intercept": {
+      "d": 1.313201881559211
+    }
+  },
+  "op_version": "0.0.2",
+}
+)JSON";
+  NodeDef node_def;
+  JsonToPb(json_content, &node_def);
+
+  auto expect_input_schema = arrow::schema({});
+  auto expect_output_schema =
+      arrow::schema({arrow::field("score", arrow::float64())});
+
+  auto mock_node = std::make_shared<Node>(std::move(node_def));
+  ASSERT_EQ(mock_node->GetOpDef()->inputs_size(), 1);
+
+  OpKernelOptions opts{mock_node->node_def(), mock_node->GetOpDef()};
+  auto kernel = OpKernelFactory::GetInstance()->Create(std::move(opts));
+
+  // check input schema
+  ASSERT_EQ(kernel->GetInputsNum(), mock_node->GetOpDef()->inputs_size());
+  const auto& input_schema_list = kernel->GetAllInputSchema();
+  ASSERT_EQ(input_schema_list.size(), kernel->GetInputsNum());
+  for (size_t i = 0; i < input_schema_list.size(); ++i) {
+    const auto& input_schema = input_schema_list[i];
+    ASSERT_TRUE(input_schema->Equals(expect_input_schema));
+  }
+  // check output schema
+  auto output_schema = kernel->GetOutputSchema();
+  ASSERT_TRUE(output_schema->Equals(expect_output_schema));
+
+  // build input
+  ComputeContext compute_ctx;
+  {
+    std::vector<std::shared_ptr<arrow::Field>> mock_input_fields = {
+        arrow::field("x1", arrow::float64()),
+        arrow::field("x2", arrow::float32()),
+        arrow::field("x3", arrow::int8()),
+        arrow::field("x4", arrow::uint8()),
+        arrow::field("x5", arrow::int16()),
+        arrow::field("x6", arrow::uint16()),
+        arrow::field("x7", arrow::int32()),
+        arrow::field("x8", arrow::uint32()),
+        arrow::field("x9", arrow::int64()),
+        arrow::field("x10", arrow::uint64())};
+
+    std::shared_ptr<arrow::Array> x1, x2, x3, x4, x5, x6, x7, x8, x9, x10;
+    using arrow::ipc::internal::json::ArrayFromJSON;
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float64(), "[93, -0.1]"), x1);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float32(), "[18, 0.1]"), x2);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int8(), "[17, -1]"), x3);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint8(), "[20, 1]"), x4);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int16(), "[76, -1]"), x5);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint16(), "[74, 1]"), x6);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int32(), "[25, -1]"), x7);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint32(), "[2, 1]"), x8);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int64(), "[31, -1]"), x9);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint64(), "[37, 1]"), x10);
+
+    auto features = MakeRecordBatch(arrow::schema(mock_input_fields), 2,
+                                    {x1, x2, x3, x4, x5, x6, x7, x8, x9, x10});
+    compute_ctx.inputs.emplace_back(
+        std::vector<std::shared_ptr<arrow::RecordBatch>>{features});
+  }
+
+  // expect result
+  double expect_score_0 = 1.313201881559211;
+  double expect_score_1 = 1.313201881559211;
+
+  kernel->Compute(&compute_ctx);
+
+  // check output
+  ASSERT_TRUE(compute_ctx.output);
+  ASSERT_TRUE(compute_ctx.output->schema()->Equals(output_schema));
+  std::shared_ptr<arrow::Array> expect_score_array;
+  arrow::DoubleBuilder builder;
+  SERVING_CHECK_ARROW_STATUS(
+      builder.AppendValues({expect_score_0, expect_score_1}));
+  SERVING_CHECK_ARROW_STATUS(builder.Finish(&expect_score_array));
+
+  std::cout << "expect_score: " << expect_score_array->ToString() << std::endl;
+  std::cout << "result: " << compute_ctx.output->column(0)->ToString()
+            << std::endl;
+
+  // converting float to double causes the result to lose precision
+  // double epsilon = 1E-13;
+  double epsilon = 1E-8;
+  ASSERT_TRUE(compute_ctx.output->column(0)->ApproxEquals(
+      expect_score_array, arrow::EqualOptions::Defaults().atol(epsilon)));
+}
+
 TEST_F(DotProductTest, Constructor) {
   // default intercept
   std::string json_content = R"JSON(

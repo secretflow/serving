@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 17:30+0800\n"
+"POT-Creation-Date: 2024-02-19 12:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,17 +51,22 @@ msgstr "**概述**：:doc:`系统简介及架构设计 </topics/system/intro>`"
 msgid "**Observability**: :doc:`Logs and Metrics </topics/system/observability>`"
 msgstr "**可观测性**：:doc:`日志和Metrics </topics/system/observability>`"
 
-#: ../../source/index.rst:28
+#: ../../source/index.rst:27
+msgid "**FeatureSource**: :doc:`Feature Service </topics/system/feature_service>`"
+msgstr "**特征数据源**：:doc:`特征服务 </topics/system/feature_service>`"
+
+#: ../../source/index.rst:31
 msgid "Deployment"
 msgstr "部署"
 
-#: ../../source/index.rst:30
+#: ../../source/index.rst:33
 msgid ""
 "**Guides**: :doc:`How to deploy an SecretFlow-Serving "
-"cluster</topics/deployment/deployment>`"
-msgstr "**指南**：:doc:`如何部署 SecretFlow-Serving 集群</topics/deployment/deployment>`"
+"cluster</topics/deployment/deployment>` | :doc:`Serving on "
+"Kuscia</topics/deployment/serving_on_kuscia>`"
+msgstr "**指南**：:doc:`如何部署 SecretFlow-Serving 集群</topics/deployment/deployment>` | :doc:`使用 Kuscia 部署 Serving </topics/deployment/serving_on_kuscia>`"
 
-#: ../../source/index.rst:33
+#: ../../source/index.rst:36
 msgid ""
 "**Reference**: :doc:`SecretFlow-Serving service API </reference/api>` | "
 ":doc:`SecretFlow-Serving system config </reference/config>` | :doc"
@@ -71,11 +76,11 @@ msgstr ""
 ":`SecretFlow-Serving 系统配置 </reference/config>` | :doc:`SecretFlow-Serving"
 " 特征服务 SPI </reference/spi>`"
 
-#: ../../source/index.rst:40
+#: ../../source/index.rst:43
 msgid "Graph"
 msgstr "模型图"
 
-#: ../../source/index.rst:42
+#: ../../source/index.rst:45
 msgid ""
 "**Overview**: :doc:`Introduction to graphs "
 "</topics/graph/intro_to_graph>` | :doc:`Operators "
@@ -84,9 +89,6 @@ msgstr ""
 "**概述**：:doc:`模型图的介绍 </topics/graph/intro_to_graph>` | :doc:`算子 "
 "</topics/graph/operator_list>`"
 
-#: ../../source/index.rst:46
+#: ../../source/index.rst:49
 msgid "**Reference**: :doc:`SecretFlow-Serving model </reference/model>`"
 msgstr "**参考**：:doc:`SecretFlow-Serving 模型 </reference/model>`"
-
-#~ msgid "Observability"
-#~ msgstr "可观测性"

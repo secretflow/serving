@@ -85,10 +85,25 @@ class MockOpKernel3 : public OpKernel {
   void BuildOutputSchema() override {}
 };
 
+class MockOpKernel4 : public OpKernel {
+ public:
+  explicit MockOpKernel4(OpKernelOptions opts) : OpKernel(std::move(opts)) {
+    auto schema = arrow::schema({});
+    input_schema_list_ = {schema};
+    output_schema_ =
+        arrow::schema({arrow::field("test_field_a", arrow::float64())});
+  }
+
+  void DoCompute(ComputeContext* ctx) override {}
+  void BuildInputSchema() override {}
+  void BuildOutputSchema() override {}
+};
+
 REGISTER_OP_KERNEL(TEST_OP_0, MockOpKernel0);
 REGISTER_OP_KERNEL(TEST_OP_1, MockOpKernel1);
 REGISTER_OP_KERNEL(TEST_OP_2, MockOpKernel2);
 REGISTER_OP_KERNEL(TEST_OP_3, MockOpKernel3);
+REGISTER_OP_KERNEL(TEST_OP_4, MockOpKernel4);
 REGISTER_OP(TEST_OP_0, "0.0.1", "test_desc")
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
@@ -108,6 +123,11 @@ REGISTER_OP(TEST_OP_3, "0.0.1", "test_desc")
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
     .Input("input2", "input_desc")
+    .Output("output", "output_desc");
+REGISTER_OP(TEST_OP_4, "0.0.1", "test_desc")
+    .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .Input("input", "input_desc")
     .Output("output", "output_desc");
 
 class GraphTest : public ::testing::Test {
@@ -170,6 +190,16 @@ TEST_F(GraphTest, Works) {
         },
       },
     },
+    {
+      "name": "node_f",
+      "op": "TEST_OP_4",
+      "parents": [ "node_e" ],
+      "attr_values": {
+        "attr_s": {
+          "s": "b"
+        },
+      },
+    },
   ],
   "execution_list": [
     {
@@ -182,7 +212,7 @@ TEST_F(GraphTest, Works) {
     },
     {
       "nodes": [
-         "node_e"
+         "node_e", "node_f"
       ],
       "config": {
         "dispatch_type": "DP_ANYONE"
@@ -216,7 +246,8 @@ TEST_F(GraphTest, Works) {
   EXPECT_TRUE(execution_list[1]->IsExit());
   EXPECT_EQ(execution_list[1]->GetEntryNodeNum(), 1);
   EXPECT_EQ(execution_list[1]->GetExitNodeNum(), 1);
-  EXPECT_TRUE(execution_list[1]->IsExitNode("node_e"));
+  // EXPECT_TRUE(execution_list[1]->IsExitNode("node_e"));
+  EXPECT_TRUE(execution_list[1]->IsExitNode("node_f"));
 }
 
 struct ErrorParam {

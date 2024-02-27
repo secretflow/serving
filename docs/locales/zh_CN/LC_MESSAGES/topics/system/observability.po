@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 20:16+0800\n"
+"POT-Creation-Date: 2024-02-19 12:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,7 +98,7 @@ msgstr ""
 #: ../../source/topics/system/observability.rst:48
 msgid ""
 ":ref:`GetModelInfoRequest` goes to :ref:`ModelService` to get model info."
-" :ref:`Model info<ModelInfo>` is public for all parties."
+" :ref:`Model info <ModelInfo>` is public for all parties."
 msgstr ""
 ":ref:`GetModelInfoRequest` 会通过 :ref:`ModelService` 来获取模型信息。 获取的 "
 ":ref:`Model info<ModelInfo>` 对每一方来说都是公开信息。"
@@ -153,8 +153,8 @@ msgstr ""
 "<https://github.com/apache/brpc/issues/1322>`_."
 
 #: ../../source/topics/system/observability.rst:70
-msgid "MetricsService"
-msgstr "MetricsService"
+msgid "MetricsService metrics"
+msgstr ""
 
 #: ../../source/topics/system/observability.rst:73
 #: ../../source/topics/system/observability.rst:87
@@ -220,7 +220,7 @@ msgid ""
 msgstr "metrics收集请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
 
 #: ../../source/topics/system/observability.rst:84
-msgid "PredictionService"
+msgid "PredictionService metrics"
 msgstr ""
 
 #: ../../source/topics/system/observability.rst:87
@@ -296,7 +296,7 @@ msgid ""
 msgstr "metrics收集请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
 
 #: ../../source/topics/system/observability.rst:118
-msgid "ExecutionService"
+msgid "ExecutionService metrics"
 msgstr ""
 
 #: ../../source/topics/system/observability.rst:120
@@ -329,7 +329,7 @@ msgid ""
 msgstr "execution service请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
 
 #: ../../source/topics/system/observability.rst:142
-msgid "ModelService"
+msgid "ModelService metrics"
 msgstr ""
 
 #: ../../source/topics/system/observability.rst:147

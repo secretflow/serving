@@ -59,6 +59,7 @@ def global_ip_config(index):
 class MockFeatureTest(TestCase):
     def __init__(
         self,
+        service_id: str,
         path: str,
         nodes: Dict[str, List[NodeDef]],
         executions: Dict[str, List[ExecutionDef]],
@@ -79,21 +80,21 @@ class MockFeatureTest(TestCase):
             party_configs.append(
                 PartyConfig(
                     id=party,
-                    feature_mapping={}
-                    if not feature_mappings
-                    else feature_mappings[party],
+                    feature_mapping=(
+                        {} if not feature_mappings else feature_mappings[party]
+                    ),
                     **global_ip_config(ip_config_idx),
                     channel_protocol="baidu_std",
                     model_id="integration_model",
                     graph_def=graph,
-                    query_datas=["a"],
+                    query_datas=["a", "b", "c", "d"],
                 )
             )
             ip_config_idx += 1
 
         self.config = TestConfig(
             path,
-            service_spec_id="integration_test_mock_feature",
+            service_spec_id=service_id,
             party_config=party_configs,
             specific_party=specific_party,
         )
@@ -502,6 +503,7 @@ if __name__ == "__main__":
     with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
         alice_trace_content = f.read()
     MockFeatureTest(
+        service_id="glm",
         path='model_path',
         nodes={
             "alice": [
@@ -676,6 +678,7 @@ if __name__ == "__main__":
 
     # sgb
     MockFeatureTest(
+        service_id="sgb",
         path='sgb_model',
         nodes={
             "alice": [
@@ -760,7 +763,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": -0.116178043,
                         },
                         {
                             "nodeId": 8,
@@ -769,7 +771,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": 0.16241236,
                         },
                         {
                             "nodeId": 9,
@@ -778,7 +779,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": -0.418656051,
                         },
                         {
                             "nodeId": 10,
@@ -787,7 +787,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": -0.0926064253,
                         },
                         {
                             "nodeId": 11,
@@ -796,7 +795,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": 0.15993154,
                         },
                         {
                             "nodeId": 12,
@@ -805,7 +803,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": 0.358381808,
                         },
                         {
                             "nodeId": 13,
@@ -814,7 +811,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": -0.104386188,
                         },
                         {
                             "nodeId": 14,
@@ -823,7 +819,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": -1,
-                            "leafWeight": 0.194736511,
                         },
                     ],
                 ),
@@ -874,7 +869,7 @@ if __name__ == "__main__":
                             "lchildId": 7,
                             "rchildId": 8,
                             "isLeaf": False,
-                            "splitFeatureIdx": 2,
+                            "splitFeatureIdx": -1,
                             "splitValue": 0,
                         },
                         {
@@ -908,7 +903,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": -0.196025193,
                         },
                         {
                             "nodeId": 8,
@@ -917,7 +911,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": 0.0978358239,
                         },
                         {
                             "nodeId": 9,
@@ -926,7 +919,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": -0.381145447,
                         },
                         {
                             "nodeId": 10,
@@ -935,7 +927,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": -0.0979942083,
                         },
                         {
                             "nodeId": 11,
@@ -944,7 +935,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": 0.117580406,
                         },
                         {
                             "nodeId": 12,
@@ -953,7 +943,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": 0.302539676,
                         },
                         {
                             "nodeId": 13,
@@ -962,7 +951,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": 0.171336576,
                         },
                         {
                             "nodeId": 14,
@@ -971,7 +959,6 @@ if __name__ == "__main__":
                             "isLeaf": True,
                             "splitFeatureIdx": -1,
                             "splitValue": 0,
-                            "leafWeight": -0.125806138,
                         },
                     ],
                 ),
@@ -980,32 +967,441 @@ if __name__ == "__main__":
                     ["node_tree_select_0"],
                     input_col_name="selects",
                     output_col_name="weights",
-                    leaf_node_weights={
-                        7: -0.116178043,
-                        8: 0.16241236,
-                        9: -0.418656051,
-                        10: -0.0926064253,
-                        11: 0.15993154,
-                        12: 0.358381808,
-                        13: -0.104386188,
-                        14: 0.194736511,
-                    },
+                    leaf_node_weights=[
+                        -0.116178043,
+                        0.16241236,
+                        -0.418656051,
+                        -0.0926064253,
+                        0.15993154,
+                        0.358381808,
+                        -0.104386188,
+                        0.194736511,
+                    ],
                 ),
                 make_tree_merge_node_def(
                     "node_tree_merge_1",
                     ["node_tree_select_1"],
                     input_col_name="selects",
                     output_col_name="weights",
-                    leaf_node_weights={
-                        7: -0.196025193,
-                        8: 0.0978358239,
-                        9: -0.381145447,
-                        10: -0.0979942083,
-                        11: 0.117580406,
-                        12: 0.302539676,
-                        13: 0.171336576,
-                        14: -0.125806138,
+                    leaf_node_weights=[
+                        -0.196025193,
+                        0.0978358239,
+                        -0.381145447,
+                        -0.0979942083,
+                        0.117580406,
+                        0.302539676,
+                        0.171336576,
+                        -0.125806138,
+                    ],
+                ),
+                make_tree_ensemble_predict_node_def(
+                    "node_tree_ensemble_predict",
+                    ["node_tree_merge_0", "node_tree_merge_1"],
+                    input_col_name="weights",
+                    output_col_name="scores",
+                    num_trees=2,
+                    func_type='LF_SIGMOID_RAW',
+                ),
+            ],
+            "bob": [
+                make_tree_select_node_def(
+                    name="node_tree_select_0",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={
+                        "x11": "DT_FLOAT",
+                        "x12": "DT_INT16",
+                        "x13": "DT_INT8",
+                        "x14": "DT_UINT8",
+                        "x15": "DT_DOUBLE",
+                        "x16": "DT_INT64",
+                        "x17": "DT_INT16",
+                        "x18": "DT_FLOAT",
+                        "x19": "DT_FLOAT",
+                        "x20": "DT_FLOAT",
                     },
+                    root_node_id=0,
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": -0.107344508,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 7,
+                            "splitValue": 0.210497797,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                    ],
+                ),
+                make_tree_select_node_def(
+                    name="node_tree_select_1",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={
+                        "x11": "DT_FLOAT",
+                        "x12": "DT_INT16",
+                        "x13": "DT_INT8",
+                        "x14": "DT_UINT8",
+                        "x15": "DT_DOUBLE",
+                        "x16": "DT_INT64",
+                        "x17": "DT_INT16",
+                        "x18": "DT_FLOAT",
+                        "x19": "DT_FLOAT",
+                        "x20": "DT_FLOAT",
+                    },
+                    root_node_id=0,
+                    tree_nodes=[
+                        {
+                            "nodeId": 0,
+                            "lchildId": 1,
+                            "rchildId": 2,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 1,
+                            "lchildId": 3,
+                            "rchildId": 4,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 2,
+                            "lchildId": 5,
+                            "rchildId": 6,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 3,
+                            "lchildId": 7,
+                            "rchildId": 8,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 4,
+                            "splitValue": -0.548508525,
+                        },
+                        {
+                            "nodeId": 4,
+                            "lchildId": 9,
+                            "rchildId": 10,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 5,
+                            "lchildId": 11,
+                            "rchildId": 12,
+                            "isLeaf": False,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 6,
+                            "lchildId": 13,
+                            "rchildId": 14,
+                            "isLeaf": False,
+                            "splitFeatureIdx": 9,
+                            "splitValue": -0.405750543,
+                        },
+                        {
+                            "nodeId": 7,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 8,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 9,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 10,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 11,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 12,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 13,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                        {
+                            "nodeId": 14,
+                            "lchildId": -1,
+                            "rchildId": -1,
+                            "isLeaf": True,
+                            "splitFeatureIdx": -1,
+                            "splitValue": 0,
+                        },
+                    ],
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_0",
+                    ["node_tree_select_0"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_1",
+                    ["node_tree_select_1"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                ),
+                make_tree_ensemble_predict_node_def(
+                    "node_tree_ensemble_predict",
+                    ["node_tree_merge_0", "node_tree_merge_1"],
+                    input_col_name="weights",
+                    output_col_name="scores",
+                    num_trees=2,
+                    func_type='LF_SIGMOID_RAW',
+                ),
+            ],
+        },
+        executions={
+            "alice": [
+                ExecutionDef(
+                    nodes=["node_tree_select_0", "node_tree_select_1"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=[
+                        "node_tree_merge_0",
+                        "node_tree_merge_1",
+                        "node_tree_ensemble_predict",
+                    ],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_SPECIFIED,
+                        session_run=False,
+                        specific_flag=True,
+                    ),
+                ),
+            ],
+            "bob": [
+                ExecutionDef(
+                    nodes=["node_tree_select_0", "node_tree_select_1"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=[
+                        "node_tree_merge_0",
+                        "node_tree_merge_1",
+                        "node_tree_ensemble_predict",
+                    ],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_SPECIFIED, session_run=False
+                    ),
+                ),
+            ],
+        },
+        specific_party="alice",
+    ).exec()
+
+    # sgb with alice no feature
+    MockFeatureTest(
+        service_id="sgb_bob_no_feature",
+        path='sgb_model',
+        nodes={
+            "alice": [
+                make_tree_select_node_def(
+                    name="node_tree_select_0",
+                    parents=[],
+                    output_col_name="selects",
+                    root_node_id=0,
+                    feature_dict={},
+                    tree_nodes=[],
+                ),
+                make_tree_select_node_def(
+                    name="node_tree_select_1",
+                    parents=[],
+                    output_col_name="selects",
+                    feature_dict={},
+                    root_node_id=0,
+                    tree_nodes=[],
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_0",
+                    ["node_tree_select_0"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                    leaf_node_weights=[
+                        -0.116178043,
+                        0.16241236,
+                        -0.418656051,
+                        -0.0926064253,
+                        0.15993154,
+                        0.358381808,
+                        -0.104386188,
+                        0.194736511,
+                    ],
+                ),
+                make_tree_merge_node_def(
+                    "node_tree_merge_1",
+                    ["node_tree_select_1"],
+                    input_col_name="selects",
+                    output_col_name="weights",
+                    leaf_node_weights=[
+                        -0.196025193,
+                        0.0978358239,
+                        -0.381145447,
+                        -0.0979942083,
+                        0.117580406,
+                        0.302539676,
+                        0.171336576,
+                        -0.125806138,
+                    ],
                 ),
                 make_tree_ensemble_predict_node_def(
                     "node_tree_ensemble_predict",
@@ -1088,8 +1484,8 @@ if __name__ == "__main__":
                             "lchildId": 13,
                             "rchildId": 14,
                             "isLeaf": False,
-                            "splitFeatureIdx": -1,
-                            "splitValue": 0,
+                            "splitFeatureIdx": 1,
+                            "splitValue": 0.510497797,
                         },
                         {
                             "nodeId": 7,
@@ -1362,7 +1758,102 @@ if __name__ == "__main__":
         specific_party="alice",
     ).exec()
 
-    PredefinedErrorTest('model_path').exec()
+    # glm with bob no feature
+    MockFeatureTest(
+        service_id="glm_with_bob_no_feature",
+        path='model_path',
+        nodes={
+            "alice": [
+                make_dot_product_node_def(
+                    name="node_dot_product",
+                    parents=[],
+                    weight_dict={
+                        "x21": -0.3,
+                        "x22": 0.95,
+                        "x23": 1.01,
+                        "x24": 1.35,
+                        "x25": -0.97,
+                    },
+                    output_col_name="y",
+                    input_types=[
+                        "DT_DOUBLE",
+                        "DT_FLOAT",
+                        "DT_INT8",
+                        "DT_INT16",
+                        "DT_INT32",
+                    ],
+                ),
+                make_merge_y_node_def(
+                    "node_merge_y",
+                    ["node_dot_product"],
+                    LinkFunctionType.LF_LOGIT,
+                    input_col_name="y",
+                    output_col_name="score",
+                    yhat_scale=1.2,
+                ),
+            ],
+            "bob": [
+                make_dot_product_node_def(
+                    name="node_dot_product",
+                    parents=[],
+                    weight_dict={},
+                    input_types=[],
+                    intercept=1.313,
+                    output_col_name="y",
+                ),
+                make_merge_y_node_def(
+                    "node_merge_y",
+                    ["node_dot_product"],
+                    LinkFunctionType.LF_LOGIT,
+                    input_col_name="y",
+                    output_col_name="score",
+                    yhat_scale=1.2,
+                ),
+            ],
+        },
+        executions={
+            "alice": [
+                ExecutionDef(
+                    nodes=["node_dot_product"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=["node_merge_y"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ANYONE, session_run=False
+                    ),
+                ),
+            ],
+            "bob": [
+                ExecutionDef(
+                    nodes=["node_dot_product"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ALL, session_run=False
+                    ),
+                ),
+                ExecutionDef(
+                    nodes=["node_merge_y"],
+                    config=RuntimeConfig(
+                        dispatch_type=DispatchType.DP_ANYONE, session_run=False
+                    ),
+                ),
+            ],
+        },
+        feature_mappings={
+            "alice": {
+                "v24": "x24",
+                "v22": "x22",
+                "v21": "x21",
+                "v25": "x25",
+                "v23": "x23",
+            },
+            "bob": {},
+        },
+    ).exec()
+
+    # PredefinedErrorTest('model_path').exec()
     PredefineTest('model_path').exec()
     CsvTest('model_path').exec()
     SpecificTest('model_path').exec()

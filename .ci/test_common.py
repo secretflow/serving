@@ -204,9 +204,13 @@ def make_tree_select_node_def(
                 data=[node['rchildId'] for node in tree_nodes if 'rchildId' in node]
             )
         ),
-        "leaf_flags": AttrValue(
-            bs=BoolList(
-                data=[node['isLeaf'] for node in tree_nodes if 'isLeaf' in node]
+        "leaf_node_ids": AttrValue(
+            i32s=Int32List(
+                data=[
+                    node['nodeId']
+                    for node in tree_nodes
+                    if 'isLeaf' in node and node['isLeaf'] is True
+                ]
             )
         ),
         "split_feature_idxs": AttrValue(
@@ -239,7 +243,7 @@ def make_tree_merge_node_def(
     parents,
     input_col_name,
     output_col_name,
-    leaf_node_weights: Dict[int, float] = None,
+    leaf_node_weights: List[float] = None,
 ):
     op_def = get_op("TREE_MERGE")
     attrs = {
@@ -247,12 +251,7 @@ def make_tree_merge_node_def(
         "output_col_name": AttrValue(s=output_col_name),
     }
     if leaf_node_weights:
-        attrs['leaf_node_ids'] = AttrValue(
-            i32s=Int32List(data=list(leaf_node_weights.keys()))
-        )
-        attrs['leaf_weights'] = AttrValue(
-            ds=DoubleList(data=list(leaf_node_weights.values()))
-        )
+        attrs['leaf_weights'] = AttrValue(ds=DoubleList(data=leaf_node_weights))
 
     return NodeDef(
         name=name,
@@ -385,9 +384,11 @@ class ConfigDumper:
                 "parties": self.parties,
                 "channel_desc": {"protocol": config.channel_protocol},
             },
-            "featureSourceConf": self.make_csv_config(config.csv_dict, path)
-            if config.csv_dict
-            else {"mockOpts": {}},
+            "featureSourceConf": (
+                self.make_csv_config(config.csv_dict, path)
+                if config.csv_dict
+                else {"mockOpts": {"type": "MDT_RANDOM"}}
+            ),
         }
         dump_json(config_dict, os.path.join(path, self.serving_config))
 

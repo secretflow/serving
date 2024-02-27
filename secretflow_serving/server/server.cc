@@ -221,6 +221,10 @@ void Server::Start() {
   }
   health::ServingHealthReporter hr;
   server_options.health_reporter = &hr;
+  // FIXME:
+  // kuscia场景需要在服务启动后，使服务状态可用，此时才能挂载路由。但服务需要完成
+  // exchange model info 才能 ready
+  hr.SetStatusCode(200);
 
   // start services server
   service_server_.set_version(SERVING_VERSION_STRING);
@@ -254,9 +258,6 @@ void Server::Start() {
   auto prediction_core =
       std::make_shared<PredictionCore>(std::move(prediction_core_opts));
   prediction_service->Init(prediction_core);
-
-  // set server ready code
-  hr.SetStatusCode(200);
 }
 
 void Server::WaitForEnd() {

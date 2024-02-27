@@ -23,13 +23,8 @@ struct TreeNode {
   // [internal] split value, goes left when less than it. valid when `is_leaf ==
   // false`
   double split_value;
-  // [leaf] weight for leaf node.
-  // * master(with label) has meaningful leaf_weight.
-  // * slave(without label) is trained with encrypted data, leaf_weight is
-  //   meaningless.
-  double leaf_weight = 0.0;
   // only for leaf node;
-  int32_t leaf_bfs_index = -1;
+  int32_t leaf_index = -1;
 };
 
 struct TreePredictSelect {
@@ -48,10 +43,25 @@ struct TreePredictSelect {
     std::memcpy(select.data(), str.data(), str.size());
   }
 
-  void SetLeafs(size_t leafs) {
+  void SetSelectBuf(const std::string& str) {
+    select.resize(str.size());
+    std::memcpy(select.data(), str.data(), str.size());
+  }
+
+  void SetSelectBuf(std::string_view str) {
+    select.resize(str.size());
+    std::memcpy(select.data(), str.data(), str.size());
+  }
+
+  void SetLeafs(size_t leafs, bool all_selected = false) {
     select.resize(std::ceil(leafs / 8.0) + 1, 0);
     uint8_t pad_bits = leafs % 8 ? 8 - leafs % 8 : 0;
     select[0] = pad_bits;
+    if (all_selected) {
+      for (size_t i = 1; i < select.size(); ++i) {
+        select[i] = std::numeric_limits<uint8_t>::max();
+      }
+    }
   }
 
   size_t Leafs() const {
@@ -63,14 +73,14 @@ struct TreePredictSelect {
 
   void Merge(const TreePredictSelect& s) {
     SERVING_ENFORCE(Leafs(), errors::ErrorCode::LOGIC_ERROR);
-    SERVING_ENFORCE(Leafs() == s.Leafs(), errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE_EQ(Leafs(), s.Leafs());
     for (size_t i = 1; i < s.select.size(); i++) {
       select[i] &= s.select[i];
     }
   }
 
   void SetLeafSelected(uint32_t leaf_idx) {
-    SERVING_ENFORCE(leaf_idx < Leafs(), errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE_LT(leaf_idx, Leafs());
     size_t vec_idx = leaf_idx / 8 + 1;
     uint8_t bit_mask = 1 << (leaf_idx % 8);
     select[vec_idx] |= bit_mask;

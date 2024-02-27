@@ -9,14 +9,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 20:00+0800\n"
+"POT-Creation-Date: 2024-02-19 12:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../source/reference/model.md:1
 msgid "SecretFlow-Serving Model"
@@ -170,10 +170,6 @@ msgstr ""
 msgid "[Scalar Value Types](#scalar-value-types)"
 msgstr ""
 
-#: ../../source/reference/model.md:159
-msgid "{#AttrDef}"
-msgstr ""
-
 #: ../../source/reference/model.md:160
 msgid "AttrDef"
 msgstr ""
@@ -252,10 +248,6 @@ msgstr ""
 msgid ""
 "A reasonable default for this attribute if it's optional and the user "
 "does not supply a value. If not, the user must supply a value."
-msgstr ""
-
-#: ../../source/reference/model.md:175
-msgid "{#AttrValue}"
 msgstr ""
 
 #: ../../source/reference/model.md:176
@@ -438,10 +430,6 @@ msgstr ""
 msgid "BYTESS"
 msgstr ""
 
-#: ../../source/reference/model.md:200
-msgid "{#BoolList}"
-msgstr ""
-
 #: ../../source/reference/model.md:201
 msgid "BoolList"
 msgstr ""
@@ -454,20 +442,12 @@ msgstr ""
 msgid "[repeated bool](#bool )"
 msgstr ""
 
-#: ../../source/reference/model.md:212
-msgid "{#BytesList}"
-msgstr ""
-
 #: ../../source/reference/model.md:213
 msgid "BytesList"
 msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[repeated bytes](#bytes )"
-msgstr ""
-
-#: ../../source/reference/model.md:224
-msgid "{#DoubleList}"
 msgstr ""
 
 #: ../../source/reference/model.md:225
@@ -478,20 +458,12 @@ msgstr ""
 msgid "[repeated double](#double )"
 msgstr ""
 
-#: ../../source/reference/model.md:236
-msgid "{#FloatList}"
-msgstr ""
-
 #: ../../source/reference/model.md:237
 msgid "FloatList"
 msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[repeated float](#float )"
-msgstr ""
-
-#: ../../source/reference/model.md:248
-msgid "{#Int32List}"
 msgstr ""
 
 #: ../../source/reference/model.md:249
@@ -502,10 +474,6 @@ msgstr ""
 msgid "[repeated int32](#int32 )"
 msgstr ""
 
-#: ../../source/reference/model.md:260
-msgid "{#Int64List}"
-msgstr ""
-
 #: ../../source/reference/model.md:261
 msgid "Int64List"
 msgstr ""
@@ -514,20 +482,12 @@ msgstr ""
 msgid "[repeated int64](#int64 )"
 msgstr ""
 
-#: ../../source/reference/model.md:272
-msgid "{#StringList}"
-msgstr ""
-
 #: ../../source/reference/model.md:273
 msgid "StringList"
 msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[repeated string](#string )"
-msgstr ""
-
-#: ../../source/reference/model.md:286
-msgid "{#IoDef}"
 msgstr ""
 
 #: ../../source/reference/model.md:287
@@ -544,10 +504,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "Description of the IO"
-msgstr ""
-
-#: ../../source/reference/model.md:299
-msgid "{#OpDef}"
 msgstr ""
 
 #: ../../source/reference/model.md:300
@@ -612,10 +568,6 @@ msgstr ""
 msgid "[repeated AttrDef](#attrdef )"
 msgstr ""
 
-#: ../../source/reference/model.md:317
-msgid "{#OpTag}"
-msgstr ""
-
 #: ../../source/reference/model.md:318
 msgid "OpTag"
 msgstr ""
@@ -658,10 +610,6 @@ msgstr ""
 msgid "Whether this op has variable input argument. default `false`."
 msgstr ""
 
-#: ../../source/reference/model.md:334
-msgid "{#ExecutionDef}"
-msgstr ""
-
 #: ../../source/reference/model.md:335
 msgid "ExecutionDef"
 msgstr ""
@@ -695,10 +643,6 @@ msgstr ""
 msgid "The runtime config of the execution."
 msgstr ""
 
-#: ../../source/reference/model.md:348
-msgid "{#GraphDef}"
-msgstr ""
-
 #: ../../source/reference/model.md:349
 msgid "GraphDef"
 msgstr ""
@@ -729,10 +673,6 @@ msgstr ""
 msgid "[repeated ExecutionDef](#executiondef )"
 msgstr ""
 
-#: ../../source/reference/model.md:363
-msgid "{#GraphView}"
-msgstr ""
-
 #: ../../source/reference/model.md:364
 msgid "GraphView"
 msgstr ""
@@ -745,10 +685,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[repeated NodeView](#nodeview )"
-msgstr ""
-
-#: ../../source/reference/model.md:378
-msgid "{#NodeDef}"
 msgstr ""
 
 #: ../../source/reference/model.md:379
@@ -803,10 +739,6 @@ msgstr ""
 msgid "The operator version."
 msgstr ""
 
-#: ../../source/reference/model.md:394
-msgid "{#NodeDef.AttrValuesEntry}"
-msgstr ""
-
 #: ../../source/reference/model.md:395
 msgid "NodeDef.AttrValuesEntry"
 msgstr ""
@@ -823,20 +755,12 @@ msgstr ""
 msgid "[ op.AttrValue](#attrvalue )"
 msgstr ""
 
-#: ../../source/reference/model.md:407
-msgid "{#NodeView}"
-msgstr ""
-
 #: ../../source/reference/model.md:408
 msgid "NodeView"
 msgstr ""
 
 #: ../../source/reference/model.md:409
 msgid "The view of a node, which could be public to other parties"
-msgstr ""
-
-#: ../../source/reference/model.md:422
-msgid "{#RuntimeConfig}"
 msgstr ""
 
 #: ../../source/reference/model.md:423
@@ -867,10 +791,6 @@ msgstr ""
 msgid "if dispatch_type is DP_SPECIFIED, only one party should be true"
 msgstr ""
 
-#: ../../source/reference/model.md:438
-msgid "{#ModelBundle}"
-msgstr ""
-
 #: ../../source/reference/model.md:439
 msgid "ModelBundle"
 msgstr ""
@@ -889,10 +809,6 @@ msgstr ""
 msgid "[ GraphDef](#graphdef )"
 msgstr ""
 
-#: ../../source/reference/model.md:453
-msgid "{#ModelInfo}"
-msgstr ""
-
 #: ../../source/reference/model.md:454
 msgid "ModelInfo"
 msgstr ""
@@ -907,10 +823,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[ GraphView](#graphview )"
-msgstr ""
-
-#: ../../source/reference/model.md:467
-msgid "{#ModelManifest}"
 msgstr ""
 
 #: ../../source/reference/model.md:468
@@ -944,10 +856,6 @@ msgstr ""
 msgid "The format type of the model bundle file."
 msgstr ""
 
-#: ../../source/reference/model.md:489 ../../source/reference/model.md:567
-msgid "{#ComputeTrace}"
-msgstr ""
-
 #: ../../source/reference/model.md:490 ../../source/reference/model.md:568
 msgid "ComputeTrace"
 msgstr ""
@@ -962,10 +870,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "[repeated FunctionTrace](#functiontrace )"
-msgstr ""
-
-#: ../../source/reference/model.md:502 ../../source/reference/model.md:580
-msgid "{#FunctionInput}"
 msgstr ""
 
 #: ../../source/reference/model.md:503 ../../source/reference/model.md:581
@@ -992,20 +896,12 @@ msgstr ""
 msgid "[ Scalar](#scalar )"
 msgstr ""
 
-#: ../../source/reference/model.md:515 ../../source/reference/model.md:593
-msgid "{#FunctionOutput}"
-msgstr ""
-
 #: ../../source/reference/model.md:516 ../../source/reference/model.md:594
 msgid "FunctionOutput"
 msgstr ""
 
 #: ../../source/reference/model.md
 msgid "data_id"
-msgstr ""
-
-#: ../../source/reference/model.md:527 ../../source/reference/model.md:605
-msgid "{#FunctionTrace}"
 msgstr ""
 
 #: ../../source/reference/model.md:528 ../../source/reference/model.md:606
@@ -1038,10 +934,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "Output of this function."
-msgstr ""
-
-#: ../../source/reference/model.md:542 ../../source/reference/model.md:620
-msgid "{#Scalar}"
 msgstr ""
 
 #: ../../source/reference/model.md:543 ../../source/reference/model.md:621
@@ -1130,10 +1022,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "DOUBLE"
-msgstr ""
-
-#: ../../source/reference/model.md:648
-msgid "{#AttrType}"
 msgstr ""
 
 #: ../../source/reference/model.md:649
@@ -1304,10 +1192,6 @@ msgstr ""
 msgid "BYTES LIST"
 msgstr ""
 
-#: ../../source/reference/model.md:677
-msgid "{#DispatchType}"
-msgstr ""
-
 #: ../../source/reference/model.md:678
 msgid "DispatchType"
 msgstr ""
@@ -1344,10 +1228,6 @@ msgstr ""
 msgid "Dispatch specified participant."
 msgstr ""
 
-#: ../../source/reference/model.md:693
-msgid "{#FileFormatType}"
-msgstr ""
-
 #: ../../source/reference/model.md:694
 msgid "FileFormatType"
 msgstr ""
@@ -1376,10 +1256,6 @@ msgstr ""
 msgid ""
 "Json It is recommended to use protobuf's official json serialization "
 "method to ensure compatibility"
-msgstr ""
-
-#: ../../source/reference/model.md:708
-msgid "{#DataType}"
 msgstr ""
 
 #: ../../source/reference/model.md:709
@@ -1506,10 +1382,6 @@ msgstr ""
 
 #: ../../source/reference/model.md
 msgid "Variable-length bytes (no guarantee of UTF8-ness)"
-msgstr ""
-
-#: ../../source/reference/model.md:735 ../../source/reference/model.md:752
-msgid "{#ExtendFunctionName}"
 msgstr ""
 
 #: ../../source/reference/model.md:736 ../../source/reference/model.md:753

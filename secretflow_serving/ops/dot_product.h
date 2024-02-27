@@ -36,9 +36,11 @@ class DotProduct : public OpKernel {
 
   std::string output_col_name_;
 
-  double intercept_ = 0.0d;
+  double intercept_ = 0.0;
 
   Double::ColVec weights_;
+
+  bool no_feature_ = false;
 };
 
 }  // namespace secretflow::serving::op

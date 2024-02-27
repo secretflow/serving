@@ -37,23 +37,26 @@ BAZEL_CACHE_DIR = os.getenv("BAZEL_CACHE_DIR")
 pyd_suffix = ".so"
 
 
-def add_date_to_version(*filepath):
+def add_date_to_version(version_txt_file, version_py_file):
     local_time = datetime.utcnow()
     chn_time = local_time + timedelta(hours=8)
     dstr = chn_time.strftime("%Y%m%d")
-    with open(os.path.join(ROOT_DIR, *filepath), "r") as fp:
+    with open(os.path.join(ROOT_DIR, version_txt_file), "r") as fp:
         content = fp.read()
-
     content = content.replace("$$DATE$$", dstr)
 
-    with open(os.path.join(ROOT_DIR, *filepath), "w+") as fp:
+    with open(os.path.join(ROOT_DIR, version_txt_file), "w+") as fp:
+        fp.write(content)
+
+    # write to py version file
+    with open(os.path.join(ROOT_DIR, version_py_file), "w+") as fp:
         fp.write(content)
 
 
-def find_version(*filepath):
-    add_date_to_version(*filepath)
+def find_version(version_txt_file, version_py_file):
+    add_date_to_version(version_txt_file, version_py_file)
     # Extract version information from filepath
-    with open(os.path.join(ROOT_DIR, *filepath)) as fp:
+    with open(os.path.join(ROOT_DIR, version_py_file)) as fp:
         version_match = re.search(
             r"^__version__ = ['\"]([^'\"]*)['\"]", fp.read(), re.M
         )
@@ -72,7 +75,7 @@ def read_requirements(*filepath):
 class SetupSpec:
     def __init__(self, name: str, description: str):
         self.name: str = name
-        self.version = find_version("secretflow_serving_lib", "version.py")
+        self.version = find_version("version.txt", "secretflow_serving_lib/version.py")
         self.description: str = description
         self.files_to_include: list = []
         self.install_requires: list = []

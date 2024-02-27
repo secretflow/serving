@@ -29,26 +29,8 @@ TreeMerge::TreeMerge(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   output_col_name_ =
       GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
 
-  // build leaf tree nodes
-  auto leaf_node_ids = GetNodeAttr<std::vector<int32_t>>(
-      opts_.node_def, *opts_.op_def, "leaf_node_ids");
-  CheckAttrValueDuplicate(leaf_node_ids, "leaf_node_ids");
-  auto leaf_weights = GetNodeAttr<std::vector<double>>(
-      opts_.node_def, *opts_.op_def, "leaf_weights");
-  if (!leaf_weights.empty()) {
-    SERVING_ENFORCE_EQ(
-        leaf_node_ids.size(), leaf_weights.size(),
-        "The length of attr value `leaf_node_ids` `leaf_weights` "
-        "should be same.");
-    // build bfs weight list
-    std::map<int32_t, double> leaf_weight_map;
-    for (size_t i = 0; i < leaf_node_ids.size(); ++i) {
-      leaf_weight_map.emplace(leaf_node_ids[i], leaf_weights[i]);
-    }
-    for (const auto& [id, weight] : leaf_weight_map) {
-      bfs_weights_.emplace_back(weight);
-    }
-  }
+  weights_ = GetNodeAttr<std::vector<double>>(opts_.node_def, *opts_.op_def,
+                                              "leaf_weights");
 
   BuildInputSchema();
   BuildOutputSchema();
@@ -61,7 +43,7 @@ void TreeMerge::DoCompute(ComputeContext* ctx) {
                   errors::ErrorCode::LOGIC_ERROR);
   // TODO: support for static detection of whether the execution dp_type
   // matches.
-  SERVING_ENFORCE(!bfs_weights_.empty(), errors::ErrorCode::LOGIC_ERROR,
+  SERVING_ENFORCE(!weights_.empty(), errors::ErrorCode::LOGIC_ERROR,
                   "party doesn't have leaf weights, can not get merge result.");
 
   const auto& selects_array = ctx->inputs.front().front()->column(0);
@@ -69,18 +51,28 @@ void TreeMerge::DoCompute(ComputeContext* ctx) {
   arrow::DoubleBuilder res_builder;
   SERVING_CHECK_ARROW_STATUS(res_builder.Resize(selects_array->length()));
   for (int64_t row = 0; row < selects_array->length(); ++row) {
-    TreePredictSelect merged_select(
-        std::static_pointer_cast<arrow::BinaryArray>(selects_array)
-            ->Value(row));
+    TreePredictSelect merged_select;
+    auto select =
+        std::static_pointer_cast<arrow::BinaryArray>(selects_array)->Value(row);
+    if (select.empty()) {
+      merged_select.SetLeafs(weights_.size(), true);
+    } else {
+      merged_select.SetSelectBuf(select);
+    }
     for (size_t p = 1; p < ctx->inputs.front().size(); ++p) {
-      TreePredictSelect partial_select(
-          std::static_pointer_cast<arrow::BinaryArray>(
-              ctx->inputs.front()[p]->column(0))
-              ->Value(row));
+      TreePredictSelect partial_select;
+      select = std::static_pointer_cast<arrow::BinaryArray>(
+                   ctx->inputs.front()[p]->column(0))
+                   ->Value(row);
+      if (select.empty()) {
+        partial_select.SetLeafs(weights_.size(), true);
+      } else {
+        partial_select.SetSelectBuf(select);
+      }
       merged_select.Merge(partial_select);
     }
     SERVING_CHECK_ARROW_STATUS(
-        res_builder.Append(bfs_weights_[merged_select.GetLeafIndex()]));
+        res_builder.Append(weights_[merged_select.GetLeafIndex()]));
   }
   std::shared_ptr<arrow::Array> res_array;
   SERVING_CHECK_ARROW_STATUS(res_builder.Finish(&res_array));
@@ -101,18 +93,16 @@ void TreeMerge::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(TREE_MERGE, TreeMerge)
-REGISTER_OP(TREE_MERGE, "0.0.1", "")
+REGISTER_OP(TREE_MERGE, "0.0.1",
+            "Merge the `TREE_SELECT` output from multiple parties to obtain a "
+            "unique prediction path and return the result weights.")
     .Mergeable()
     .StringAttr("input_col_name", "The column name of selects", false, false)
     .StringAttr("output_col_name", "The column name of tree predict score",
                 false, false)
-    .Int32Attr("leaf_node_ids",
-               "The id list of the leaf nodes, If party does not possess "
-               "weights, the attr can be omitted.",
-               true, true, std::vector<int32_t>())
     .DoubleAttr("leaf_weights",
                 "The weight list for leaf node, If party does not possess "
-                "weights, the attr can be omitted.",
+                "weights. The attr can be omitted.",
                 true, true, std::vector<double>())
     .Input("selects", "Input tree selects")
     .Output("score", "The prediction result of tree.");

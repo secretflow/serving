@@ -80,10 +80,10 @@ TEST_F(TreeSelectTest, Works) {
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -175,8 +175,8 @@ TEST_F(TreeSelectTest, Works) {
   }
 
   // expect result
-  std::vector<uint8_t> except_select_0 = {0, /*01100000*/ (1 << 5) | (1 << 6)};
-  std::vector<uint8_t> except_select_1 = {0, /*00000101*/ 1 | (1 << 2)};
+  std::vector<uint8_t> except_select_0 = {0, /*00000110*/ (1 << 1) | (1 << 2)};
+  std::vector<uint8_t> except_select_1 = {0, /*10100000*/ (1 << 5) | (1 << 7)};
 
   kernel->Compute(&compute_ctx);
 
@@ -189,6 +189,145 @@ TEST_F(TreeSelectTest, Works) {
       builder.Append(except_select_0.data(), except_select_0.size()));
   SERVING_CHECK_ARROW_STATUS(
       builder.Append(except_select_1.data(), except_select_0.size()));
+  SERVING_CHECK_ARROW_STATUS(builder.Finish(&expect_select_array));
+
+  std::cout << "expect_select: " << expect_select_array->ToString()
+            << std::endl;
+  std::cout << "result: " << compute_ctx.output->column(0)->ToString()
+            << std::endl;
+
+  ASSERT_TRUE(compute_ctx.output->column(0)->Equals(expect_select_array));
+}
+
+TEST_F(TreeSelectTest, WorksNoFeature) {
+  std::string json_content = R"JSON(
+{
+  "name": "test_node",
+  "op": "TREE_SELECT",
+  "attr_values": {
+    "input_feature_names": {
+      "ss": {
+        "data": []
+      }
+    },
+    "input_feature_types": {
+      "ss": {
+        "data": []
+      }
+    },
+    "output_col_name": {
+      "s": "select"
+    },
+    "node_ids": {
+      "i32s": {
+        "data": []
+      }
+    },
+    "lchild_ids": {
+      "i32s": {
+        "data": []
+      }
+    },
+    "rchild_ids": {
+      "i32s": {
+        "data": []
+      }
+    },
+    "leaf_node_ids": {
+      "i32s": {
+        "data": []
+      }
+    },
+    "split_feature_idxs": {
+      "i32s": {
+        "data": []
+      }
+    },
+    "split_values": {
+      "ds": {
+        "data": []
+      }
+    }
+  },
+  "op_version": "0.0.1"
+}
+)JSON";
+  NodeDef node_def;
+  JsonToPb(json_content, &node_def);
+
+  auto expect_input_schema = arrow::schema({});
+  auto expect_output_schema =
+      arrow::schema({arrow::field("select", arrow::binary())});
+
+  auto mock_node = std::make_shared<Node>(std::move(node_def));
+  ASSERT_EQ(mock_node->GetOpDef()->inputs_size(), 1);
+
+  OpKernelOptions opts{mock_node->node_def(), mock_node->GetOpDef()};
+  auto kernel = OpKernelFactory::GetInstance()->Create(std::move(opts));
+
+  // check input schema
+  ASSERT_EQ(kernel->GetInputsNum(), mock_node->GetOpDef()->inputs_size());
+  const auto& input_schema_list = kernel->GetAllInputSchema();
+  ASSERT_EQ(input_schema_list.size(), kernel->GetInputsNum());
+  for (size_t i = 0; i < input_schema_list.size(); ++i) {
+    const auto& input_schema = input_schema_list[i];
+    ASSERT_TRUE(input_schema->Equals(expect_input_schema));
+  }
+  // check output schema
+  auto output_schema = kernel->GetOutputSchema();
+  ASSERT_TRUE(output_schema->Equals(expect_output_schema));
+
+  // build input
+  ComputeContext compute_ctx;
+  {
+    std::vector<std::shared_ptr<arrow::Field>> mock_input_fields = {
+        arrow::field("x1", arrow::float64()),
+        arrow::field("x2", arrow::float32()),
+        arrow::field("x3", arrow::float64()),
+        arrow::field("x4", arrow::float32()),
+        arrow::field("x5", arrow::int16()),
+        arrow::field("x6", arrow::uint16()),
+        arrow::field("x7", arrow::int32()),
+        arrow::field("x8", arrow::uint32()),
+        arrow::field("x9", arrow::int64()),
+        arrow::field("x10", arrow::uint64())};
+
+    std::shared_ptr<arrow::Array> x1, x2, x3, x4, x5, x6, x7, x8, x9, x10;
+    using arrow::ipc::internal::json::ArrayFromJSON;
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float64(), "[-0.01, -0.2]"),
+                             x1);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float32(), "[0.01, 0.1]"),
+                             x2);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float64(), "[0.01, -1]"), x3);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::float32(), "[-0.01, -0.2]"),
+                             x4);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int16(), "[-1, -1]"), x5);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint16(), "[1, 1]"), x6);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int32(), "[-1, -1]"), x7);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint32(), "[1, 1]"), x8);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::int64(), "[-1, -1]"), x9);
+    SERVING_GET_ARROW_RESULT(ArrayFromJSON(arrow::uint64(), "[1, 1]"), x10);
+
+    auto features = MakeRecordBatch(arrow::schema(mock_input_fields), 2,
+                                    {x1, x2, x3, x4, x5, x6, x7, x8, x9, x10});
+    compute_ctx.inputs.emplace_back(
+        std::vector<std::shared_ptr<arrow::RecordBatch>>{features});
+  }
+
+  // expect result
+  std::vector<uint8_t> except_select = {};
+
+  kernel->Compute(&compute_ctx);
+
+  // check output
+  ASSERT_TRUE(compute_ctx.output);
+  ASSERT_TRUE(compute_ctx.output->schema()->Equals(output_schema));
+  std::shared_ptr<arrow::Array> expect_select_array;
+  arrow::BinaryBuilder builder;
+  SERVING_CHECK_ARROW_STATUS(
+      builder.Append(except_select.data(), except_select.size()));
+  SERVING_CHECK_ARROW_STATUS(
+      builder.Append(except_select.data(), except_select.size()));
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&expect_select_array));
 
   std::cout << "expect_select: " << expect_select_array->ToString()
@@ -271,10 +410,10 @@ INSTANTIATE_TEST_SUITE_P(
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -288,7 +427,8 @@ INSTANTIATE_TEST_SUITE_P(
     "split_values": {
       "ds": {
         "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633,
+          0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
       }
     }
@@ -336,10 +476,10 @@ INSTANTIATE_TEST_SUITE_P(
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -353,7 +493,8 @@ INSTANTIATE_TEST_SUITE_P(
     "split_values": {
       "ds": {
         "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633,
+          0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
       }
     }
@@ -401,10 +542,10 @@ INSTANTIATE_TEST_SUITE_P(
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -418,7 +559,8 @@ INSTANTIATE_TEST_SUITE_P(
     "split_values": {
       "ds": {
         "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633,
+          0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
       }
     }
@@ -471,10 +613,10 @@ INSTANTIATE_TEST_SUITE_P(
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -488,77 +630,8 @@ INSTANTIATE_TEST_SUITE_P(
     "split_values": {
       "ds": {
         "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-        ]
-      }
-    }
-  },
-  "op_version": "0.0.1"
-}
-)JSON"},
-                      /*missing root_node_id*/ Param{R"JSON(
-{
-  "name": "test_node",
-  "op": "TREE_SELECT",
-  "attr_values": {
-    "input_feature_names": {
-      "ss": {
-        "data": [
-          "x1", "x2", "x3", "x4", "x5",
-          "x6", "x7", "x8", "x9", "x10"
-        ]
-      }
-    },
-    "input_feature_types": {
-      "ss": {
-        "data": [
-          "DT_DOUBLE", "DT_FLOAT", "DT_DOUBLE", "DT_FLOAT", "DT_INT16",
-          "DT_UINT16", "DT_INT32", "DT_UINT32", "DT_INT64", "DT_UINT64"
-        ]
-      }
-    },
-    "output_col_name": {
-      "s": "select"
-    },
-    "node_ids": {
-      "i32s": {
-        "data": [
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
-        ]
-      }
-    },
-    "lchild_ids": {
-      "i32s": {
-        "data": [
-          1, 3, 5, 7, 9, 11, 13, -1, -1, -1, -1, -1, -1, -1, -1
-        ]
-      }
-    },
-    "rchild_ids": {
-      "i32s": {
-        "data": [
-          2, 4, 6, 8, 10, 12, 14, -1, -1, -1, -1, -1, -1, -1, -1
-        ]
-      }
-    },
-    "leaf_flags": {
-      "bs": {
-        "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
-        ]
-      }
-    },
-    "split_feature_idxs": {
-      "i32s": {
-        "data": [
-          3, -1, -1, 2, 2, 1, 2, -1, -1, -1, -1, -1, -1, -1, -1
-        ]
-      }
-    },
-    "split_values": {
-      "ds": {
-        "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633,
+          0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
       }
     }
@@ -614,10 +687,10 @@ INSTANTIATE_TEST_SUITE_P(
         ]
       }
     },
-    "leaf_flags": {
-      "bs": {
+    "leaf_node_ids": {
+      "i32s": {
         "data": [
-          "false", "false", "false", "false", "false", "false", "false", "true", "true", "true", "true", "true", "true", "true", "true"
+          14, 13, 12, 11, 10, 9, 8, 7
         ]
       }
     },
@@ -631,7 +704,8 @@ INSTANTIATE_TEST_SUITE_P(
     "split_values": {
       "ds": {
         "data": [
-          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633, 0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+          -0.154862225, 0.0, 0.0, -0.208345324, 0.301087976, -0.300848633,
+          0.0800122, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         ]
       }
     }
