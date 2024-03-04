@@ -144,9 +144,6 @@ def build(build_python, build_cpp):
 
     bazel_flags.extend(["-c", "opt"])
 
-    if sys.platform == "linux":
-        bazel_flags.extend(["--config=linux-release"])
-
     if platform.machine() == "x86_64":
         bazel_flags.extend(["--config=avx"])
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 common --experimental_repo_remote_exec
-common --experimental_remote_download_regex='.*libserving\.so$|.*_pb2\.py$|.*\/secretflow_serving$'
+common --experimental_remote_download_regex='.*libserving\.so$|.*_pb2\.py$|.*\/secretflow_serving$|.*sf_serving\.tar\.gz$'
 
 build --incompatible_new_actions_api=false
 build --copt=-fdiagnostics-color=always
@@ -37,8 +37,8 @@ test --test_output=errors
 test --test_timeout=1800
 
 # static link runtime libraries on Linux
-build:linux-release --action_env=BAZEL_LINKOPTS=-static-libstdc++:-static-libgcc
-build:linux-release --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
+build:linux --action_env=BAZEL_LINKOPTS=-static-libstdc++:-static-libgcc
+build:linux --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
 
 # platform specific config
 # Bazel will automatic pick platform config since we have enable_platform_specific_config set

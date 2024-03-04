@@ -36,14 +36,8 @@ T ApplyLinkFunc(T x, LinkFunctionType lf_type) {
   };
 
   switch (lf_type) {
-    case LinkFunctionType::LF_LOG: {
+    case LinkFunctionType::LF_EXP: {
       return std::exp(x);
-    }
-    case LinkFunctionType::LF_LOGIT: {
-      return 1.0F / (1.0F + std::exp(-x));
-    }
-    case LinkFunctionType::LF_INVERSE: {
-      return std::exp(-x);
     }
     case LinkFunctionType::LF_RECIPROCAL: {
       return 1.0F / x;

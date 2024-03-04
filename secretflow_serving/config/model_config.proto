@@ -41,8 +41,9 @@ message OSSSourceMeta {
   // Bucket secret key
   string secret_key = 2;
 
-  // Whether to use virtual host mode,
+  // Whether to use virtual host mode, ref:
   // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+  // Defalut: False
   bool virtual_hosted = 3;
 
   string endpoint = 4;

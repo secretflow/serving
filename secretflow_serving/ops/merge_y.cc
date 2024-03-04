@@ -102,7 +102,7 @@ REGISTER_OP(MERGE_Y, "0.0.2",
         "link_function",
         "Type of link function, defined in "
         "`secretflow_serving/protos/link_function.proto`. Optional value: "
-        "LF_LOG, LF_LOGIT, LF_INVERSE, "
+        "LF_EXP, "
         "LF_RECIPROCAL, "
         "LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, "
         "LF_SIGMOID_GA, "

@@ -44,9 +44,24 @@ namespace {
 const int32_t kPeerConnectTimeoutMs = 500;
 const int32_t kPeerRpcTimeoutMs = 2000;
 
+void SetServerTLSOpts(const TlsConfig& tls_config,
+                      brpc::ServerSSLOptions* server_ssl_opts) {
+  server_ssl_opts->default_cert.certificate = tls_config.certificate_path();
+  server_ssl_opts->default_cert.private_key = tls_config.private_key_path();
+  if (!tls_config.ca_file_path().empty()) {
+    server_ssl_opts->verify.verify_depth = 1;
+    server_ssl_opts->verify.ca_file_path = tls_config.ca_file_path();
+  }
+}
+
 }  // namespace
 
-Server::Server(Options opts) : opts_(std::move(opts)) {}
+Server::Server(Options opts) : opts_(std::move(opts)) {
+  SERVING_ENFORCE(opts_.cluster_config.parties_size() > 1,
+                  errors::ErrorCode::INVALID_ARGUMENT,
+                  "too few parties params for cluster config, get: {}",
+                  opts_.cluster_config.parties_size());
+}
 
 Server::~Server() {
   service_server_.Stop(0);
@@ -126,14 +141,8 @@ void Server::Start() {
 
     brpc::ServerOptions metrics_server_options;
     if (opts_.server_config.has_tls_config()) {
-      auto* ssl_opts = metrics_server_options.mutable_ssl_options();
-      ssl_opts->default_cert.certificate =
-          opts_.server_config.tls_config().certificate_path();
-      ssl_opts->default_cert.private_key =
-          opts_.server_config.tls_config().private_key_path();
-      ssl_opts->verify.verify_depth = 1;
-      ssl_opts->verify.ca_file_path =
-          opts_.server_config.tls_config().ca_file_path();
+      SetServerTLSOpts(opts_.server_config.tls_config(),
+                       metrics_server_options.mutable_ssl_options());
     }
 
     auto* metrics_service = new metrics::MetricsService();
@@ -210,14 +219,8 @@ void Server::Start() {
     SPDLOG_INFO("internal port: {}", server_options.internal_port);
   }
   if (opts_.server_config.has_tls_config()) {
-    auto* ssl_opts = server_options.mutable_ssl_options();
-    ssl_opts->default_cert.certificate =
-        opts_.server_config.tls_config().certificate_path();
-    ssl_opts->default_cert.private_key =
-        opts_.server_config.tls_config().private_key_path();
-    ssl_opts->verify.verify_depth = 1;
-    ssl_opts->verify.ca_file_path =
-        opts_.server_config.tls_config().ca_file_path();
+    SetServerTLSOpts(opts_.server_config.tls_config(),
+                     server_options.mutable_ssl_options());
   }
   health::ServingHealthReporter hr;
   server_options.health_reporter = &hr;

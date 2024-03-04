@@ -23,11 +23,7 @@ enum LinkFunctionType {
   UNKNOWN_LF_TYPE = 0;
 
   // LOG
-  LF_LOG = 1;
-  // LOGIT
-  LF_LOGIT = 2;
-  // INVERSE
-  LF_INVERSE = 3;
+  LF_EXP = 1;
   // RECIPROCAL
   LF_RECIPROCAL = 5;
   // IDENTITY
