@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-23 15:15+0800\n"
+"POT-Creation-Date: 2024-03-01 17:29+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgid "SecretFlow-Serving Operator List"
 msgstr "SecretFlow-Serving 算子列表"
 
 #: ../../source/topics/graph/operator_list.md:9
-msgid "Last update: Fri Feb 23 15:15:32 2024"
+msgid "Last update: Fri Mar  1 17:28:55 2024"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md:10
@@ -90,12 +90,12 @@ msgstr ""
 #: ../../source/topics/graph/operator_list.md
 msgid ""
 "Type of link function, defined in "
-"`secretflow_serving/protos/link_function.proto`. Optional value: LF_LOG, "
-"LF_LOGIT, LF_INVERSE, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, "
-"LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, "
-"LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, "
-"LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, "
-"LF_SIGMOID_SR, LF_SIGMOID_SEGLS"
+"`secretflow_serving/protos/link_function.proto`. Optional value: LF_EXP, "
+"LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, "
+"LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, "
+"LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, "
+"LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, "
+"LF_SIGMOID_SEGLS"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md

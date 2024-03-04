@@ -74,6 +74,116 @@ jobs:
 
             python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
+  linux_x64_build_binary:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: secretflow/release-ci:latest
+    resource_class: 2xlarge+
+    shell: /bin/bash --login -eo pipefail
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=gcs.json --min_download
+      - run:
+          name: "Build"
+          command: |
+            bash ./build_package_entrypoint.sh
+      - run:
+          name: "Copy binary"
+          command: |
+            DIR=/tmp/binary/linux/amd64/
+
+            mkdir -p ${DIR}
+            cp ./sf_serving.tar.gz ${DIR}
+            cp ./version.txt ${DIR}
+            ls ${DIR}
+      - persist_to_workspace:
+          root: "/tmp/binary/linux"
+          paths:
+            - amd64/*
+
+  linux_aarch64_build_binary:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: secretflow/release-ci-aarch64:latest
+    resource_class: arm.2xlarge
+    shell: /bin/bash --login -eo pipefail
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=gcs.json --min_download
+      - run:
+          name: "Build"
+          command: |
+            bash ./build_package_entrypoint.sh
+      - run:
+          name: "Copy binary"
+          command: |
+            DIR=/tmp/binary/linux/arm64/
+
+            mkdir -p ${DIR}
+            cp ./sf_serving.tar.gz ${DIR}
+            cp ./version.txt ${DIR}
+            ls ${DIR}
+      - persist_to_workspace:
+          root: "/tmp/binary/linux"
+          paths:
+            - arm64/*
+
+  docker_image_publish:
+    docker:
+      - image: cimg/deploy:2023.06.1
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: /tmp/binary/linux
+      - run:
+          name: Build Docker image
+          command: |
+            # login docker
+            docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
+
+            ls /tmp/binary/linux/amd64/
+            ls /tmp/binary/linux/arm64/
+
+            # Build image
+            cd docker
+            mkdir -p linux/amd64
+            mkdir -p linux/arm64
+            cp /tmp/binary/linux/amd64/sf_serving.tar.gz linux/amd64/sf_serving.tar.gz
+            cp /tmp/binary/linux/arm64/sf_serving.tar.gz linux/arm64/sf_serving.tar.gz
+
+            ls ./linux/amd64
+            ls ./linux/arm64
+
+            TAG=$(grep "version" /tmp/binary/linux/amd64/version.txt | awk -F'"' '{print $2}')
+            echo $TAG
+            docker buildx create --name serving-image-builder --platform linux/arm64,linux/amd64 --use
+            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving:$TAG --push .
+
+            if [[ $TAG =~ b[0-9]$ ]]; then
+                echo "tag and push latest image."
+                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving:latest --push .
+            fi
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -96,3 +206,21 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - linux_x64_build_binary:
+          # This is mandatory to trigger a pipeline when pushing a tag
+          filters:
+            tags:
+              only: /.*b[0-9]/
+      - linux_aarch64_build_binary:
+          # This is mandatory to trigger a pipeline when pushing a tag
+          filters:
+            tags:
+              only: /.*b[0-9]/
+      - docker_image_publish:
+          requires:
+            - linux_x64_build_binary
+            - linux_aarch64_build_binary
+          # This is mandatory to trigger a pipeline when pushing a tag
+          filters:
+            tags:
+              only: /.*b[0-9]/

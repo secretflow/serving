@@ -566,7 +566,7 @@ if __name__ == "__main__":
                 make_merge_y_node_def(
                     "node_merge_y",
                     ["node_dot_product"],
-                    LinkFunctionType.LF_LOGIT,
+                    LinkFunctionType.LF_SIGMOID_RAW,
                     input_col_name="y",
                     output_col_name="score",
                     yhat_scale=1.2,
@@ -618,7 +618,7 @@ if __name__ == "__main__":
                 make_merge_y_node_def(
                     "node_merge_y",
                     ["node_dot_product"],
-                    LinkFunctionType.LF_LOGIT,
+                    LinkFunctionType.LF_SIGMOID_RAW,
                     input_col_name="y",
                     output_col_name="score",
                     yhat_scale=1.2,
@@ -1786,7 +1786,7 @@ if __name__ == "__main__":
                 make_merge_y_node_def(
                     "node_merge_y",
                     ["node_dot_product"],
-                    LinkFunctionType.LF_LOGIT,
+                    LinkFunctionType.LF_SIGMOID_RAW,
                     input_col_name="y",
                     output_col_name="score",
                     yhat_scale=1.2,
@@ -1804,7 +1804,7 @@ if __name__ == "__main__":
                 make_merge_y_node_def(
                     "node_merge_y",
                     ["node_dot_product"],
-                    LinkFunctionType.LF_LOGIT,
+                    LinkFunctionType.LF_SIGMOID_RAW,
                     input_col_name="y",
                     output_col_name="score",
                     yhat_scale=1.2,

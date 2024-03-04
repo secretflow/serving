@@ -146,16 +146,15 @@ TEST_P(MergeYParamTest, Works) {
 INSTANTIATE_TEST_SUITE_P(
     MergeYParamTestSuite, MergeYParamTest,
     ::testing::Values(
-        Param{"LF_LOG", 1.0}, Param{"LF_LOGIT", 1.0}, Param{"LF_INVERSE", 1.0},
-        Param{"LF_RECIPROCAL", 1.1}, Param{"LF_IDENTITY", 1.2},
-        Param{"LF_SIGMOID_RAW", 1.3}, Param{"LF_SIGMOID_MM1", 1.4},
-        Param{"LF_SIGMOID_MM3", 1.5}, Param{"LF_SIGMOID_GA", 1.6},
-        Param{"LF_SIGMOID_T1", 1.7}, Param{"LF_SIGMOID_T3", 1.8},
-        Param{"LF_SIGMOID_T5", 1.9}, Param{"LF_SIGMOID_T7", 1.01},
-        Param{"LF_SIGMOID_T9", 1.02}, Param{"LF_SIGMOID_LS7", 1.03},
-        Param{"LF_SIGMOID_SEG3", 1.04}, Param{"LF_SIGMOID_SEG5", 1.05},
-        Param{"LF_SIGMOID_DF", 1.06}, Param{"LF_SIGMOID_SR", 1.07},
-        Param{"LF_SIGMOID_SEGLS", 1.08}));
+        Param{"LF_EXP", 1.0}, Param{"LF_RECIPROCAL", 1.1},
+        Param{"LF_IDENTITY", 1.2}, Param{"LF_SIGMOID_RAW", 1.3},
+        Param{"LF_SIGMOID_MM1", 1.4}, Param{"LF_SIGMOID_MM3", 1.5},
+        Param{"LF_SIGMOID_GA", 1.6}, Param{"LF_SIGMOID_T1", 1.7},
+        Param{"LF_SIGMOID_T3", 1.8}, Param{"LF_SIGMOID_T5", 1.9},
+        Param{"LF_SIGMOID_T7", 1.01}, Param{"LF_SIGMOID_T9", 1.02},
+        Param{"LF_SIGMOID_LS7", 1.03}, Param{"LF_SIGMOID_SEG3", 1.04},
+        Param{"LF_SIGMOID_SEG5", 1.05}, Param{"LF_SIGMOID_DF", 1.06},
+        Param{"LF_SIGMOID_SR", 1.07}, Param{"LF_SIGMOID_SEGLS", 1.08}));
 
 // TODO: exception case
 
@@ -174,7 +173,7 @@ TEST_F(MergeYTest, Constructor) {
   "op": "MERGE_Y",
   "attr_values": {
     "link_function": {
-      "s": "LF_LOG"
+      "s": "LF_EXP"
     },
     "input_col_name": {
       "s": "y"

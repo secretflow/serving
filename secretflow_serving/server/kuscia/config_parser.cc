@@ -20,6 +20,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/utils.h"
@@ -50,6 +51,8 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
   std::ifstream file_is(config_file);
   std::string raw_config_str((std::istreambuf_iterator<char>(file_is)),
                              std::istreambuf_iterator<char>());
+
+  SPDLOG_INFO("raw kuscia serving config content: {}", raw_config_str);
 
   rapidjson::Document doc;
   SERVING_ENFORCE(!doc.Parse(raw_config_str.c_str()).HasParseError(),
@@ -93,6 +96,9 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
         }
       }
     }
+
+    SERVING_ENFORCE_GT(cluster_config_.parties_size(), 1,
+                       "too few cluster party config to run serving.");
   }
 
   {

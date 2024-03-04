@@ -74,10 +74,12 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
         tls_config->certificate_path();
     opts.mutable_ssl_options()->client_cert.private_key =
         tls_config->private_key_path();
-    opts.mutable_ssl_options()->verify.ca_file_path =
-        tls_config->ca_file_path();
-    // use default verify depth
-    opts.mutable_ssl_options()->verify.verify_depth = 1;
+    if (!tls_config->ca_file_path().empty()) {
+      opts.mutable_ssl_options()->verify.ca_file_path =
+          tls_config->ca_file_path();
+      // use default verify depth
+      opts.mutable_ssl_options()->verify.verify_depth = 1;
+    }
   }
 
   return CreateBrpcChannel(endpoint, enable_lb, opts);

@@ -18,20 +18,15 @@ RUN yum install -y \
     wget autoconf bison flex git protobuf-devel libnl3-devel \
     libtool make pkg-config protobuf-compiler && yum clean all
 
-FROM secretflow/anolis8-python:3.8.15 as python
-
 FROM openanolis/anolisos:8.8
+
+ARG TARGETPLATFORM
 
 LABEL maintainer="secretflow-contact@service.alipay.com"
 
-COPY --from=python /root/miniconda3/envs/secretflow/bin/ /usr/local/bin/
-COPY --from=python /root/miniconda3/envs/secretflow/lib/ /usr/local/lib/
-
 RUN yum install -y protobuf libnl3 libgomp && yum clean all
 
-RUN grep -rl '#!/root/miniconda3/envs/secretflow/bin' /usr/local/bin/ | xargs sed -i -e 's/#!\/root\/miniconda3\/envs\/secretflow/#!\/usr\/local/g'
-
-COPY sf_serving.tar.gz /root/sf_serving.tgz
+COPY ./$TARGETPLATFORM/sf_serving.tar.gz /root/sf_serving.tgz
 RUN tar -C /root -xzf /root/sf_serving.tgz
 
 # run as root for now

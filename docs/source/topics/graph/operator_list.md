@@ -6,7 +6,7 @@ SecretFlow-Serving Operator List
 ================================
 
 
-Last update: Fri Feb 23 15:15:32 2024
+Last update: Fri Mar  1 17:28:55 2024
 ## MERGE_Y
 
 
@@ -19,7 +19,7 @@ Merge all partial y(score) and apply link function
 |Name|Description|Type|Required|Notes|
 | :--- | :--- | :--- | :--- | :--- |
 |output_col_name|The column name of merged score|String|Y||
-|link_function|Type of link function, defined in `secretflow_serving/protos/link_function.proto`. Optional value: LF_LOG, LF_LOGIT, LF_INVERSE, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|Y||
+|link_function|Type of link function, defined in `secretflow_serving/protos/link_function.proto`. Optional value: LF_EXP, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|Y||
 |input_col_name|The column name of partial_y|String|Y||
 |yhat_scale|In order to prevent value overflow, GLM training is performed on the scaled y label. So in the prediction process, you need to enlarge yhat back to get the real predicted value, `yhat = yhat_scale * link(X * W)`|Double|N|Default: 1.0.|
 

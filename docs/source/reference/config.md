@@ -292,7 +292,7 @@ S3 protocol.
 | ----- | ---- | ----------- |
 | access_key | [ string](#string ) | Bucket access key |
 | secret_key | [ string](#string ) | Bucket secret key |
-| virtual_hosted | [ bool](#bool ) | Whether to use virtual host mode, https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html |
+| virtual_hosted | [ bool](#bool ) | Whether to use virtual host mode, ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html Defalut: False |
 | endpoint | [ string](#string ) | none |
 | bucket | [ string](#string ) | none |
  <!-- end Fields -->
@@ -361,7 +361,7 @@ Related config of serving
 | ----- | ---- | ----------- |
 | certificate_path | [ string](#string ) | Certificate file path |
 | private_key_path | [ string](#string ) | Private key file path |
-| ca_file_path | [ string](#string ) | The trusted CA file to verify the peer's certificate If empty, use the system default CA files |
+| ca_file_path | [ string](#string ) | The trusted CA file to verify the peer's certificate If empty, turn off the verification |
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-19 12:47+0000\n"
+"POT-Creation-Date: 2024-03-01 11:43+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -541,8 +541,9 @@ msgstr ""
 
 #: ../../source/reference/config.md
 msgid ""
-"Whether to use virtual host mode, "
+"Whether to use virtual host mode, ref: "
 "https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html"
+" Defalut: False"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -699,8 +700,8 @@ msgstr ""
 
 #: ../../source/reference/config.md
 msgid ""
-"The trusted CA file to verify the peer's certificate If empty, use the "
-"system default CA files"
+"The trusted CA file to verify the peer's certificate If empty, turn off "
+"the verification"
 msgstr ""
 
 #: ../../source/reference/config.md:376

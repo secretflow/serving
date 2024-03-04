@@ -24,11 +24,11 @@
 namespace secretflow::serving::op {
 
 static constexpr const char* const kLinkFuncsArray[] = {
-    "LF_LOG",          "LF_LOGIT",       "LF_INVERSE",     "LF_RECIPROCAL",
-    "LF_IDENTITY",     "LF_SIGMOID_RAW", "LF_SIGMOID_MM1", "LF_SIGMOID_MM3",
-    "LF_SIGMOID_GA",   "LF_SIGMOID_T1",  "LF_SIGMOID_T3",  "LF_SIGMOID_T5",
-    "LF_SIGMOID_T7",   "LF_SIGMOID_T9",  "LF_SIGMOID_LS7", "LF_SIGMOID_SEG3",
-    "LF_SIGMOID_SEG5", "LF_SIGMOID_DF",  "LF_SIGMOID_SR",  "LF_SIGMOID_SEGLS"};
+    "LF_EXP",         "LF_RECIPROCAL",   "LF_IDENTITY",     "LF_SIGMOID_RAW",
+    "LF_SIGMOID_MM1", "LF_SIGMOID_MM3",  "LF_SIGMOID_GA",   "LF_SIGMOID_T1",
+    "LF_SIGMOID_T3",  "LF_SIGMOID_T5",   "LF_SIGMOID_T7",   "LF_SIGMOID_T9",
+    "LF_SIGMOID_LS7", "LF_SIGMOID_SEG3", "LF_SIGMOID_SEG5", "LF_SIGMOID_DF",
+    "LF_SIGMOID_SR",  "LF_SIGMOID_SEGLS"};
 
 void BMMergeYOPBench(benchmark::State& state) {
   std::string json_content = R"JSON(

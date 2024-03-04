@@ -32,11 +32,18 @@ show_help() {
     echo
 }
 
-RELEASE_IMAGE=secretflow/release-ci:latest
+MACHINE_TYPE=$(arch)
+HOST_PLATFORM=""
+RELEASE_IMAGE=""
+if [ "$MACHINE_TYPE" == "x86_64" ]; then
+  HOST_PLATFORM=linux/amd64
+  RELEASE_IMAGE=secretflow/release-ci:latest
+else
+  HOST_PLATFORM=linux/arm64
+  RELEASE_IMAGE=secretflow/release-ci-aarch64:latest
+fi
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 CODE_PATH=$(cd "$(dirname "$0")" && cd .. && pwd)
-
 build_serving() {
     echo -e "${GREEN}Start build serving package...${NO_COLOR} ${CODE_PATH}"
 
@@ -91,10 +98,11 @@ IMAGE_TAG=secretflow/serving-anolis8:${VERSION}
 LATEST_TAG=secretflow/serving-anolis8:latest
 
 # copy package
-cp ${CODE_PATH}/sf_serving.tar.gz ./
+mkdir -p ${HOST_PLATFORM}
+cp ${CODE_PATH}/sf_serving.tar.gz ./${HOST_PLATFORM}/
 
 echo -e "Building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
-docker build . -f Dockerfile -t ${IMAGE_TAG}
+docker build --build-arg="TARGETPLATFORM=${HOST_PLATFORM}" . -f Dockerfile -t ${IMAGE_TAG}
 echo -e "Finish building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
 
 if [[ LATEST -eq 1 ]]; then

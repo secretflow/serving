@@ -440,6 +440,7 @@ void ArrowProcessing::DoCompute(ComputeContext* ctx) {
 
 std::shared_ptr<arrow::RecordBatch> ArrowProcessing::ReplayCompute(
     const std::shared_ptr<arrow::RecordBatch>& input) {
+  SERVING_ENFORCE_GE(result_id_, 0);
   std::map<int32_t, arrow::Datum> datas = {{0, input}};
 
   arrow::Datum result_datum;

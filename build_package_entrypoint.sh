@@ -34,6 +34,6 @@ fi
 echo "binary version: ${new_version}"
 sed -i "s/SF_SERVING_VERSION/${new_version}/g" ${BASE_DIR}/secretflow_serving/server/version.h
 
-bazel build --verbose_failures --config=linux-release -c opt //:sf_serving --spawn_strategy local
+bazel build --verbose_failures -c opt //:sf_serving
 
 cp bazel-bin/sf_serving.tar.gz ./

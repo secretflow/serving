@@ -43,11 +43,11 @@ class ArrowProcessing : public OpKernel {
   std::string input_schema_bytes_;
   std::string output_schema_bytes_;
 
-  int32_t result_id_;
-
   std::map<int, std::unique_ptr<arrow::compute::FunctionOptions>> func_opt_map_;
   std::vector<std::function<void(arrow::Datum&, std::vector<arrow::Datum>&)>>
       func_list_;
+
+  int32_t result_id_ = -1;
 
   bool dummy_flag_ = false;
 };
