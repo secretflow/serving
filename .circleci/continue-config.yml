@@ -114,6 +114,9 @@ jobs:
           name: Checkout devtools
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
+          name: "Install homebrew dependencies"
+          command: brew install bazelisk cmake ninja libomp wget go md5sha1sum
+      - run:
           name: "Install Miniconda"
           command: |
             wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.1.0-1-MacOSX-arm64.sh -O ~/miniconda.sh
