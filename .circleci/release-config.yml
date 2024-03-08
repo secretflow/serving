@@ -98,7 +98,7 @@ jobs:
           name: "build package and publish"
           command: |
             set +e
-            
+
             conda create -n build python=<< parameters.python_ver >> -y
             conda activate build
 
@@ -132,7 +132,7 @@ jobs:
           name: "build package and publish"
           command: |
             set +e
-            
+
             conda create -n build python=<< parameters.python_ver >> -y
             conda activate build
 
