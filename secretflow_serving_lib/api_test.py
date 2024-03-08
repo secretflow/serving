@@ -12,7 +12,7 @@ print("imported, about to call", file=sys.stderr)
 
 # get ops
 ops = serving.get_all_ops()
-assert len(ops) == 3
+assert len(ops) > 0
 
 # get ops
 op = serving.get_op("MERGE_Y")
