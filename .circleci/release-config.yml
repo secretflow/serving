@@ -50,7 +50,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   linux_aarch64_publish:
     docker:
@@ -72,7 +72,61 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+
+  macOS_arm64_publish:
+    macos:
+      xcode: 15.1
+    resource_class: macos.m1.large.gen1
+    parameters:
+      python_ver:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: "Install homebrew dependencies"
+          command: |
+            brew install bazelisk cmake ninja libomp wget go
+      - run:
+          name: "build package and publish"
+          command: |
+            set +e
+            
+            conda create -n build python=<< parameters.python_ver >> -y
+            conda activate build
+
+            sh ./build_wheel_entrypoint.sh
+            python3 -m pip install twine
+            ls dist/*.whl
+
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+
+  macOS_x64_publish:
+    macos:
+      xcode: 15.1
+    resource_class: macos.x86.medium.gen2
+    parameters:
+      python_ver:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: "Install homebrew dependencies"
+          command: |
+            brew install bazelisk cmake ninja nasm libomp wget go
+      - run:
+          name: "build package and publish"
+          command: |
+            set +e
+            
+            conda create -n build python=<< parameters.python_ver >> -y
+            conda activate build
+
+            sh ./build_wheel_entrypoint.sh
+            python3 -m pip install twine
+            ls dist/*.whl
+
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   linux_x64_build_binary:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
@@ -162,6 +216,9 @@ jobs:
             # login docker
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
 
+            # login docker - aliyun
+            docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD} secretflow-registry.cn-hangzhou.cr.aliyuncs.com
+
             ls /tmp/binary/linux/amd64/
             ls /tmp/binary/linux/arm64/
 
@@ -178,11 +235,16 @@ jobs:
             TAG=$(grep "version" /tmp/binary/linux/amd64/version.txt | awk -F'"' '{print $2}')
             echo $TAG
             docker buildx create --name serving-image-builder --platform linux/arm64,linux/amd64 --use
-            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving:$TAG --push .
+
+            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG --push .
+            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG --push .
+            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG .
+            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG .
 
             if [[ $TAG =~ b[0-9]$ ]]; then
                 echo "tag and push latest image."
-                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving:latest --push .
+                # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:latest --push .
+                # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latest --push .
             fi
 
 # Invoke jobs via workflows
@@ -190,7 +252,23 @@ jobs:
 workflows:
   publish:
     jobs:
-      - linux_x64_publish:
+      # - linux_x64_publish:
+      #     matrix:
+      #       parameters:
+      #         python_ver: ["3.8", "3.9", "3.10", "3.11"]
+      #     # This is mandatory to trigger a pipeline when pushing a tag
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      # - linux_aarch64_publish:
+      #     matrix:
+      #       parameters:
+      #         python_ver: ["3.9", "3.10", "3.11"]
+      #     # This is mandatory to trigger a pipeline when pushing a tag
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      - macOS_x64_publish:
           matrix:
             parameters:
               python_ver: ["3.8", "3.9", "3.10", "3.11"]
@@ -198,10 +276,10 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - linux_aarch64_publish:
+      - macOS_arm64_publish:
           matrix:
             parameters:
-              python_ver: ["3.9", "3.10", "3.11"]
+              python_ver: ["3.8", "3.9", "3.10", "3.11"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:

@@ -31,6 +31,7 @@ build:avx --host_copt=-DCHECK_AVX
 build --copt=-fPIC
 build --copt=-fstack-protector-strong
 build:linux --copt=-Wl,-z,noexecstack
+build:macos --copt=-Wa,--noexecstack
 
 test --keep_going
 test --test_output=errors
@@ -44,3 +45,8 @@ build:linux --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
 # Bazel will automatic pick platform config since we have enable_platform_specific_config set
 build:linux --copt=-fopenmp
 build:linux --linkopt=-fopenmp
+build:macos --copt="-Xpreprocessor -fopenmp"
+build:macos --copt=-Wno-unused-command-line-argument
+build:macos --features=-supports_dynamic_linker
+build:macos --macos_minimum_os=12.0
+build:macos --host_macos_minimum_os=12.0

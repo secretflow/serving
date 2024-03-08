@@ -104,6 +104,64 @@ jobs:
       - store_artifacts:
           path: integration_test.log
 
+  macOS_ut:
+    macos:
+      xcode: 15.1
+    resource_class: macos.m1.large.gen1
+    steps:
+      - checkout
+      - run:
+          name: Checkout devtools
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+      - run:
+          name: "build"
+          command: |
+            source ~/miniconda3/bin/activate
+
+            python3 -m pip install -r requirements.txt
+            python3 -m pip install -r .ci/requirements-ci.txt
+
+            sh ./build_wheel_entrypoint.sh
+      - run:
+          name: "test"
+          command: |
+            set +e
+            declare -i test_status
+            bazel test //secretflow_serving/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+
+            sh ../devtools/rename-junit-xml.sh
+            find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+
+            exit ${test_status}
+      - run:
+          name: "integration test"
+          command: |
+            set +e
+            source ~/miniconda3/bin/activate
+
+            declare -i test_status
+
+            python3 .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
+
+            exit ${test_status}
+      - run:
+          name: "accuracy test"
+          command: |
+            set +e
+            source ~/miniconda3/bin/activate
+
+            declare -i test_status
+
+            python3 .ci/accuracy_test.py 2>&1 | tee accuracy_test.py.log; test_status=${PIPESTATUS[0]}
+
+            exit ${test_status}
+
 workflows:
   unittest:
     when: << pipeline.parameters.build-and-run >>
@@ -112,3 +170,4 @@ workflows:
           matrix:
             parameters:
               resource_class: ["2xlarge", "arm.2xlarge"]
+      - macOS_ut
