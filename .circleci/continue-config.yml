@@ -114,6 +114,16 @@ jobs:
           name: Checkout devtools
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
+          name: "Install Miniconda"
+          command: |
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.1.0-1-MacOSX-arm64.sh -O ~/miniconda.sh
+            bash ~/miniconda.sh -b -p $HOME/miniconda
+            source $HOME/miniconda/bin/activate
+            conda init bash zsh
+
+            python3 -m pip install -r requirements.txt
+            python3 -m pip install -r .ci/requirements-ci.txt
+      - run:
           name: Setup GCS
           command: |
             echo ${gcs_content} > ../gcs.data
@@ -121,11 +131,6 @@ jobs:
       - run:
           name: "build"
           command: |
-            source ~/miniconda3/bin/activate
-
-            python3 -m pip install -r requirements.txt
-            python3 -m pip install -r .ci/requirements-ci.txt
-
             sh ./build_wheel_entrypoint.sh
       - run:
           name: "test"

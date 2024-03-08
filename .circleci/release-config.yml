@@ -88,6 +88,13 @@ jobs:
           command: |
             brew install bazelisk cmake ninja libomp wget go
       - run:
+          name: "Install Miniconda"
+          command: |
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.1.0-1-MacOSX-arm64.sh -O ~/miniconda.sh
+            bash ~/miniconda.sh -b -p $HOME/miniconda
+            source $HOME/miniconda/bin/activate
+            conda init zsh bash
+      - run:
           name: "build package and publish"
           command: |
             set +e
@@ -114,6 +121,13 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install bazelisk cmake ninja nasm libomp wget go
+      - run:
+          name: "Install Miniconda"
+          command: |
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_22.11.1-1-MacOSX-x86_64.sh -O ~/miniconda.sh
+            bash ~/miniconda.sh -b -p $HOME/miniconda
+            source $HOME/miniconda/bin/activate
+            conda init zsh bash
       - run:
           name: "build package and publish"
           command: |
