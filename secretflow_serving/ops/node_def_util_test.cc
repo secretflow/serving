@@ -101,12 +101,12 @@ TEST_F(NodeDefUtilTest, Works) {
   {
     float attr_f;
     EXPECT_TRUE(GetNodeAttr(node_def, "attr_f", &attr_f));
-    EXPECT_EQ(attr_f, 3.0f);
+    EXPECT_EQ(attr_f, 3.0F);
   }
   {
     double attr_d;
     EXPECT_TRUE(GetNodeAttr(node_def, "attr_d", &attr_d));
-    EXPECT_EQ(attr_d, 4.0d);
+    EXPECT_EQ(attr_d, 4.0);
   }
   {
     std::string attr_s;

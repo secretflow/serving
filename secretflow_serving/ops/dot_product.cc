@@ -168,7 +168,7 @@ REGISTER_OP(DOT_PRODUCT, "0.0.2",
                 "DT_INT64, DT_FLOAT, DT_DOUBLE",
                 true, false)
     .StringAttr("output_col_name", "Column name of partial y", false, false)
-    .DoubleAttr("intercept", "Value of model intercept", false, true, 0.0d)
+    .DoubleAttr("intercept", "Value of model intercept", false, true, 0.0)
     .Input("features", "Input feature table")
     .Output("partial_ys",
             "The calculation results, they have a data type of `double`.");
