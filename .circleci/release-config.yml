@@ -50,7 +50,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   linux_aarch64_publish:
     docker:
@@ -72,7 +72,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   macOS_arm64_publish:
     macos:
@@ -106,7 +106,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   macOS_x64_publish:
     macos:
@@ -140,7 +140,7 @@ jobs:
             python3 -m pip install twine
             ls dist/*.whl
 
-            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
   linux_x64_build_binary:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
@@ -250,15 +250,13 @@ jobs:
             echo $TAG
             docker buildx create --name serving-image-builder --platform linux/arm64,linux/amd64 --use
 
-            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG --push .
-            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG .
-            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG .
+            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG --push .
+            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG --push .
 
             if [[ $TAG =~ b[0-9]$ ]]; then
                 echo "tag and push latest image."
-                # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:latest --push .
-                # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latest --push .
+                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:latest --push .
+                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latest --push .
             fi
 
 # Invoke jobs via workflows
@@ -266,22 +264,22 @@ jobs:
 workflows:
   publish:
     jobs:
-      # - linux_x64_publish:
-      #     matrix:
-      #       parameters:
-      #         python_ver: ["3.8", "3.9", "3.10", "3.11"]
-      #     # This is mandatory to trigger a pipeline when pushing a tag
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - linux_aarch64_publish:
-      #     matrix:
-      #       parameters:
-      #         python_ver: ["3.9", "3.10", "3.11"]
-      #     # This is mandatory to trigger a pipeline when pushing a tag
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - linux_x64_publish:
+          matrix:
+            parameters:
+              python_ver: ["3.8", "3.9", "3.10", "3.11"]
+          # This is mandatory to trigger a pipeline when pushing a tag
+          filters:
+            tags:
+              only: /.*/
+      - linux_aarch64_publish:
+          matrix:
+            parameters:
+              python_ver: ["3.9", "3.10", "3.11"]
+          # This is mandatory to trigger a pipeline when pushing a tag
+          filters:
+            tags:
+              only: /.*/
       - macOS_x64_publish:
           matrix:
             parameters:
