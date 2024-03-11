@@ -118,6 +118,7 @@ jobs:
           command: |
             wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
+            source $HOME/miniconda/bin/activate
             conda init bash zsh
       - build_and_test:
           bazel_targets: "//secretflow_serving_lib/..."
