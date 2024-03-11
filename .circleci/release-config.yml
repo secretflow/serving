@@ -27,41 +27,29 @@ parameters:
     type: string
     default: ""
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  linux_x64_publish:
+executors:
+  linux_x64_executor: # declares a reusable executor
     docker:
       - image: secretflow/release-ci:latest
     resource_class: 2xlarge+
-    parameters:
-      python_ver:
-        type: string
     shell: /bin/bash --login -eo pipefail
-    steps:
-      - checkout
-      - run:
-          name: "build package and publish"
-          command: |
-            conda create -n build python=<< parameters.python_ver >> -y
-            conda activate build
-
-            sh ./build_wheel_entrypoint.sh
-            python3 -m pip install twine
-            ls dist/*.whl
-
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
-
-  linux_aarch64_publish:
+  linux_aarch64_executor:
     docker:
       - image: secretflow/release-ci-aarch64:latest
     resource_class: arm.2xlarge
-    parameters:
-      python_ver:
-        type: string
     shell: /bin/bash --login -eo pipefail
+  macos_arm64_executor:
+    macos:
+      xcode: 15.1.0
+    resource_class: macos.m1.large.gen1
+  macos_x64_executor:
+    macos:
+      xcode: 15.1.0
+    resource_class: macos.x86.medium.gen2
+
+commands:
+  publish:
     steps:
-      - checkout
       - run:
           name: "build package and publish"
           command: |
@@ -74,13 +62,27 @@ jobs:
 
             python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
 
-  macOS_arm64_publish:
-    macos:
-      xcode: 15.1
-    resource_class: macos.m1.large.gen1
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  linux_publish:
     parameters:
       python_ver:
         type: string
+      executor:
+        type: string
+    executor: <<parameters.executor>>
+    steps:
+      - checkout
+      - publish
+
+  macOS_publish:
+    parameters:
+      python_ver:
+        type: string
+      executor:
+        type: string
+    executor: <<parameters.executor>>
     steps:
       - checkout
       - run:
@@ -90,65 +92,17 @@ jobs:
       - run:
           name: "Install Miniconda"
           command: |
-            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.1.0-1-MacOSX-arm64.sh -O ~/miniconda.sh
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init zsh bash
-      - run:
-          name: "build package and publish"
-          command: |
-            set +e
+      - publish
 
-            conda create -n build python=<< parameters.python_ver >> -y
-            conda activate build
-
-            sh ./build_wheel_entrypoint.sh
-            python3 -m pip install twine
-            ls dist/*.whl
-
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
-
-  macOS_x64_publish:
-    macos:
-      xcode: 15.1
-    resource_class: macos.x86.medium.gen2
+  linux_build_binary:
     parameters:
-      python_ver:
+      executor:
         type: string
-    steps:
-      - checkout
-      - run:
-          name: "Install homebrew dependencies"
-          command: |
-            brew install bazelisk cmake ninja nasm libomp wget go
-      - run:
-          name: "Install Miniconda"
-          command: |
-            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_22.11.1-1-MacOSX-x86_64.sh -O ~/miniconda.sh
-            bash ~/miniconda.sh -b -p $HOME/miniconda
-            source $HOME/miniconda/bin/activate
-            conda init zsh bash
-      - run:
-          name: "build package and publish"
-          command: |
-            set +e
-
-            conda create -n build python=<< parameters.python_ver >> -y
-            conda activate build
-
-            sh ./build_wheel_entrypoint.sh
-            python3 -m pip install twine
-            ls dist/*.whl
-
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
-
-  linux_x64_build_binary:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: secretflow/release-ci:latest
-    resource_class: 2xlarge+
-    shell: /bin/bash --login -eo pipefail
+    executor: <<parameters.executor>>
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
@@ -168,53 +122,21 @@ jobs:
       - run:
           name: "Copy binary"
           command: |
-            DIR=/tmp/binary/linux/amd64/
+            MACHINE_TYPE=`arch`
+            if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+              DIR=/tmp/binary/linux/amd64/
+            else
+              DIR=/tmp/binary/linux/arm64/
+            fi
 
             mkdir -p ${DIR}
             cp ./sf_serving.tar.gz ${DIR}
             cp ./version.txt ${DIR}
             ls ${DIR}
       - persist_to_workspace:
-          root: "/tmp/binary/linux"
+          root: /tmp/binary/
           paths:
-            - amd64/*
-
-  linux_aarch64_build_binary:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: secretflow/release-ci-aarch64:latest
-    resource_class: arm.2xlarge
-    shell: /bin/bash --login -eo pipefail
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-    steps:
-      - checkout
-      - run:
-          name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=gcs.json --min_download
-      - run:
-          name: "Build"
-          command: |
-            bash ./build_package_entrypoint.sh
-      - run:
-          name: "Copy binary"
-          command: |
-            DIR=/tmp/binary/linux/arm64/
-
-            mkdir -p ${DIR}
-            cp ./sf_serving.tar.gz ${DIR}
-            cp ./version.txt ${DIR}
-            ls ${DIR}
-      - persist_to_workspace:
-          root: "/tmp/binary/linux"
-          paths:
-            - arm64/*
+            - linux
 
   docker_image_publish:
     docker:
@@ -223,7 +145,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - attach_workspace:
-          at: /tmp/binary/linux
+          at: /tmp/binary/
       - run:
           name: Build Docker image
           command: |
@@ -264,52 +186,35 @@ jobs:
 workflows:
   publish:
     jobs:
-      - linux_x64_publish:
+      - linux_publish:
           matrix:
             parameters:
               python_ver: ["3.8", "3.9", "3.10", "3.11"]
+              executor: ["linux_x64_executor", "linux_aarch64_executor"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:
               only: /.*/
-      - linux_aarch64_publish:
-          matrix:
-            parameters:
-              python_ver: ["3.9", "3.10", "3.11"]
-          # This is mandatory to trigger a pipeline when pushing a tag
-          filters:
-            tags:
-              only: /.*/
-      - macOS_x64_publish:
+      - macOS_publish:
           matrix:
             parameters:
               python_ver: ["3.8", "3.9", "3.10", "3.11"]
+              executor: ["macos_arm64_executor", "macos_x64_executor"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:
               only: /.*/
-      - macOS_arm64_publish:
+      - linux_build_binary:
           matrix:
             parameters:
-              python_ver: ["3.8", "3.9", "3.10", "3.11"]
-          # This is mandatory to trigger a pipeline when pushing a tag
-          filters:
-            tags:
-              only: /.*/
-      - linux_x64_build_binary:
-          # This is mandatory to trigger a pipeline when pushing a tag
-          filters:
-            tags:
-              only: /.*b[0-9]/
-      - linux_aarch64_build_binary:
+              executor: ["linux_x64_executor", "linux_aarch64_executor"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:
               only: /.*b[0-9]/
       - docker_image_publish:
           requires:
-            - linux_x64_build_binary
-            - linux_aarch64_build_binary
+            - linux_build_binary
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:

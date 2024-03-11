@@ -19,6 +19,55 @@ parameters:
     type: boolean
     default: false
 
+commands:
+  build_and_test:
+    parameters:
+      bazel_targets:
+        type: string
+        default: "//..."
+    steps:
+      # Kill the whole ci after 1hr
+      - run:
+          name: Cancel build after set time
+          background: true
+          command: |
+            sleep 3600
+            echo "Canceling workflow as too much time has elapsed"
+            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
+      - run:
+          name: Checkout devtools
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Install Python dependencies
+          command: |
+            python3 -m pip install -r requirements.txt
+            python3 -m pip install -r .ci/requirements-ci.txt
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+      - run:
+          name: "build"
+          command: |
+            source ~/miniconda3/bin/activate
+            sh ./build_wheel_entrypoint.sh
+      - run:
+          name: "test"
+          command: |
+            set +e
+            declare -i test_status
+            bazel test <<parameters.bazel_targets>> -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+
+            sh ../devtools/rename-junit-xml.sh
+            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+
+            exit ${test_status}
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test_logs.tar.gz
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -35,120 +84,45 @@ jobs:
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
-      # Kill the whole ci after 1hr
-      - run:
-          name: Cancel build after set time
-          background: true
-          command: |
-            sleep 3600
-            echo "Canceling workflow as too much time has elapsed"
-            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
       - checkout
-      - run:
-          name: Checkout devtools
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-      - run:
-          name: "build"
-          command: |
-            source ~/miniconda3/bin/activate
-
-            python3 -m pip install -r requirements.txt
-            python3 -m pip install -r .ci/requirements-ci.txt
-
-            sh ./build_wheel_entrypoint.sh
-      - run:
-          name: "test"
-          command: |
-            set +e
-            declare -i test_status
-            bazel test //... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
-
-            sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
-
-            exit ${test_status}
+      - build_and_test
       - run:
           name: "integration test"
           command: |
             set +e
-            source ~/miniconda3/bin/activate
-
             declare -i test_status
-
             python3 .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
-
             exit ${test_status}
+      - store_artifacts:
+          path: integration_test.log
       - run:
           name: "accuracy test"
           command: |
             set +e
-            source ~/miniconda3/bin/activate
-
             declare -i test_status
-
             python3 .ci/accuracy_test.py 2>&1 | tee accuracy_test.py.log; test_status=${PIPESTATUS[0]}
-
             exit ${test_status}
-      - store_test_results:
-          path: test-results
       - store_artifacts:
-          path: test_binary.tar.gz
-      - store_artifacts:
-          path: test_logs.tar.gz
-      - store_artifacts:
-          path: integration_test.log
+          path: accuracy_test.py.log
 
   macOS_lib_ut:
     macos:
-      xcode: 15.1
+      xcode: 15.1.0
     resource_class: macos.m1.large.gen1
     steps:
       - checkout
-      - run:
-          name: Checkout devtools
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
           name: "Install homebrew dependencies"
           command: brew install bazelisk cmake ninja libomp wget go md5sha1sum
       - run:
           name: "Install Miniconda"
           command: |
-            wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.1.0-1-MacOSX-arm64.sh -O ~/miniconda.sh
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init bash zsh
-
-            python3 -m pip install -r requirements.txt
-            python3 -m pip install -r .ci/requirements-ci.txt
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-      - run:
-          name: "build"
-          command: |
-            sh ./build_wheel_entrypoint.sh
-      - run:
-          name: "test"
-          command: |
-            set +e
-            declare -i test_status
-
-            # only test lib ut
-            bazel test //secretflow_serving_lib/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
-
-            sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
-
-            exit ${test_status}
+      - build_and_test:
+          bazel_targets: "//secretflow_serving_lib/..."
 
 workflows:
   unittest:
