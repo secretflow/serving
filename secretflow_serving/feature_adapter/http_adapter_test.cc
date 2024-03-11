@@ -40,8 +40,8 @@ const std::vector<FieldType> kFieldTypes = {
     FieldType::FIELD_DOUBLE, FieldType::FIELD_STRING, FieldType::FIELD_BOOL};
 const std::vector<int32_t> kI32Values = {1, 2, 3};
 const std::vector<int64_t> kI64Values = {4, 5, 6};
-const std::vector<float> kFValues = {7.0f, 8.0f, 9.0f};
-const std::vector<double> kDValues = {1.1d, 2.2d, 3.3d};
+const std::vector<float> kFValues = {7.0F, 8.0F, 9.0F};
+const std::vector<double> kDValues = {1.1, 2.2, 3.3};
 const std::vector<std::string> kStrValues = {"a", "b", "c"};
 const std::vector<bool> kBValues = {true, false, true};
 }  // namespace
