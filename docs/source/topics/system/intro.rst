@@ -6,14 +6,13 @@ SecretFlow-Serving is a serving system for privacy-preserving machine learning m
 Key Features
 ------------
 
+* One process one model/version.
 * Support multiple parties (N >= 2).
 * Parallel compute between parties.
 * Batch Predict API Supported.
-* Multi-protocol support. Secretflow-Serving is built on brpc, a high-performance rpc framework, and is capable of using multiple communication protocols.
+* Multi-protocol support. Secretflow-Serving is built on `brpc <https://brpc.apache.org/>`_, a high-performance rpc framework, and is capable of using multiple communication protocols.
 * Support multiple types feature sources, e.g. SPI, CSV file, Mock data.
 * Specific model graph definition.
-* Federated learning model predict.
-* One process one model/version.
 
 
 Architecture

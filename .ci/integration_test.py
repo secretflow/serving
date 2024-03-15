@@ -41,19 +41,8 @@ from test_common import (
     make_tree_select_node_def,
     make_tree_merge_node_def,
     make_tree_ensemble_predict_node_def,
+    global_ip_config,
 )
-
-
-def global_ip_config(index):
-    cluster_ip = ["127.0.0.1:9910", "127.0.0.1:9911"]
-    metrics_port = [10318, 10319]
-    brpc_builtin_port = [10328, 10329]
-    assert index < len(cluster_ip)
-    return {
-        "cluster_ip": cluster_ip[index],
-        "metrics_port": metrics_port[index],
-        "brpc_builtin_service_port": brpc_builtin_port[index],
-    }
 
 
 class MockFeatureTest(TestCase):

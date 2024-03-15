@@ -200,7 +200,10 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
         // 0 <= index < num_fields
         SERVING_ENFORCE_GE(index_scalar.i64(), 0);
         SERVING_ENFORCE_LT(index_scalar.i64(), num_fields);
-
+        if (ex_func_name == compute::ExtendFunctionName::EFN_TB_REMOVE_COLUMN) {
+          // change total number of fields
+          --num_fields;
+        }
       } else if (ex_func_name ==
                      compute::ExtendFunctionName::EFN_TB_ADD_COLUMN ||
                  ex_func_name ==
@@ -228,6 +231,8 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
         if (ex_func_name == compute::ExtendFunctionName::EFN_TB_ADD_COLUMN) {
           // index <= num_fields
           SERVING_ENFORCE_LE(index_scalar.i64(), num_fields);
+          // change total number of fields
+          ++num_fields;
         }
         if (ex_func_name == compute::ExtendFunctionName::EFN_TB_SET_COLUMN) {
           // index < num_fields

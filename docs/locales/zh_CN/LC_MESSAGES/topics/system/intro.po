@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-26 11:01+0800\n"
+"POT-Creation-Date: 2024-03-07 15:05+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../source/topics/system/intro.rst:2
 msgid "SecretFlow-Serving System Introduction"
@@ -32,148 +32,151 @@ msgid "Key Features"
 msgstr "关键特性"
 
 #: ../../source/topics/system/intro.rst:9
-msgid "Support multiple parties (N >= 2)."
-msgstr "支持多个参与方（N >= 2）。"
-
-#: ../../source/topics/system/intro.rst:10
-msgid "Parallel compute between parties."
-msgstr "多方并行计算。"
-
-#: ../../source/topics/system/intro.rst:11
-msgid "Batch Predict API Supported."
-msgstr "支持批量预测请求API。"
-
-#: ../../source/topics/system/intro.rst:12
-msgid ""
-"Multi-protocol support. Secretflow-Serving is built on brpc, a high-"
-"performance rpc framework, and is capable of using multiple communication"
-" protocols."
-msgstr "多种协议支持。Secretflow-Serving基于brpc构建，其可支持多种通信协议。"
-
-#: ../../source/topics/system/intro.rst:13
-msgid "Support multiple types feature sources, e.g. SPI, CSV file, Mock data."
-msgstr "多种特征数据源的支持：SPI、CSV文件、仿真数据等。"
-
-#: ../../source/topics/system/intro.rst:14
-msgid "Specific model graph definition."
-msgstr "标准模型图定义。"
-
-#: ../../source/topics/system/intro.rst:15
-msgid "Federated learning model predict."
-msgstr "联邦模型预测。"
-
-#: ../../source/topics/system/intro.rst:16
 msgid "One process one model/version."
 msgstr "单进程单模型模式。"
 
-#: ../../source/topics/system/intro.rst:20
+#: ../../source/topics/system/intro.rst:10
+msgid "Support multiple parties (N >= 2)."
+msgstr "支持多个参与方（N >= 2）。"
+
+#: ../../source/topics/system/intro.rst:11
+msgid "Parallel compute between parties."
+msgstr "多方并行计算。"
+
+#: ../../source/topics/system/intro.rst:12
+msgid "Batch Predict API Supported."
+msgstr "支持批量预测请求API。"
+
+#: ../../source/topics/system/intro.rst:13
+msgid ""
+"Multi-protocol support. Secretflow-Serving is built on `brpc "
+"<https://brpc.apache.org/>`_, a high-performance rpc framework, and is "
+"capable of using multiple communication protocols."
+msgstr "多种协议支持。Secretflow-Serving基于 `brpc <https://brpc.apache.org/zh/>`_ 构建，其可支持多种通信协议。"
+
+#: ../../source/topics/system/intro.rst:14
+msgid "Support multiple types feature sources, e.g. SPI, CSV file, Mock data."
+msgstr "多种特征数据源的支持：SPI、CSV文件、仿真数据等。"
+
+#: ../../source/topics/system/intro.rst:15
+msgid "Specific model graph definition."
+msgstr "标准模型图定义。"
+
+#: ../../source/topics/system/intro.rst:19
 msgid "Architecture"
 msgstr "架构"
 
-#: ../../source/topics/system/intro.rst:22
+#: ../../source/topics/system/intro.rst:21
 msgid ""
 "Secretflow-Serving leverages the model package trained with Secretflow to"
 " provide model prediction capabilities at different security levels. It "
 "achieves this by utilizing the online feature data provided by each "
 "participant without compromising the integrity of the original data "
 "domain."
-msgstr "Secretflow-Serving 使用由 Secretflow 训练产生的模型包，在预测参与方各方的在线特征数据不出域的前提下，提供不同的安全级别的模型预测能力。"
+msgstr ""
+"Secretflow-Serving 使用由 Secretflow "
+"训练产生的模型包，在预测参与方各方的在线特征数据不出域的前提下，提供不同的安全级别的模型预测能力。"
 
 #: ../../source/topics/system/intro.rst:-1
 msgid "Secretflow-Serving Deployment Architecture"
 msgstr "Secretflow-Serving 部署架构"
 
-#: ../../source/topics/system/intro.rst:29
+#: ../../source/topics/system/intro.rst:28
 msgid "Key Concepts"
 msgstr "关键概念"
 
-#: ../../source/topics/system/intro.rst:31
+#: ../../source/topics/system/intro.rst:30
 msgid ""
 "To understand the architecture of Secretflow-Serving, you need to "
 "understand the following key concepts:"
 msgstr "为了理解 Secretflow-Serving 的系统架构，你需要理解下列的一些关键概念："
 
-#: ../../source/topics/system/intro.rst:35
+#: ../../source/topics/system/intro.rst:34
 msgid "Model Package"
 msgstr "模型包"
 
-#: ../../source/topics/system/intro.rst:37
+#: ../../source/topics/system/intro.rst:36
 msgid ""
 "A Secretflow-Serving model package is a compressed package comprising a "
 "model file, a manifest file, and other metadata files."
 msgstr "Secretflow-Serving 的模型包是一个包含模型文件、描述文件以及一些元数据文件的压缩包。"
 
-#: ../../source/topics/system/intro.rst:39
+#: ../../source/topics/system/intro.rst:38
 msgid ""
 "The manifest file provides meta-information about the model file and "
 "follows the defined structure outlined :ref:`here <ModelManifest>`."
 msgstr "描述文件包含了关于模型文件的元数据信息，它的内容结构可参考 :ref:`这里 <ModelManifest>`。"
 
-#: ../../source/topics/system/intro.rst:41
+#: ../../source/topics/system/intro.rst:40
 msgid ""
 "The model file contains the graph that represents the model inference "
 "process, encompassing pre-processing, post-processing, and the specific "
 "inference algorithm. For graph details, please check :ref:`Introduction "
 "to Graph <intro-graph>`."
-msgstr "模型文件包含了一个描述了模型预测过程、特征预处理、结果后处理以及特定预测算法的图。想了解更多关于图的细节，可以查看"
-" :ref:`模型图的介绍 <intro-graph>` "
+msgstr ""
+"模型文件包含了一个描述了模型预测过程、特征预处理、结果后处理以及特定预测算法的图。想了解更多关于图的细节，可以查看 :ref:`模型图的介绍 "
+"<intro-graph>` "
 
-#: ../../source/topics/system/intro.rst:43
+#: ../../source/topics/system/intro.rst:42
 msgid ""
 "The metadata files, while optional, stores additional data information "
 "required during the model inference process."
 msgstr "元数据文件存储了一些在模型预测中可能被用到的额外数据信息，它们只会在必要场景时存在。"
 
-#: ../../source/topics/system/intro.rst:47
+#: ../../source/topics/system/intro.rst:46
 msgid "Model Source"
 msgstr "模型数据源"
 
-#: ../../source/topics/system/intro.rst:49
+#: ../../source/topics/system/intro.rst:48
 msgid ""
 "Secretflow-Serving supports retrieving model packages from different "
 "storage sources. Currently, the following data sources are supported:"
 msgstr "Secretflow-Serving 支持从不同的存储数据源中获取模型包。目前已支持下列的数据源："
 
-#: ../../source/topics/system/intro.rst:51
+#: ../../source/topics/system/intro.rst:50
 msgid ""
 "Local Filesystem Data Source: Secretflow-Serving loads the model package "
 "from a specified local path."
 msgstr "本地文件系统数据源：Secretflow-Serving 可从一个可访问的本地路径读取模型包。"
 
-#: ../../source/topics/system/intro.rst:52
+#: ../../source/topics/system/intro.rst:51
 msgid ""
 "OSS/S3 Data Source: Secretflow-Serving attempts to download the model "
 "package from the OSS/S3 storage based on the provided configuration "
 "before loading it locally."
 msgstr "OSS/S3 数据源：Secretflow-Serving 支持根据提供的配置从 OSS/S3 存储中下载模型包到本地进行加载。"
 
-#: ../../source/topics/system/intro.rst:56
+#: ../../source/topics/system/intro.rst:55
 msgid "Feature Source"
 msgstr "特征数据源"
 
-#: ../../source/topics/system/intro.rst:58
+#: ../../source/topics/system/intro.rst:57
 msgid ""
 "Secretflow-Serving obtains the necessary features for the online "
 "inference process through the Feature Source. Currently, the platform "
 "supports the following feature data sources:"
 msgstr "Secretflow-Serving 在预测过程中会向特征数据源请求获取必要的特征数据。当前已支持的特征数据源如下所示："
 
-#: ../../source/topics/system/intro.rst:60
+#: ../../source/topics/system/intro.rst:59
 msgid ""
 "HTTP Source: Secretflow-Serving defines a Service Provider Interface "
 "(:doc:`SPI </reference/spi>`) for retrieving feature data. Feature "
 "providers can implement this SPI to supply features to Secretflow-"
 "Serving."
-msgstr "HTTP数据源：Secretflow-Serving 定义一组服务提供接口（:doc:`SPI </reference/spi>`）来获取特征数据。特征提供方可以通过实现"
+msgstr ""
+"HTTP数据源：Secretflow-Serving 定义一组服务提供接口（:doc:`SPI "
+"</reference/spi>`）来获取特征数据。特征提供方可以通过实现"
 
-#: ../../source/topics/system/intro.rst:61
+#: ../../source/topics/system/intro.rst:60
 msgid ""
 "CSV Source: Secretflow-Serving supports direct loading of CSV file as a "
 "feature source. For performance reasons, the CSV file is fully loaded "
 "into memory and features are filtered based on the ID column."
-msgstr "CSV数据源：Secretflow-Serving 支持直接加载CSV文件作为特征特征数据源。性能原因考虑，CSV文件会被整个加载到内存中以支持通过ID列查询到特定特征。"
+msgstr ""
+"CSV数据源：Secretflow-Serving "
+"支持直接加载CSV文件作为特征特征数据源。性能原因考虑，CSV文件会被整个加载到内存中以支持通过ID列查询到特定特征。"
 
-#: ../../source/topics/system/intro.rst:62
+#: ../../source/topics/system/intro.rst:61
 msgid ""
 "Mock Source: In this scenario, Secretflow-Serving uses randomly generated"
 " values as feature data."

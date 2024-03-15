@@ -24,7 +24,7 @@ class ArrowHelperTest : public ::testing::Test {
   void TearDown() override {}
 };
 
-TEST_F(ArrowHelperTest, FeaturesToTable) {
+TEST_F(ArrowHelperTest, FeaturesToRecordBatch) {
   ::google::protobuf::RepeatedPtrField<Feature> features;
 
   std::vector<int8_t> int8_list = {1, -2, -3};
@@ -214,7 +214,7 @@ TEST_F(ArrowHelperTest, FeaturesToTable) {
 
   std::cout << "expect_record: " << expect_record->ToString() << std::endl;
 
-  auto record_batch = FeaturesToTable(features, expect_schema);
+  auto record_batch = FeaturesToRecordBatch(features, expect_schema);
 
   std::cout << "record_batch: " << record_batch->ToString() << std::endl;
 

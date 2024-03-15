@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "arrow/compute/api.h"
+
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/utils.h"
 
@@ -204,7 +206,7 @@ struct FeatureToArrayVisitor {
 
 }  // namespace
 
-std::shared_ptr<arrow::RecordBatch> FeaturesToTable(
+std::shared_ptr<arrow::RecordBatch> FeaturesToRecordBatch(
     const ::google::protobuf::RepeatedPtrField<Feature>& features,
     const std::shared_ptr<const arrow::Schema>& target_schema) {
   arrow::SchemaBuilder schema_builder;
@@ -286,6 +288,24 @@ std::shared_ptr<arrow::Schema> DeserializeSchema(const std::string& buf) {
   return result;
 }
 
+std::shared_ptr<arrow::DataType> FieldTypeToDataType(FieldType field_type) {
+  const static std::unordered_map<FieldType, std::shared_ptr<arrow::DataType>>
+      kTypeMap = {
+          {FieldType::FIELD_BOOL, arrow::boolean()},
+          {FieldType::FIELD_INT32, arrow::int32()},
+          {FieldType::FIELD_INT64, arrow::int64()},
+          {FieldType::FIELD_FLOAT, arrow::float32()},
+          {FieldType::FIELD_DOUBLE, arrow::float64()},
+          {FieldType::FIELD_STRING, arrow::utf8()},
+      };
+
+  auto it = kTypeMap.find(field_type);
+  SERVING_ENFORCE(it != kTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "unsupported arrow data type: {}",
+                  FieldType_Name(field_type));
+  return it->second;
+}
+
 FieldType DataTypeToFieldType(
     const std::shared_ptr<arrow::DataType>& data_type) {
   const static std::unordered_map<arrow::Type::type, FieldType> kFieldTypeMap =
@@ -365,6 +385,87 @@ void CheckReferenceFields(const std::shared_ptr<arrow::Schema>& src,
         "{}. field: {} type not match, expect: {}, get: {}", additional_msg,
         dst_f->name(), dst_f->type()->ToString(), src_f->type()->ToString());
   }
+}
+
+std::shared_ptr<arrow::Table> ReadCsvFileToTable(
+    const std::string& path,
+    const std::shared_ptr<const arrow::Schema>& feature_schema) {
+  // read csv file
+  std::shared_ptr<arrow::io::ReadableFile> file;
+  SERVING_GET_ARROW_RESULT(arrow::io::ReadableFile::Open(path), file);
+
+  arrow::csv::ConvertOptions convert_options;
+
+  for (int i = 0; i < feature_schema->num_fields(); ++i) {
+    std::shared_ptr<arrow::Field> field = feature_schema->field(i);
+
+    convert_options.include_columns.push_back(field->name());
+    convert_options.column_types[field->name()] = field->type();
+  }
+
+  std::shared_ptr<arrow::csv::TableReader> csv_reader;
+  SERVING_GET_ARROW_RESULT(
+      arrow::csv::TableReader::Make(arrow::io::default_io_context(), file,
+                                    arrow::csv::ReadOptions::Defaults(),
+                                    arrow::csv::ParseOptions::Defaults(),
+                                    convert_options),
+      csv_reader);
+
+  std::shared_ptr<arrow::Table> table;
+  SERVING_GET_ARROW_RESULT(csv_reader->Read(), table);
+  return table;
+}
+
+arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
+                           const std::vector<std::string>& ids) {
+  arrow::StringBuilder builder;
+  SERVING_CHECK_ARROW_STATUS(builder.AppendValues(ids));
+  std::shared_ptr<arrow::Array> query_data_array;
+  SERVING_CHECK_ARROW_STATUS(builder.Finish(&query_data_array));
+  {
+    arrow::Datum is_in;
+    SERVING_GET_ARROW_RESULT(arrow::compute::IsIn(query_data_array, id_column),
+                             is_in);
+    const auto is_in_array =
+        std::static_pointer_cast<arrow::BooleanArray>(is_in.make_array());
+    SERVING_ENFORCE(is_in_array->true_count() == is_in_array->length(),
+                    errors::ErrorCode::INVALID_ARGUMENT,
+                    "query data row ids:{} do not all exists in id column of "
+                    "csv file, match count: {}.",
+                    fmt::join(ids, ","), is_in_array->true_count());
+  }
+
+  // filter query datas
+  arrow::Datum filter;
+  SERVING_GET_ARROW_RESULT(arrow::compute::IsIn(id_column, query_data_array),
+                           filter);
+  return filter;
+}
+
+std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
+                                                         std::string id_name) {
+  std::vector<std::shared_ptr<arrow::Field>> fields;
+  fields.push_back(arrow::field(id_name, arrow::utf8()));
+  auto schema = arrow::schema(fields);
+  auto table = ReadCsvFileToTable(filename, schema);
+  auto id_column = table->GetColumnByName(id_name);
+  SERVING_ENFORCE(id_column, errors::ErrorCode::INVALID_ARGUMENT,
+                  "column: {} is not in csv file: {}", id_name, filename);
+
+  return id_column;
+}
+
+std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
+    std::shared_ptr<arrow::Table> table, arrow::Datum filter) {
+  arrow::Datum filtered_table;
+  SERVING_GET_ARROW_RESULT(arrow::compute::Filter(table, filter),
+                           filtered_table);
+
+  std::shared_ptr<arrow::RecordBatch> result;
+  SERVING_GET_ARROW_RESULT(filtered_table.table()->CombineChunksToBatch(),
+                           result);
+
+  return result;
 }
 
 }  // namespace secretflow::serving

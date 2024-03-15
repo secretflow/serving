@@ -148,7 +148,7 @@ void HttpFeatureAdapter::DeserializeResponse(const std::string& res_context,
   response->header->mutable_data()->swap(
       *batch_response.mutable_header()->mutable_data());
   response->features =
-      FeaturesToTable(batch_response.features(), feature_schema_);
+      FeaturesToRecordBatch(batch_response.features(), feature_schema_);
 }
 
 REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kHttpOpts,

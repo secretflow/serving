@@ -29,11 +29,21 @@ message ServerConfig {
   // Whether to enable tls for server
   TlsConfig tls_config = 2;
 
+  // e.g. 192.168.2.51
+  string host = 3;
+
+  // The port used for model inference.
+  int32 service_port = 4;
+
+  // The port used for communication between parties serving.
+  int32 communication_port = 5;
+
   // Brpc builtin service listen port
   // Default: disable service
   int32 brpc_builtin_service_port = 11;
 
-  // Whether `/metrics` service is enable/disable.
+  // `/metrics` service listen port
+  // Default: disable service
   int32 metrics_exposer_port = 12;
 
   // Number of pthreads that server runs on.

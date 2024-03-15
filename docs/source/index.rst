@@ -50,6 +50,11 @@ Graph
 - **Reference**:
   :doc:`SecretFlow-Serving model </reference/model>`
 
+Prediction Algorithms
+---------------------
+
+- **Introduction**:
+  :doc:`Introduction to prediction algorithms </topics/algorithm/intro>`
 
 .. toctree::
     :hidden:

@@ -22,8 +22,7 @@ To deploy SecretFlow-Serving in Kusica, you first need to register the template 
           "serving_id": "{{.SERVING_ID}}",
           "input_config": "{{.INPUT_CONFIG}}",
           "cluster_def": "{{.CLUSTER_DEFINE}}",
-          "allocated_ports": "{{.ALLOCATED_PORTS}}",
-          "oss_meta": "{{.MODEL_OSS_META}}"
+          "allocated_ports": "{{.ALLOCATED_PORTS}}"
         }
     deployTemplates:
     - name: secretflow
@@ -40,6 +39,10 @@ To deploy SecretFlow-Serving in Kusica, you first need to register the template 
           name: secretflow
           ports:
           - name: service
+            port: 53508
+            protocol: HTTP
+            scope: Domain
+          - name: communication
             port: 53509
             protocol: HTTP
             scope: Cluster
@@ -68,7 +71,6 @@ To deploy SecretFlow-Serving in Kusica, you first need to register the template 
             successThreshold: 1
             timeoutSeconds: 1
           workingDir: /root/sf_serving
-        restartPolicy: Never
     image:
       name: secretflow/serving-anolis8
       tag: latest
@@ -82,9 +84,10 @@ Other field explanations are as follows:
     * `input_config`: SecretFlow-Serving startup configuration, details can be seen in the description below. The current content is a placeholder and will actually be replaced by the content in `Kuscia API /api/v1/serving/create <https://www.secretflow.org.cn/docs/kuscia/latest/zh-Hans/reference/apis/serving_cn#create-serving>`_ at startup.
     * `cluster_def`: See `AppImage explanation <https://www.secretflow.org.cn/docs/kuscia/latest/zh-Hans/reference/concepts/appimage_cn#appimage-ref>`_.
     * `allocated_ports`: See `AppImage explanation <https://www.secretflow.org.cn/docs/kuscia/latest/zh-Hans/reference/concepts/appimage_cn#appimage-ref>`_.
-    * `oss_meta`: Valid when the SecretFlow-Serving model data source is OSS, the current content is a placeholder and will actually be replaced with the configuration value, related configuration can be seen in the description below.
+
 * `ports`:
-    * `service`: The port in one's own :ref:`PartyDesc.listen_address <PartyDesc>`, representing the service port.
+    * `service`: The :ref:`ServerConfig.service_port <ServerConfig>`
+    * `communication`: The :ref:`ServerConfig.communication_port <ServerConfig>`
     * `internal`: The :ref:`ServerConfig.metrics_exposer_port <ServerConfig>`
     * `brpc-builtin`: The :ref:`ServerConfig.brpc_builtin_service_port <ServerConfig>`
 
@@ -113,7 +116,6 @@ The launch and management of SecretFlow-Serving can be performed using the `Kusc
         "modelConfig": {
           "modelId": "glm-test-1",
           "basePath": "/tmp/alice",
-          "sourceSha256": "3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522",
           "sourcePath": "examples/alice/glm-test.tar.gz",
           "sourceType": "ST_FILE"
         },
@@ -137,7 +139,6 @@ The launch and management of SecretFlow-Serving can be performed using the `Kusc
         "modelConfig": {
           "modelId": "glm-test-1",
           "basePath": "/tmp/bob",
-          "sourceSha256": "330192f3a51f9498dd882478bfe08a06501e2ed4aa2543a0fb586180925eb309",
           "sourcePath": "examples/bob/glm-test.tar.gz",
           "sourceType": "ST_FILE"
         },
@@ -204,43 +205,3 @@ The launch and management of SecretFlow-Serving can be performed using the `Kusc
 +-----------------------------------------------------------+-----------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
 | PartyConfig.channelDesc.connectTimeoutMs                  | int32                 | Max duration for a connect. -1 means wait indefinitely. Default: 500 (ms)                                                                                                                                        | No                                                                     |
 +-----------------------------------------------------------+-----------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
-
-OSS Config
-----------
-
-f you need to use OSS/S3 as the model data source, you need to configure the relevant OSS configuration on the node side into the environment variables.
-
-**Env**: MODEL_OSS_META
-**Value**: "{\"access_key\":\"\", \"secret_key\":\"\", \"virtual_hosted\":true, \"endpoint\":\"\", \"bucket\":\"\"}"
-
-The description of the fields for the environment variable values is as follows:
-
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-|     Field      |                                                          Content Description                                                          |
-+================+=======================================================================================================================================+
-| access_key     | Bucket access key                                                                                                                     |
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| secret_key     | Bucket secret key                                                                                                                     |
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| virtual_hosted | Whether to use virtual host mode, refer `VirtualHosting <https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html>`_ |
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| endpoint       | The OSS/S3 Storage endpoint                                                                                                           |
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| bucket         | The Bucket name                                                                                                                       |
-+----------------+---------------------------------------------------------------------------------------------------------------------------------------+
-
-
-SPI TLS Config
---------------
-
-If TLS configuration needs to be enabled when obtaining feature data via SPI, the relevant TLS settings can be configured on the node side into the environment variables:
-
-+-------------------------+----------------------------------------------------------------------------------------------+
-|           Env           |                                     Content Description                                      |
-+=========================+==============================================================================================+
-| SERVING_SPI_CERT        | Certificate content                                                                          |
-+-------------------------+----------------------------------------------------------------------------------------------+
-| SERVING_SPI_PRIVATE_KEY | Private Key content                                                                          |
-+-------------------------+----------------------------------------------------------------------------------------------+
-| SERVING_SPI_CA          | The trusted CA to verify the peer's certificate, If empty, use the system default CA Content |
-+-------------------------+----------------------------------------------------------------------------------------------+

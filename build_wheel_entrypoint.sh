@@ -15,7 +15,6 @@
 # limitations under the License.
 set -e
 
-
 rm -rf dist
 python setup.py bdist_wheel
 python3 -m pip install dist/*.whl --force-reinstall

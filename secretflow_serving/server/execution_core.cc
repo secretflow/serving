@@ -104,8 +104,8 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
                       "get empty predefined features.");
       SERVING_ENFORCE(request->task().nodes().empty(),
                       errors::ErrorCode::LOGIC_ERROR);
-      features = FeaturesToTable(request->feature_source().predefineds(),
-                                 source_schema_);
+      features = FeaturesToRecordBatch(request->feature_source().predefineds(),
+                                       source_schema_);
     }
     features = ApplyFeatureMappingRule(features);
 

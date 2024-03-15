@@ -22,6 +22,8 @@ FROM openanolis/anolisos:8.8
 
 ARG TARGETPLATFORM
 
+ENV TZ=Asia/Shanghai
+
 LABEL maintainer="secretflow-contact@service.alipay.com"
 
 RUN yum install -y protobuf libnl3 libgomp && yum clean all

@@ -60,6 +60,24 @@ g_clean_up_service = True
 g_clean_up_files = True
 
 
+def global_ip_config(index):
+    cluster_ip = ["127.0.0.1:8710", "127.0.0.1:8711"]
+    host = "127.0.0.1"
+    service_port = [9810, 9811]
+    communication_port = [8710, 8711]
+    metrics_port = [8318, 8319]
+    brpc_builtin_port = [8328, 8329]
+    assert index < len(cluster_ip)
+    return {
+        "cluster_ip": cluster_ip[index],
+        "host": host,
+        "service_port": service_port[index],
+        "communication_port": communication_port[index],
+        "metrics_port": metrics_port[index],
+        "brpc_builtin_service_port": brpc_builtin_port[index],
+    }
+
+
 class ModelBuilder:
     def __init__(self, name, desc, graph_def: GraphDef):
         self.name = name
@@ -303,6 +321,9 @@ class PartyConfig:
     id: str
     feature_mapping: Dict[str, str]
     cluster_ip: str
+    host: str
+    service_port: int
+    communication_port: int
     metrics_port: int
     brpc_builtin_service_port: int
     channel_protocol: str
@@ -368,6 +389,9 @@ class ConfigDumper:
         config_dict = {
             "id": self.service_id,
             "serverConf": {
+                "host": config.host,
+                "servicePort": config.service_port,
+                "communicationPort": config.communication_port,
                 "featureMapping": config.feature_mapping,
                 "metricsExposerPort": config.metrics_port,
                 "brpcBuiltinServicePort": config.brpc_builtin_service_port,
@@ -488,7 +512,7 @@ class TestConfig:
         url = None
         for p_cfg in self.party_config:
             if p_cfg.id == party:
-                url = f"http://{p_cfg.cluster_ip}/PredictionService/Predict"
+                url = f"http://{p_cfg.host}:{p_cfg.service_port}/PredictionService/Predict"
                 break
         if not url:
             raise Exception(

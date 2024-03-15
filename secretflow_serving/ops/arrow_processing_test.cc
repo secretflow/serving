@@ -277,6 +277,54 @@ INSTANTIATE_TEST_SUITE_P(
       "output": {
         "data_id": 6
       }
+    })JSON",
+               R"JSON({
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "data_id": 6
+        },
+        {
+          "custom_scalar": {
+            "i64": 3
+          }
+        },
+        {
+          "custom_scalar": {
+            "s": "a5"
+          }
+        },
+        {
+          "data_id": 3
+        }
+      ],
+      "output": {
+        "data_id": 7
+      }
+    })JSON",
+               R"JSON({
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "data_id": 7
+        },
+        {
+          "custom_scalar": {
+            "i64": 4
+          }
+        },
+        {
+          "custom_scalar": {
+            "s": "a6"
+          }
+        },
+        {
+          "data_id": 3
+        }
+      ],
+      "output": {
+        "data_id": 8
+      }
     })JSON"},
               {},
               {R"JSON([1, 2, 3])JSON", R"JSON([4, 5, 6])JSON",
@@ -285,10 +333,13 @@ INSTANTIATE_TEST_SUITE_P(
                arrow::field("x2", arrow::int32()),
                arrow::field("x3", arrow::utf8())},
               {R"JSON([1, 2, 3])JSON", R"JSON([5, 7, 9])JSON",
+               R"JSON([5, 7, 9])JSON", R"JSON([5, 7, 9])JSON",
                R"JSON([5, 7, 9])JSON"},
               {arrow::field("x1", arrow::int32()),
                arrow::field("s2", arrow::int32()),
-               arrow::field("a4", arrow::int32())}},
+               arrow::field("a4", arrow::int32()),
+               arrow::field("a5", arrow::int32()),
+               arrow::field("a6", arrow::int32())}},
         /*run func with opts*/
         Param{false,
               {R"JSON({

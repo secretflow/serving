@@ -25,3 +25,10 @@ Topics
 
    graph/intro_to_graph
    graph/operator_list
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: algorithm
+
+   algorithm/intro

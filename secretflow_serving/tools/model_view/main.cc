@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <filesystem>
 #include <iostream>
+
+#include "gflags/gflags.h"
 
 #include "secretflow_serving/ops/graph.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
@@ -22,10 +25,7 @@
 
 namespace secretflow::serving {
 
-static void ShowModel(const std::string& file_path) {
-  ModelBundle model_pb;
-  LoadPbFromBinaryFile(file_path, &model_pb);
-
+static void ShowModel(const ModelBundle& model_pb) {
   auto model_json_content = PbToJson(&model_pb);
   std::cout << "Model content: " << std::endl;
   std::cout << model_json_content << std::endl;
@@ -54,20 +54,68 @@ static void ShowModel(const std::string& file_path) {
   }
 }
 
-}  // namespace secretflow::serving
+static void ShowPBModel(const std::string& file_path) {
+  ModelBundle model_pb;
+  LoadPbFromBinaryFile(file_path, &model_pb);
+  ShowModel(model_pb);
+}
 
-const char* help_msg = R"MSG(
-Usage: model_view <file>
-View file content of secretflow binary format model file.
-)MSG";
-int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << help_msg << std::endl;
-    return 1;
+static void ShowJsonModel(const std::string& file_path) {
+  ModelBundle model_pb;
+  LoadPbFromJsonFile(file_path, &model_pb);
+  ShowModel(model_pb);
+}
+
+void ShowModelFile(FileFormatType model_type, const std::string& model_file) {
+  if (!std::filesystem::exists(model_file)) {
+    throw std::runtime_error("model file does not exist.");
   }
 
+  if (model_type == FileFormatType::FF_PB) {
+    ShowPBModel(model_file);
+
+  } else if (model_type == FileFormatType::FF_JSON) {
+    ShowJsonModel(model_file);
+
+  } else {
+    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                  "found unknown bundle_format:{}",
+                  FileFormatType_Name(model_type));
+  }
+}
+
+void ShowModelFile(const std::string& manifest_file,
+                   const std::string& model_file) {
+  if (!std::filesystem::exists(manifest_file)) {
+    throw std::runtime_error("manifest file does not exist.");
+  }
+
+  ModelManifest manifest;
+  LoadPbFromJsonFile(manifest_file, &manifest);
+  ShowModelFile(manifest.bundle_format(), model_file);
+}
+
+}  // namespace secretflow::serving
+
+DEFINE_string(model_file, "", "filename of model");
+DEFINE_string(manifest, "", "filename of manifest");
+
+int main(int argc, char** argv) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  if (FLAGS_model_file.empty() || FLAGS_manifest.empty()) {
+    std::cerr << "Usage: " << argv[0]
+              << " --model_file=<model_file> "
+                 "--manifest=<manifest_file>"
+              << std::endl;
+    return -1;
+  }
+
+  std::cout << "model_file: " << FLAGS_model_file << std::endl;
+
   try {
-    secretflow::serving::ShowModel(argv[1]);
+    std::cout << "manifest_file: " << FLAGS_manifest << std::endl;
+    secretflow::serving::ShowModelFile(FLAGS_manifest, FLAGS_model_file);
+
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return -1;

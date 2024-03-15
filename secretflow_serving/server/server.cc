@@ -24,7 +24,6 @@
 #include "secretflow_serving/server/health.h"
 #include "secretflow_serving/server/metrics/default_metrics_registry.h"
 #include "secretflow_serving/server/metrics/metrics_service.h"
-#include "secretflow_serving/server/model_service_impl.h"
 #include "secretflow_serving/server/prediction_service_impl.h"
 #include "secretflow_serving/server/version.h"
 #include "secretflow_serving/source/factory.h"
@@ -65,9 +64,13 @@ Server::Server(Options opts) : opts_(std::move(opts)) {
 
 Server::~Server() {
   service_server_.Stop(0);
+  communication_server_.Stop(0);
   metrics_server_.Stop(0);
   service_server_.Join();
+  communication_server_.Join();
   metrics_server_.Join();
+
+  model_service_ = nullptr;
 }
 
 void Server::Start() {
@@ -78,15 +81,16 @@ void Server::Start() {
                                                      opts_.service_id);
   auto package_path = source->PullModel();
 
+  std::string host = opts_.server_config.host();
+  SERVING_ENFORCE(!host.empty(), errors::ErrorCode::INVALID_ARGUMENT,
+                  "get empty host.");
+
   // build channels
-  std::string self_address;
   std::vector<std::string> cluster_ids;
   auto channels = std::make_shared<PartyChannelMap>();
   for (const auto& party : opts_.cluster_config.parties()) {
     cluster_ids.emplace_back(party.id());
     if (party.id() == self_party_id) {
-      self_address = party.listen_address().empty() ? party.address()
-                                                    : party.listen_address();
       continue;
     }
     channels->emplace(
@@ -104,6 +108,10 @@ void Server::Start() {
                 ? &opts_.cluster_config.channel_desc().tls_config()
                 : nullptr));
   }
+  auto com_address =
+      fmt::format("{}:{}", host, opts_.server_config.communication_port());
+  auto service_address =
+      fmt::format("{}:{}", host, opts_.server_config.service_port());
 
   // load model package
   auto loader = std::make_unique<ModelLoader>();
@@ -133,21 +141,20 @@ void Server::Start() {
 
   // start mertrics server
   if (opts_.server_config.metrics_exposer_port() > 0) {
-    std::vector<std::string> strs = absl::StrSplit(self_address, ':');
-    SERVING_ENFORCE(strs.size() == 2, errors::ErrorCode::LOGIC_ERROR,
-                    "invalid self address.");
-    auto metrics_listen_address = fmt::format(
-        "{}:{}", strs[0], opts_.server_config.metrics_exposer_port());
+    auto metrics_listen_address =
+        fmt::format("{}:{}", host, opts_.server_config.metrics_exposer_port());
 
     brpc::ServerOptions metrics_server_options;
     if (opts_.server_config.has_tls_config()) {
       SetServerTLSOpts(opts_.server_config.tls_config(),
                        metrics_server_options.mutable_ssl_options());
     }
+    if (opts_.server_config.worker_num() > 0) {
+      metrics_server_options.num_threads = opts_.server_config.worker_num();
+    }
 
     auto* metrics_service = new metrics::MetricsService();
     metrics_service->RegisterCollectable(metrics::GetDefaultRegistry());
-
     metrics_server_.set_version(SERVING_VERSION_STRING);
     if (metrics_server_.AddService(metrics_service,
                                    brpc::SERVER_OWNS_SERVICE) != 0) {
@@ -158,7 +165,8 @@ void Server::Start() {
     if (metrics_server_.Start(metrics_listen_address.c_str(),
                               &metrics_server_options) != 0) {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                    "fail to start metrics server at {}", self_address);
+                    "fail to start metrics server at {}",
+                    metrics_listen_address);
     }
 
     SPDLOG_INFO("begin metrics service listen at {}, ", metrics_listen_address);
@@ -184,29 +192,44 @@ void Server::Start() {
     }
   }
 
-  // add services
-  auto* model_service = new ModelServiceImpl(
-      {{opts_.service_id, model_info_collector.GetSelfModelInfo()}},
-      self_party_id);
-  if (service_server_.AddService(model_service, brpc::SERVER_OWNS_SERVICE) !=
-      0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to add model service into brpc server.");
-  }
-  auto* execution_service = new ExecutionServiceImpl(execution_core);
-  if (service_server_.AddService(execution_service,
-                                 brpc::SERVER_OWNS_SERVICE) != 0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to add execution service into brpc server.");
-  }
-  auto* prediction_service = new PredictionServiceImpl(self_party_id);
-  if (service_server_.AddService(prediction_service,
-                                 brpc::SERVER_OWNS_SERVICE) != 0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to add prediction service into brpc server.");
+  // start commnication server
+  std::map<std::string, ModelInfo> model_info_map = {
+      {opts_.service_id, model_info_collector.GetSelfModelInfo()}};
+  model_service_ = std::make_unique<ModelServiceImpl>(std::move(model_info_map),
+                                                      self_party_id);
+  {
+    brpc::ServerOptions com_server_options;
+    if (opts_.server_config.worker_num() > 0) {
+      com_server_options.num_threads = opts_.server_config.worker_num();
+    }
+    if (opts_.server_config.has_tls_config()) {
+      SetServerTLSOpts(opts_.server_config.tls_config(),
+                       com_server_options.mutable_ssl_options());
+    }
+    auto* execution_service = new ExecutionServiceImpl(execution_core);
+    if (communication_server_.AddService(execution_service,
+                                         brpc::SERVER_OWNS_SERVICE) != 0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to add execution service into brpc server.");
+    }
+    if (communication_server_.AddService(
+            model_service_.get(), brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to add model service into com brpc server.");
+    }
+    // start services server
+    communication_server_.set_version(SERVING_VERSION_STRING);
+    if (communication_server_.Start(com_address.c_str(), &com_server_options) !=
+        0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to start communication brpc server at {}",
+                    com_address);
+    }
+
+    SPDLOG_INFO("begin communication server listen at {}, ", com_address);
   }
 
-  // build services server opts
+  // start service server
   brpc::ServerOptions server_options;
   server_options.max_concurrency = opts_.server_config.max_concurrency();
   if (opts_.server_config.worker_num() > 0) {
@@ -216,7 +239,7 @@ void Server::Start() {
     server_options.has_builtin_services = true;
     server_options.internal_port =
         opts_.server_config.brpc_builtin_service_port();
-    SPDLOG_INFO("internal port: {}", server_options.internal_port);
+    SPDLOG_INFO("brpc built-in service port: {}", server_options.internal_port);
   }
   if (opts_.server_config.has_tls_config()) {
     SetServerTLSOpts(opts_.server_config.tls_config(),
@@ -229,12 +252,24 @@ void Server::Start() {
   // exchange model info 才能 ready
   hr.SetStatusCode(200);
 
-  // start services server
-  service_server_.set_version(SERVING_VERSION_STRING);
-  if (service_server_.Start(self_address.c_str(), &server_options) != 0) {
+  if (service_server_.AddService(model_service_.get(),
+                                 brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
     SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to start brpc server at {}", self_address);
+                  "fail to add model service into brpc server.");
   }
+  auto* prediction_service = new PredictionServiceImpl(self_party_id);
+  if (service_server_.AddService(prediction_service,
+                                 brpc::SERVER_OWNS_SERVICE) != 0) {
+    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                  "fail to add prediction service into brpc server.");
+  }
+  service_server_.set_version(SERVING_VERSION_STRING);
+  if (service_server_.Start(service_address.c_str(), &server_options) != 0) {
+    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                  "fail to start service brpc server at {}", service_address);
+  }
+
+  SPDLOG_INFO("begin service server listen at {}, ", service_address);
 
   // exchange model info
   SPDLOG_INFO("start exchange model_info");
@@ -265,6 +300,7 @@ void Server::Start() {
 
 void Server::WaitForEnd() {
   service_server_.RunUntilAskedToQuit();
+  communication_server_.RunUntilAskedToQuit();
   metrics_server_.RunUntilAskedToQuit();
 }
 

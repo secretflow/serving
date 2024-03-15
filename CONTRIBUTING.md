@@ -31,7 +31,6 @@ Most of the code style is derived from the
 
 ### Prerequisite
 
-
 #### Docker
 
 ```sh
@@ -42,6 +41,7 @@ docker run -d -it --name serving-dev-$(whoami) \
          --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
          --cap-add=NET_ADMIN \
          --privileged=true \
+         --entrypoint=bash \
          secretflow/ubuntu-base-ci:latest
 
 # attach to build container
@@ -55,9 +55,6 @@ Install gcc>=11.2, cmake>=3.18, ninja, nasm>=2.15, python>=3.8, bazel==6.2.1
 ```
 
 ### Build & UnitTest
-
-
-
 
 ``` sh
 # build as debug
