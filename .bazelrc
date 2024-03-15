@@ -48,5 +48,5 @@ build:linux --linkopt=-fopenmp
 build:macos --copt="-Xpreprocessor -fopenmp"
 build:macos --copt=-Wno-unused-command-line-argument
 build:macos --features=-supports_dynamic_linker
-build:macos --macos_minimum_os=11.0
-build:macos --host_macos_minimum_os=11.0
+build:macos --macos_minimum_os=12.0
+build:macos --host_macos_minimum_os=12.0

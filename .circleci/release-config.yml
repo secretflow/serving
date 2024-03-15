@@ -42,10 +42,6 @@ executors:
     macos:
       xcode: 15.1.0
     resource_class: macos.m1.large.gen1
-  macos_x64_executor:
-    macos:
-      xcode: 15.1.0
-    resource_class: macos.x86.medium.gen2
 
 commands:
   pip_publish:
@@ -96,12 +92,7 @@ jobs:
       - run:
           name: "Install Miniconda"
           command: |
-            MACHINE_TYPE=`arch`
-            if [ ${MACHINE_TYPE} == 'arm64' ]; then
-              wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.1.2-0-MacOSX-arm64.sh -O ~/miniconda.sh
-            else
-              wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.1.2-0-MacOSX-x86_64.sh -O ~/miniconda.sh
-            fi
+            wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.1.2-0-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init zsh bash
@@ -199,7 +190,7 @@ workflows:
       - linux_publish:
           matrix:
             parameters:
-              python_ver: ["3.8", "3.9", "3.10", "3.11"]
+              python_ver: ["3.9", "3.10", "3.11"]
               executor: ["linux_x64_executor", "linux_aarch64_executor"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
@@ -208,8 +199,8 @@ workflows:
       - macOS_publish:
           matrix:
             parameters:
-              python_ver: ["3.8", "3.9", "3.10", "3.11"]
-              executor: ["macos_arm64_executor", "macos_x64_executor"]
+              python_ver: ["3.9", "3.10", "3.11"]
+              executor: ["macos_arm64_executor"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:
