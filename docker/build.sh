@@ -44,6 +44,7 @@ else
 fi
 
 CODE_PATH=$(cd "$(dirname "$0")" && cd .. && pwd)
+
 build_serving() {
     echo -e "${GREEN}Start build serving package...${NO_COLOR} ${CODE_PATH}"
 
@@ -120,4 +121,4 @@ if [[ NEED_PUSH -eq 1 ]]; then
 fi
 
 # clean up
-rm -f sf_serving.tar.gz
+rm -rf ./${HOST_PLATFORM}

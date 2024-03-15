@@ -21,6 +21,7 @@ pkg_tar(
         "//secretflow_serving/server:secretflow_serving",
         "//secretflow_serving/server:secretflow_serving_conf",
         "//secretflow_serving/tools/model_view",
+        "//secretflow_serving/tools/simple_feature_service",
     ],
     extension = "tar.gz",
     package_dir = "sf_serving",

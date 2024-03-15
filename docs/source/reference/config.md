@@ -171,8 +171,7 @@ Description for a joined party
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | id | [ string](#string ) | Unique id of the party |
-| address | [ string](#string ) | e.g. 127.0.0.1:9001 |
-| listen_address | [ string](#string ) | Optional. Address will be used if listen_address is empty. |
+| address | [ string](#string ) | e.g. 127.0.0.1:9001 commucation adress between paries. |
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->
@@ -310,8 +309,11 @@ S3 protocol.
 | ----- | ---- | ----------- |
 | feature_mapping | [map ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry ) | Optional. Feature name mapping rules. Key: source or predefined feature name Value: model feature name |
 | tls_config | [ TlsConfig](#tlsconfig ) | Whether to enable tls for server |
+| host | [ string](#string ) | e.g. 192.168.2.51 |
+| service_port | [ int32](#int32 ) | The port used for model inference. |
+| communication_port | [ int32](#int32 ) | The port used for communication between parties serving. |
 | brpc_builtin_service_port | [ int32](#int32 ) | Brpc builtin service listen port Default: disable service |
-| metrics_exposer_port | [ int32](#int32 ) | Whether `/metrics` service is enable/disable. |
+| metrics_exposer_port | [ int32](#int32 ) | `/metrics` service listen port Default: disable service |
 | worker_num | [ int32](#int32 ) | Number of pthreads that server runs on. If this option <= 0, use default value. Default: #cpu-cores |
 | max_concurrency | [ int32](#int32 ) | Server-level max number of requests processed in parallel Default: 0 (unlimited) |
 | op_exec_worker_num | [ int32](#int32 ) | Number of pthreads that server runs to execute ops. If this option <= 0, use default value. Default: #cpu-cores |

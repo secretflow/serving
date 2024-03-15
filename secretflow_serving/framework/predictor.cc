@@ -148,16 +148,13 @@ void Predictor::DealFinalResult(
       col = std::move(tmp).make_array();
     }
 
-    // index 0 is validity bitmap, real data start with 1
-    const auto* data = col->data()->GetValues<double>(1);
-    SERVING_ENFORCE(data, errors::ErrorCode::LOGIC_ERROR,
-                    "found unsupported field type");
+    auto col_vector = std::static_pointer_cast<arrow::DoubleArray>(col);
 
     auto field_name = record_batch->schema()->field(j)->name();
     for (int64_t i = 0; i < record_batch->num_rows(); ++i) {
       auto* score = results[i]->add_scores();
       score->set_name(field_name);
-      score->set_value(data[i]);
+      score->set_value(col_vector->Value(i));
     }
   }
 }

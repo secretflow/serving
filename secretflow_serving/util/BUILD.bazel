@@ -60,6 +60,19 @@ serving_cc_library(
 )
 
 serving_cc_library(
+    name = "csv_extractor",
+    srcs = ["csv_extractor.cc"],
+    hdrs = ["csv_extractor.h"],
+    deps = [
+        ":arrow_helper",
+        ":utils",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:data_type_cc_proto",
+        "//secretflow_serving/spis:batch_feature_service_cc_proto",
+    ],
+)
+
+serving_cc_library(
     name = "thread_safe_queue",
     hdrs = ["thread_safe_queue.h"],
     deps = [
@@ -72,6 +85,15 @@ serving_cc_library(
     hdrs = ["thread_pool.h"],
     deps = [
         ":thread_safe_queue",
+    ],
+)
+
+serving_cc_test(
+    name = "csv_extractor_test",
+    srcs = ["csv_extractor_test.cc"],
+    deps = [
+        ":csv_extractor",
+        "@com_github_brpc_brpc//:butil",
     ],
 )
 

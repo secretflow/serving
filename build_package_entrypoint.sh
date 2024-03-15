@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-
 BASE_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # prepare version information before build

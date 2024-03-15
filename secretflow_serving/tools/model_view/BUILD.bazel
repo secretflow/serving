@@ -10,5 +10,6 @@ serving_cc_binary(
         "//secretflow_serving/ops:graph",
         "//secretflow_serving/protos:bundle_cc_proto",
         "//secretflow_serving/util:utils",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )

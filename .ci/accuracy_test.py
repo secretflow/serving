@@ -29,6 +29,7 @@ from pyarrow import csv as pa_csv
 from google.protobuf.json_format import MessageToJson
 
 from secretflow_serving_lib.feature_pb2 import FeatureParam
+from test_common import global_ip_config
 
 
 TEST_STORAGE_ROOT = os.path.join(tempfile.gettempdir(), getpass.getuser())
@@ -40,18 +41,6 @@ g_repo_dir = os.path.dirname(g_script_dir)
 
 g_clean_up_service = True
 g_clean_up_files = True
-
-
-def global_ip_config(index):
-    cluster_ip = ["127.0.0.1:9810", "127.0.0.1:9811"]
-    metrics_port = [8318, 8319]
-    brpc_builtin_port = [8328, 8329]
-    assert index < len(cluster_ip)
-    return {
-        "cluster_ip": cluster_ip[index],
-        "metrics_port": metrics_port[index],
-        "brpc_builtin_service_port": brpc_builtin_port[index],
-    }
 
 
 def dump_json(obj, filename, indent=2):
@@ -79,6 +68,9 @@ class CurlWrapper:
 class PartyConfig:
     id: str
     cluster_ip: str
+    host: str
+    service_port: int
+    communication_port: int
     metrics_port: int
     brpc_builtin_service_port: int
     channel_protocol: str
@@ -118,6 +110,9 @@ class ConfigBuilder:
         config_dict = {
             "id": self.service_id,
             "serverConf": {
+                "host": config.host,
+                "servicePort": config.service_port,
+                "communicationPort": config.communication_port,
                 "metricsExposerPort": config.metrics_port,
                 "brpcBuiltinServicePort": config.brpc_builtin_service_port,
             },
@@ -255,7 +250,7 @@ class AccuracyTestCase:
         url = None
         for id, config in self.party_configs.items():
             if id == party:
-                url = f"http://{config.cluster_ip}/PredictionService/Predict"
+                url = f"http://{config.host}:{config.service_port}/PredictionService/Predict"
                 break
         if not url:
             raise Exception(f"{party} is not in config({self.party_configs.keys()})")

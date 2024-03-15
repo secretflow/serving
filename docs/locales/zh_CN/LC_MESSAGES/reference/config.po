@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-01 11:43+0800\n"
+"POT-Creation-Date: 2024-03-08 14:41+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,7 +93,7 @@ msgstr ""
 msgid "[TlsConfig](#tlsconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:81 ../../source/reference/config.md:370
+#: ../../source/reference/config.md:81 ../../source/reference/config.md:372
 msgid "Enums"
 msgstr ""
 
@@ -251,22 +251,14 @@ msgid "address"
 msgstr ""
 
 #: ../../source/reference/config.md
-msgid "e.g. 127.0.0.1:9001"
+msgid "e.g. 127.0.0.1:9001 commucation adress between paries."
 msgstr ""
 
-#: ../../source/reference/config.md
-msgid "listen_address"
-msgstr ""
-
-#: ../../source/reference/config.md
-msgid "Optional. Address will be used if listen_address is empty."
-msgstr ""
-
-#: ../../source/reference/config.md:183
+#: ../../source/reference/config.md:182
 msgid "CsvOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:184
+#: ../../source/reference/config.md:183
 msgid "Options of a csv feature source."
 msgstr ""
 
@@ -290,11 +282,11 @@ msgid ""
 "a subset of id column"
 msgstr ""
 
-#: ../../source/reference/config.md:196
+#: ../../source/reference/config.md:195
 msgid "FeatureSourceConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:197
+#: ../../source/reference/config.md:196
 msgid "Config for a feature source"
 msgstr ""
 
@@ -328,11 +320,11 @@ msgstr ""
 msgid "[ CsvOptions](#csvoptions )"
 msgstr ""
 
-#: ../../source/reference/config.md:210
+#: ../../source/reference/config.md:209
 msgid "HttpOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:211
+#: ../../source/reference/config.md:210
 msgid ""
 "Options for a http feature source which should implement the feature "
 "service spi. The defined of spi can be found in "
@@ -365,11 +357,11 @@ msgid ""
 "(ms)"
 msgstr ""
 
-#: ../../source/reference/config.md:228
+#: ../../source/reference/config.md:227
 msgid "MockOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:229
+#: ../../source/reference/config.md:228
 msgid ""
 "Options for a mock feature source. Mock feature source will generates "
 "values(random or fixed, according to type) for the desired features."
@@ -387,11 +379,11 @@ msgstr ""
 msgid "default MDT_FIXED"
 msgstr ""
 
-#: ../../source/reference/config.md:244
+#: ../../source/reference/config.md:243
 msgid "LoggingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:245
+#: ../../source/reference/config.md:244
 msgid "Serving log config options"
 msgstr ""
 
@@ -431,19 +423,19 @@ msgstr ""
 msgid "default value: 10"
 msgstr ""
 
-#: ../../source/reference/config.md:261
+#: ../../source/reference/config.md:260
 msgid "FileSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:262
+#: ../../source/reference/config.md:261
 msgid "empty by design"
 msgstr ""
 
-#: ../../source/reference/config.md:268
+#: ../../source/reference/config.md:267
 msgid "ModelConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:269
+#: ../../source/reference/config.md:268
 msgid "Config for serving model"
 msgstr ""
 
@@ -509,11 +501,11 @@ msgstr ""
 msgid "[ OSSSourceMeta](#osssourcemeta )"
 msgstr ""
 
-#: ../../source/reference/config.md:286
+#: ../../source/reference/config.md:285
 msgid "OSSSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:287
+#: ../../source/reference/config.md:286
 msgid ""
 "Options for a Oss model source. Serving accesses data services using the "
 "AWS S3 protocol."
@@ -550,7 +542,7 @@ msgstr ""
 msgid "bucket"
 msgstr ""
 
-#: ../../source/reference/config.md:305
+#: ../../source/reference/config.md:304
 msgid "ServerConfig"
 msgstr ""
 
@@ -573,6 +565,30 @@ msgid "Whether to enable tls for server"
 msgstr ""
 
 #: ../../source/reference/config.md
+msgid "host"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "e.g. 192.168.2.51"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "service_port"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "The port used for model inference."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "communication_port"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "The port used for communication between parties serving."
+msgstr ""
+
+#: ../../source/reference/config.md
 msgid "brpc_builtin_service_port"
 msgstr ""
 
@@ -585,7 +601,7 @@ msgid "metrics_exposer_port"
 msgstr ""
 
 #: ../../source/reference/config.md
-msgid "Whether `/metrics` service is enable/disable."
+msgid "`/metrics` service listen port Default: disable service"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -618,7 +634,7 @@ msgid ""
 "use default value. Default: #cpu-cores"
 msgstr ""
 
-#: ../../source/reference/config.md:323
+#: ../../source/reference/config.md:325
 msgid "ServerConfig.FeatureMappingEntry"
 msgstr ""
 
@@ -630,11 +646,11 @@ msgstr ""
 msgid "value"
 msgstr ""
 
-#: ../../source/reference/config.md:338
+#: ../../source/reference/config.md:340
 msgid "ServingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:339
+#: ../../source/reference/config.md:341
 msgid "Related config of serving"
 msgstr ""
 
@@ -674,7 +690,7 @@ msgstr ""
 msgid "[ FeatureSourceConfig](#featuresourceconfig )"
 msgstr ""
 
-#: ../../source/reference/config.md:356
+#: ../../source/reference/config.md:358
 msgid "TlsConfig"
 msgstr ""
 
@@ -704,7 +720,7 @@ msgid ""
 "the verification"
 msgstr ""
 
-#: ../../source/reference/config.md:376
+#: ../../source/reference/config.md:378
 msgid "MockDataType"
 msgstr ""
 
@@ -752,11 +768,11 @@ msgstr ""
 msgid "fixed value for each feature"
 msgstr ""
 
-#: ../../source/reference/config.md:390
+#: ../../source/reference/config.md:392
 msgid "LogLevel"
 msgstr ""
 
-#: ../../source/reference/config.md:391
+#: ../../source/reference/config.md:393
 msgid "Serving log level"
 msgstr ""
 
@@ -804,11 +820,11 @@ msgstr ""
 msgid "error"
 msgstr ""
 
-#: ../../source/reference/config.md:406
+#: ../../source/reference/config.md:408
 msgid "SourceType"
 msgstr ""
 
-#: ../../source/reference/config.md:407
+#: ../../source/reference/config.md:409
 msgid "Supported model source type"
 msgstr ""
 
@@ -832,7 +848,7 @@ msgstr ""
 msgid "OSS/AWS S3"
 msgstr ""
 
-#: ../../source/reference/config.md:425
+#: ../../source/reference/config.md:427
 msgid "Scalar Value Types"
 msgstr ""
 

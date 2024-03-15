@@ -52,10 +52,8 @@ message PartyDesc {
   string id = 1;
 
   // e.g. 127.0.0.1:9001
+  // commucation adress between paries.
   string address = 2;
-
-  // Optional. Address will be used if listen_address is empty.
-  string listen_address = 3;
 }
 
 // Runtime config for a serving cluster

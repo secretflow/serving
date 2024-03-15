@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "secretflow_serving/feature_adapter/feature_adapter.h"
+#include "secretflow_serving/util/csv_extractor.h"
 
 namespace secretflow::serving::feature {
 
@@ -33,8 +34,7 @@ class FileAdapter : public FeatureAdapter {
   void OnFetchFeature(const Request& request, Response* response) override;
 
  private:
-  std::string id_name_;
-  std::shared_ptr<arrow::Table> csv_table_;
+  CSVExtractor extractor_;
 };
 
 }  // namespace secretflow::serving::feature

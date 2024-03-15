@@ -17,6 +17,8 @@
 #include <utility>
 
 #include "arrow/api.h"
+#include "arrow/csv/api.h"
+#include "arrow/io/api.h"
 #include "google/protobuf/repeated_field.h"
 
 #include "secretflow_serving/core/exception.h"
@@ -72,7 +74,9 @@ std::shared_ptr<arrow::Schema> DeserializeSchema(const std::string& buf);
 FieldType DataTypeToFieldType(
     const std::shared_ptr<arrow::DataType>& data_type);
 
-std::shared_ptr<arrow::RecordBatch> FeaturesToTable(
+std::shared_ptr<arrow::DataType> FieldTypeToDataType(FieldType field_type);
+
+std::shared_ptr<arrow::RecordBatch> FeaturesToRecordBatch(
     const ::google::protobuf::RepeatedPtrField<Feature>& features,
     const std::shared_ptr<const arrow::Schema>& target_schema);
 
@@ -98,5 +102,18 @@ std::shared_ptr<arrow::DataType> DataTypeToArrowDataType(
 void CheckReferenceFields(const std::shared_ptr<arrow::Schema>& src,
                           const std::shared_ptr<arrow::Schema>& dst,
                           const std::string& additional_msg = "");
+
+std::shared_ptr<arrow::Table> ReadCsvFileToTable(
+    const std::string& path,
+    const std::shared_ptr<const arrow::Schema>& feature_schema);
+
+arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
+                           const std::vector<std::string>& ids);
+
+std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
+    std::shared_ptr<arrow::Table> table, arrow::Datum filter);
+
+std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
+                                                         std::string id_name);
 
 }  // namespace secretflow::serving
