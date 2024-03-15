@@ -48,7 +48,10 @@ executors:
     resource_class: macos.x86.medium.gen2
 
 commands:
-  publish:
+  pip_publish:
+    parameters:
+      python_ver:
+        type: string
     steps:
       - run:
           name: "build package and publish"
@@ -74,7 +77,8 @@ jobs:
     executor: <<parameters.executor>>
     steps:
       - checkout
-      - publish
+      - pip_publish:
+          python_ver: << parameters.python_ver >>
 
   macOS_publish:
     parameters:
@@ -92,11 +96,17 @@ jobs:
       - run:
           name: "Install Miniconda"
           command: |
-            wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
+            MACHINE_TYPE=`arch`
+            if [ ${MACHINE_TYPE} == 'arm64' ]; then
+              wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.1.2-0-MacOSX-arm64.sh -O ~/miniconda.sh
+            else
+              wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.1.2-0-MacOSX-x86_64.sh -O ~/miniconda.sh
+            fi
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init zsh bash
-      - publish
+      - pip_publish:
+          python_ver: << parameters.python_ver >>
 
   linux_build_binary:
     parameters:
