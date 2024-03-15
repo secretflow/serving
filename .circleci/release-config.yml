@@ -48,7 +48,10 @@ executors:
     resource_class: macos.x86.medium.gen2
 
 commands:
-  publish:
+  pip_publish:
+    parameters:
+      python_ver:
+        type: string
     steps:
       - run:
           name: "build package and publish"
@@ -74,7 +77,8 @@ jobs:
     executor: <<parameters.executor>>
     steps:
       - checkout
-      - publish
+      - pip_publish:
+          python_ver: << parameters.python_ver >>
 
   macOS_publish:
     parameters:
@@ -96,7 +100,8 @@ jobs:
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init zsh bash
-      - publish
+      - pip_publish:
+          python_ver: << parameters.python_ver >>
 
   linux_build_binary:
     parameters:
