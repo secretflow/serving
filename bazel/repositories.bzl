@@ -14,13 +14,6 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-SECRETFLOW_GIT = "https://github.com/secretflow"
-
-YACL_COMMIT_ID = "e3401da07d8aa2f3fe2238e8563e5f573036a594"
-
-KUSCIA_COMMIT_ID = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
 
 def sf_serving_deps():
     _bazel_platform()
@@ -49,19 +42,29 @@ def sf_serving_deps():
     _com_aws_checksums()
     _com_aws_sdk()
     _com_github_curl()
+    _kuscia()
+    _yacl()
 
+def _yacl():
     maybe(
-        git_repository,
+        http_archive,
         name = "yacl",
-        commit = YACL_COMMIT_ID,
-        remote = "{}/yacl.git".format(SECRETFLOW_GIT),
+        urls = [
+            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.3b1.tar.gz",
+        ],
+        strip_prefix = "yacl-0.4.3b1",
+        sha256 = "e22a1ca88a97d4709fb08051d4f756c3bb581ff74f93e01f9eb4bb52dd694b19",
     )
 
+def _kuscia():
     maybe(
-        git_repository,
+        http_archive,
         name = "kuscia",
-        commit = KUSCIA_COMMIT_ID,
-        remote = "{}/kuscia.git".format(SECRETFLOW_GIT),
+        urls = [
+            "https://github.com/secretflow/kuscia/archive/refs/tags/v0.5.0b0.tar.gz",
+        ],
+        strip_prefix = "kuscia-0.5.0b0",
+        sha256 = "6db0a23dbaf4a1fc223acc51425daa1572126410fb583f3132b7a1ade985e934",
     )
 
 def _bazel_rules_pkg():
