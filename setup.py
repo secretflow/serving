@@ -27,8 +27,8 @@ import setuptools.command.build_ext
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
-# 3.8 is the minimum python version we can support
-SUPPORTED_PYTHONS = [(3, 8), (3, 9), (3, 10), (3, 11)]
+# 3.9 is the minimum python version we can support
+SUPPORTED_PYTHONS = [(3, 9), (3, 10), (3, 11)]
 BAZEL_MAX_JOBS = os.getenv("BAZEL_MAX_JOBS")
 ROOT_DIR = os.path.dirname(__file__)
 SKIP_BAZEL_CLEAN = os.getenv("SKIP_BAZEL_CLEAN")
@@ -228,7 +228,7 @@ if sys.platform == "darwin":
     if platform.machine() == "x86_64":
         plat_name = "macosx_10_16_x86_64"
     else:
-        plat_name = "macosx_11_0_arm64"
+        plat_name = "macosx_12_0_arm64"
 elif platform.machine() == "aarch64":
     # Linux aarch64
     plat_name = "manylinux_2_28_aarch64"
@@ -251,7 +251,6 @@ setuptools.setup(
     ).read(),
     long_description_content_type='text/markdown',
     classifiers=[
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
