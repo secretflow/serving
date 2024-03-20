@@ -50,10 +50,10 @@ def _yacl():
         http_archive,
         name = "yacl",
         urls = [
-            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.3b1.tar.gz",
+            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.4b1.tar.gz",
         ],
-        strip_prefix = "yacl-0.4.3b1",
-        sha256 = "e22a1ca88a97d4709fb08051d4f756c3bb581ff74f93e01f9eb4bb52dd694b19",
+        strip_prefix = "yacl-0.4.4b1",
+        sha256 = "846f40f5e00cfb77427016623b9cb215e5150384a3cc7c663642d995ee7afec9",
     )
 
 def _kuscia():
