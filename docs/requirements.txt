@@ -10,7 +10,7 @@ sphinxcontrib-blockdiag==3.0.0
 sphinxcontrib-nwdiag==2.0.0
 sphinxcontrib-seqdiag==3.0.0
 pytablewriter==0.64.2
-linkify-it-py==2.0.0
+linkify-it-py==2.0.3
 sphinx_design==0.3.0
 sphinx-intl==2.0.1
 mdutils==1.6.0
