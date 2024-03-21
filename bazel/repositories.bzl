@@ -251,11 +251,11 @@ def _com_github_google_snappy():
     maybe(
         http_archive,
         name = "com_github_google_snappy",
-        sha256 = "75c1fbb3d618dd3a0483bff0e26d0a92b495bbe5059c8b4f1c962b478b6e06e7",
-        strip_prefix = "snappy-1.1.9",
+        sha256 = "49d831bffcc5f3d01482340fe5af59852ca2fe76c3e05df0e67203ebbe0f1d90",
+        strip_prefix = "snappy-1.1.10",
         build_file = "@sf_serving//bazel:snappy.BUILD",
         urls = [
-            "https://github.com/google/snappy/archive/refs/tags/1.1.9.tar.gz",
+            "https://github.com/google/snappy/archive/refs/tags/1.1.10.tar.gz",
         ],
     )
 
