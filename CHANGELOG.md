@@ -11,6 +11,10 @@
 
 > please add your unreleased change here.
 
+## 20240325 - 0.2.1b0
+
+- [Bugfix] Fix dummy node check output schema failed
+
 ## 20240315 - 0.2.0b0
 
 - [Feature] Add `ARROW_PROCESSING` operator
