@@ -37,10 +37,10 @@ HOST_PLATFORM=""
 RELEASE_IMAGE=""
 if [ "$MACHINE_TYPE" == "x86_64" ]; then
   HOST_PLATFORM=linux/amd64
-  RELEASE_IMAGE=secretflow/release-ci:latest
+  RELEASE_IMAGE=secretflow/release-ci:20240206
 else
   HOST_PLATFORM=linux/arm64
-  RELEASE_IMAGE=secretflow/release-ci-aarch64:latest
+  RELEASE_IMAGE=secretflow/release-ci-aarch64:20240206
 fi
 
 CODE_PATH=$(cd "$(dirname "$0")" && cd .. && pwd)
