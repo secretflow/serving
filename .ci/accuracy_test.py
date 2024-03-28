@@ -18,10 +18,12 @@
 import getpass
 import json
 import os
-import subprocess
+import platform
+import stat
 import sys
 import tempfile
 import time
+import urllib.request
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -29,7 +31,12 @@ from pyarrow import csv as pa_csv
 from google.protobuf.json_format import MessageToJson
 
 from secretflow_serving_lib.feature_pb2 import FeatureParam
-from test_common import global_ip_config
+from test_common import (
+    global_ip_config,
+    ProcRunGuard,
+    build_predict_cmd,
+    ServerBaseConifg,
+)
 
 
 TEST_STORAGE_ROOT = os.path.join(tempfile.gettempdir(), getpass.getuser())
@@ -39,7 +46,6 @@ g_script_name = os.path.abspath(sys.argv[0])
 g_script_dir = os.path.dirname(g_script_name)
 g_repo_dir = os.path.dirname(g_script_dir)
 
-g_clean_up_service = True
 g_clean_up_files = True
 
 
@@ -52,29 +58,83 @@ def is_approximately_equal(a, b, epsilon) -> bool:
     return abs(a - b) < epsilon
 
 
-class CurlWrapper:
-    def __init__(self, url: str, data: str):
-        self.url = url
-        self.data = data
+class MinioTester(ProcRunGuard):
+    def __init__(self, parties: List[str]):
+        super().__init__()
 
-    def cmd(self):
-        return f'curl --location "{self.url}" --header "Content-Type: application/json" --data \'{self.data}\''
+        minio_path = tempfile.gettempdir()
+        os.makedirs(minio_path, exist_ok=True)
 
-    def exe(self):
-        return os.popen(self.cmd())
+        self.minio_server = os.path.join(minio_path, "minio")
+        self.minio_client = os.path.join(minio_path, "mc")
+
+        system = "linux"
+        arch = "amd64"
+        if platform.system() == "Darwin":
+            system = "darwin"
+        if platform.machine() == "arm64" or platform.machine() == "aarch64":
+            arch = "arm64"
+
+        print(f"get minio server")
+        urllib.request.urlretrieve(
+            f"https://dl.min.io/server/minio/release/{system}-{arch}/minio",
+            self.minio_server,
+        )
+        st = os.stat(self.minio_server)
+        os.chmod(self.minio_server, st.st_mode | stat.S_IEXEC)
+
+        print(f"get minio client")
+        urllib.request.urlretrieve(
+            f"https://dl.min.io/client/mc/release/{system}-{arch}/mc",
+            self.minio_client,
+        )
+        st = os.stat(self.minio_client)
+        os.chmod(self.minio_client, st.st_mode | stat.S_IEXEC)
+
+        minio_data_path = os.path.join(minio_path, "data")
+
+        ms_env = os.environ.copy()
+        ms_env["MINIO_BROWSER"] = "off"
+        ms_env["MINIO_ACCESS_KEY"] = "serving_test_aaa"
+        ms_env["MINIO_SECRET_KEY"] = "serving_test_sss"
+
+        self.s3_configs = {}
+        endpoint = "127.0.0.1:63111"
+        for p in parties:
+            config = {
+                "access_key": ms_env['MINIO_ACCESS_KEY'],
+                "secret_key": ms_env['MINIO_SECRET_KEY'],
+                "virtual_hosted": False,
+                "endpoint": endpoint,
+                "bucket": p,
+            }
+            os.makedirs(os.path.join(minio_data_path, config["bucket"]), exist_ok=True)
+            self.s3_configs[p] = config
+
+        # start minio server
+        self.run_cmd(
+            f"{self.minio_server} server {minio_data_path} --address {endpoint}",
+            True,
+            ms_env,
+        )
+        # wait server start
+        time.sleep(10)
+
+        # config mc client
+        self.run_cmd(
+            f"{self.minio_client} alias set 'serving_test' 'http://{endpoint}' \'{ms_env['MINIO_ACCESS_KEY']}\' \'{ms_env['MINIO_SECRET_KEY']}\'"
+        )
+
+    def put_file(self, file_path: str, party: str):
+        put_model_cmd = f"{self.minio_client} put {file_path} serving_test/{self.s3_configs[party]['bucket']}/{os.path.basename(file_path)}"
+        self.run_cmd(put_model_cmd)
+
+    def get_s3_configs(self) -> Dict[str, dict]:
+        return self.s3_configs
 
 
 @dataclass
-class PartyConfig:
-    id: str
-    cluster_ip: str
-    host: str
-    service_port: int
-    communication_port: int
-    metrics_port: int
-    brpc_builtin_service_port: int
-    channel_protocol: str
-    model_id: str
+class PartyConfig(ServerBaseConifg):
     model_package_path: str
     csv_path: str
     query_datas: List[str] = None
@@ -106,7 +166,27 @@ class ConfigBuilder:
             json.dump({"systemLogPath": os.path.abspath(log_path)}, ofile, indent=2)
         return logging_config_path
 
-    def _dump_serving_config(self, path: str, config: PartyConfig):
+    def _dump_serving_config(
+        self,
+        path: str,
+        config: PartyConfig,
+        use_oss: bool = False,
+        party_s3_configs: Dict[str, dict] = None,
+    ):
+        model_config_dict = {
+            "modelId": config.model_id,
+            "basePath": os.path.abspath(path),
+            "sourcePath": os.path.abspath(config.model_package_path),
+            "sourceType": "ST_FILE",
+        }
+        if use_oss:
+            assert party_s3_configs
+            model_config_dict['sourceType'] = "ST_OSS"
+            model_config_dict['sourcePath'] = os.path.basename(
+                config.model_package_path
+            )
+            model_config_dict['ossSourceMeta'] = party_s3_configs[config.id]
+
         config_dict = {
             "id": self.service_id,
             "serverConf": {
@@ -116,12 +196,7 @@ class ConfigBuilder:
                 "metricsExposerPort": config.metrics_port,
                 "brpcBuiltinServicePort": config.brpc_builtin_service_port,
             },
-            "modelConf": {
-                "modelId": config.model_id,
-                "basePath": os.path.abspath(path),
-                "sourcePath": os.path.abspath(config.model_package_path),
-                "sourceType": "ST_FILE",
-            },
+            "modelConf": model_config_dict,
             "clusterConf": {
                 "selfId": config.id,
                 "parties": self.parties,
@@ -138,7 +213,12 @@ class ConfigBuilder:
         dump_json(config_dict, config_path)
         return config_path
 
-    def finish(self, path="."):
+    def finish(
+        self,
+        path=".",
+        use_oss: bool = False,
+        party_s3_configs: Dict[str, dict] = None,
+    ):
         for id, config in self.party_configs.items():
             config_path = os.path.join(path, id)
             if not os.path.exists(config_path):
@@ -147,7 +227,7 @@ class ConfigBuilder:
                 config_path, os.path.join(config_path, "log")
             )
             self.serving_config_paths[id] = self._dump_serving_config(
-                config_path, config
+                config_path, config, use_oss, party_s3_configs
             )
 
     def get_logging_config_paths(self) -> Dict[str, str]:
@@ -158,7 +238,7 @@ class ConfigBuilder:
 
 
 # simple test
-class AccuracyTestCase:
+class AccuracyTestCase(ProcRunGuard):
     def __init__(
         self,
         service_id: str,
@@ -169,7 +249,9 @@ class AccuracyTestCase:
         expect_csv_name: str,
         query_ids: List[str],
         score_col_name: str,
+        use_oss: bool = False,
     ):
+        super().__init__()
         self.service_id = service_id
         self.case_dir = case_dir
         self.expect_csv_path = os.path.join(case_dir, expect_csv_name)
@@ -189,29 +271,32 @@ class AccuracyTestCase:
             )
         self.background_proc = []
         self.data_path = os.path.join(TEST_STORAGE_ROOT, self.service_id)
-
-    def _exe_cmd(self, cmd, background=False):
-        print("Execute: ", cmd)
-        if not background:
-            ret = subprocess.run(cmd, shell=True, check=True, capture_output=True)
-            ret.check_returncode()
-            return ret
-        else:
-            proc = subprocess.Popen(cmd.split(), shell=False)
-            self.background_proc.append(proc)
-            return proc
+        self.use_oss = False
+        if use_oss:
+            self.use_oss = use_oss
+            self.minio_tester = MinioTester(parties)
 
     def start_server(self, start_interval_s=0):
+        if self.use_oss:
+            # put model file
+            for p, config in self.party_configs.items():
+                self.minio_tester.put_file(config.model_package_path, p)
+
         config_builder = ConfigBuilder(
-            party_configs=self.party_configs, service_id=self.service_id
+            party_configs=self.party_configs,
+            service_id=self.service_id,
         )
-        config_builder.finish(self.data_path)
+        config_builder.finish(
+            self.data_path,
+            self.use_oss,
+            None if not self.use_oss else self.minio_tester.get_s3_configs(),
+        )
 
         logging_config_paths = config_builder.get_logging_config_paths()
         serving_config_paths = config_builder.get_serving_config_paths()
 
         for id in self.party_configs.keys():
-            self._exe_cmd(
+            self.run_cmd(
                 f"./bazel-bin/secretflow_serving/server/secretflow_serving --serving_config_file={serving_config_paths[id]} --logging_config_file={logging_config_paths[id]}",
                 True,
             )
@@ -222,10 +307,7 @@ class AccuracyTestCase:
         time.sleep(10)
 
     def stop_server(self):
-        if g_clean_up_service:
-            for proc in self.background_proc:
-                proc.kill()
-                proc.wait()
+        self.cleanup_sub_procs()
         if g_clean_up_files:
             os.system(f"rm -rf {self.data_path}")
 
@@ -246,20 +328,6 @@ class AccuracyTestCase:
 
         return json.dumps(body_dict)
 
-    def make_predict_curl_cmd(self, party: str):
-        url = None
-        for id, config in self.party_configs.items():
-            if id == party:
-                url = f"http://{config.host}:{config.service_port}/PredictionService/Predict"
-                break
-        if not url:
-            raise Exception(f"{party} is not in config({self.party_configs.keys()})")
-        curl_wrapper = CurlWrapper(
-            url=url,
-            data=self._make_request_body(),
-        )
-        return curl_wrapper.cmd()
-
     def exec(self):
         try:
             self.start_server()
@@ -269,9 +337,12 @@ class AccuracyTestCase:
             expect_df = expect_table.to_pandas()
 
             print(f"expect_df: {expect_df}")
-
-            for party in self.party_configs.keys():
-                res = self._exe_cmd(self.make_predict_curl_cmd(party))
+            for party, config in self.party_configs.items():
+                res = self.run_cmd(
+                    build_predict_cmd(
+                        config.host, config.service_port, self._make_request_body()
+                    )
+                )
                 out = res.stdout.decode()
                 print("Predict Result: ", out)
                 res = json.loads(out)
@@ -320,6 +391,7 @@ if __name__ == "__main__":
         expect_csv_name='predict.csv',
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
         score_col_name='pred',
+        use_oss=True,
     ).exec()
 
     AccuracyTestCase(

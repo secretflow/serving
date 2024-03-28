@@ -91,7 +91,7 @@ class MockRemoteExecute : public RemoteExecute {
   void Run() override {}
   void Cancel() override {}
   void WaitToFinish() override {
-    exe_ctx_.CheckAndUpdateResponse(mock_exec_res);
+    exec_ctx_.CheckAndUpdateResponse(mock_exec_res);
   }
   void GetOutputs(
       std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*

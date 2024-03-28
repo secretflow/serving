@@ -108,6 +108,7 @@ void Server::Start() {
                 ? &opts_.cluster_config.channel_desc().tls_config()
                 : nullptr));
   }
+
   auto com_address =
       fmt::format("{}:{}", host, opts_.server_config.communication_port());
   auto service_address =
