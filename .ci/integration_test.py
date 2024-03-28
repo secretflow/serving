@@ -17,7 +17,7 @@
 
 import json
 import os
-import sys
+import time
 from typing import Any, Dict, List
 
 import pyarrow as pa
@@ -42,6 +42,8 @@ from test_common import (
     make_tree_merge_node_def,
     make_tree_ensemble_predict_node_def,
     global_ip_config,
+    ProcRunGuard,
+    build_predict_cmd,
 )
 
 
@@ -90,11 +92,11 @@ class MockFeatureTest(TestCase):
 
     def test(self, config: TestConfig):
         config.dump_config()
-        config.exe_start_server_scripts()
+        config.exec_start_server_scripts()
         for party in config.get_party_ids():
             if config.specific_party and config.specific_party != party:
                 continue
-            res = config.exe_curl_request_scripts(party)
+            res = config.exec_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
             res = json.loads(out)
@@ -103,7 +105,7 @@ class MockFeatureTest(TestCase):
                 config.party_config[0].query_datas
             ), f"result rows({len(res['results'])}) not equal to query_data({len(config.party_config[0].query_datas)})"
 
-            model_info = config.exe_get_model_info_request_scripts(party)
+            model_info = config.exec_get_model_info_request_scripts(party)
             out = model_info.stdout.decode()
             print("Model info: ", out)
             res = json.loads(out)
@@ -202,10 +204,10 @@ class PredefinedErrorTest(TestCase):
             new_config[k] = v
         config.predefined_features = new_config
         config.dump_config()
-        config.exe_start_server_scripts()
+        config.exec_start_server_scripts()
 
         for party in config.get_party_ids():
-            res = config.exe_curl_request_scripts(party)
+            res = config.exec_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
             res = json.loads(out)
@@ -217,10 +219,10 @@ class PredefinedErrorTest(TestCase):
 class PredefineTest(PredefinedErrorTest):
     def test(self, config):
         config.dump_config()
-        config.exe_start_server_scripts()
+        config.exec_start_server_scripts()
         results = []
         for party in config.get_party_ids():
-            res = config.exe_curl_request_scripts(party)
+            res = config.exec_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
             res = json.loads(out)
@@ -321,10 +323,10 @@ class CsvTest(TestCase):
 
     def test(self, config):
         config.dump_config()
-        config.exe_start_server_scripts()
+        config.exec_start_server_scripts()
 
         for party in config.get_party_ids():
-            res = config.exe_curl_request_scripts(party)
+            res = config.exec_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
             res = json.loads(out)
@@ -468,10 +470,10 @@ class SpecificTest(TestCase):
 
     def test(self, config):
         config.dump_config()
-        config.exe_start_server_scripts(2)
+        config.exec_start_server_scripts(2)
 
         for party in config.get_party_ids():
-            res = config.exe_curl_request_scripts(party)
+            res = config.exec_curl_request_scripts(party)
             out = res.stdout.decode()
             print("Result: ", out)
             res = json.loads(out)
@@ -485,6 +487,62 @@ class SpecificTest(TestCase):
                 assert (
                     score["scores"][0]["value"] == 1234.0
                 ), f'result should be 0, got: {score["scores"][0]["value"]}'
+
+
+class ExampleTest(ProcRunGuard):
+    def __init__(self, base_path: str):
+        super().__init__()
+
+        self.parties = ["alice", "bob"]
+        self.serving_cmd_dict = {}
+        self.serving_config_dict = {}
+        for p in self.parties:
+            party_base_path = os.path.join(base_path, p)
+            serving_config_file = os.path.join(party_base_path, "serving.config")
+            logging_config_file = os.path.join(party_base_path, "logging.config")
+            self.serving_cmd_dict[p] = (
+                f"./bazel-bin/secretflow_serving/server/secretflow_serving --serving_config_file={serving_config_file} --logging_config_file={logging_config_file}"
+            )
+
+            with open(serving_config_file, "r") as file:
+                serving_conf = json.load(file)
+                self.serving_config_dict[p] = serving_conf
+
+    def exec(self):
+        try:
+            # start serving
+            for p in self.parties:
+                self.run_cmd(self.serving_cmd_dict[p], True)
+
+            time.sleep(10)
+
+            body_dict = {
+                "service_spec": {
+                    "id": "test_service_id",
+                },
+                "fs_params": {
+                    "alice": {"query_datas": ["a"]},
+                    "bob": {"query_datas": ["a"]},
+                },
+            }
+
+            # make request
+            for p in self.parties:
+                res = self.run_cmd(
+                    build_predict_cmd(
+                        "127.0.0.1",
+                        self.serving_config_dict[p]['serverConf']['servicePort'],
+                        json.dumps(body_dict),
+                    )
+                )
+                out = res.stdout.decode()
+                print("Predict Result: ", out)
+                res = json.loads(out)
+                assert (
+                    res["status"]["code"] == 1
+                ), f'return status code({res["status"]["code"]}) should be OK(1)'
+        finally:
+            self.cleanup_sub_procs()
 
 
 if __name__ == "__main__":
@@ -1842,7 +1900,9 @@ if __name__ == "__main__":
         },
     ).exec()
 
-    # PredefinedErrorTest('model_path').exec()
+    PredefinedErrorTest('model_path').exec()
     PredefineTest('model_path').exec()
     CsvTest('model_path').exec()
     SpecificTest('model_path').exec()
+
+    ExampleTest('examples').exec()

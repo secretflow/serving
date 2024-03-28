@@ -11,6 +11,13 @@
 
 > please add your unreleased change here.
 
+- [Deprecated] Python 3.8 is no longer suppoted for secretflow-serving-lib
+- [Deprecated] macOS 11.x is no longer supported for secretflow-serving-lib
+
+## 20240325 - 0.2.1b0
+
+- [Bugfix] Fix dummy node check output schema failed
+
 ## 20240315 - 0.2.0b0
 
 - [Feature] Add `ARROW_PROCESSING` operator

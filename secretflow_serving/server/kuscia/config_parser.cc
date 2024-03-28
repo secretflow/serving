@@ -80,6 +80,9 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
           party->set_address(fmt::format("http://{}", s.endpoints(0)));
         }
       }
+      SERVING_ENFORCE(!party->address().empty(),
+                      errors::ErrorCode::INVALID_ARGUMENT,
+                      "party {} communication endpoint is empty.", party->id());
     }
 
     SERVING_ENFORCE_GT(cluster_config_.parties_size(), 1,
@@ -132,6 +135,11 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
         server_config_.set_metrics_exposer_port(p.port());
       }
     }
+
+    SERVING_ENFORCE_NE(server_config_.communication_port(), 0,
+                       "get empty communication port.");
+    SERVING_ENFORCE_NE(server_config_.service_port(), 0,
+                       "get empty service port.");
   }
 
   // load oss config

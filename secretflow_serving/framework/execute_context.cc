@@ -121,7 +121,7 @@ void ExecuteContext::Execute(std::shared_ptr<ExecutionCore> execution_core) {
 
 void RemoteExecute::Run() {
   // semisynchronous call
-  exe_ctx_.Execute(channel_, &cntl_);
+  exec_ctx_.Execute(channel_, &cntl_);
 
   executing_ = true;
 }

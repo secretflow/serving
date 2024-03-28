@@ -72,7 +72,7 @@ void MockAdapter::OnFetchFeature(const Request& request, Response* response) {
     auto array =
         CreateArray<arrow::Int32Builder, int32_t>(rows, []() { return 1; });
     response->features = MakeRecordBatch(
-        arrow::schema({arrow::field("x1", arrow::int32())}), rows, {array});
+        arrow::schema({arrow::field("mock", arrow::int32())}), rows, {array});
     return;
   }
 
