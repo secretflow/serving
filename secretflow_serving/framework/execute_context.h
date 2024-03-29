@@ -105,29 +105,29 @@ class ExecuteBase {
               apis::PredictResponse* response,
               const std::shared_ptr<Execution>& execution,
               std::string target_id, std::string local_id)
-      : exe_ctx_{request, response, execution, std::move(target_id),
-                 std::move(local_id)} {}
+      : exec_ctx_{request, response, execution, std::move(target_id),
+                  std::move(local_id)} {}
   virtual ~ExecuteBase() = default;
 
   void SetInputs(std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&
                      node_io_map) {
-    exe_ctx_.SetEntryNodesInputs(node_io_map);
+    exec_ctx_.SetEntryNodesInputs(node_io_map);
   }
   void SetInputs(
       std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&&
           node_io_map) {
-    exe_ctx_.SetEntryNodesInputs(std::move(node_io_map));
+    exec_ctx_.SetEntryNodesInputs(std::move(node_io_map));
   }
   virtual void GetOutputs(
       std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
           node_io_map) {
-    exe_ctx_.GetResultNodeIo(node_io_map);
+    exec_ctx_.GetResultNodeIo(node_io_map);
   }
 
   virtual void Run() = 0;
 
  protected:
-  ExecuteContext exe_ctx_;
+  ExecuteContext exec_ctx_;
 };
 
 class RemoteExecute : public ExecuteBase,
@@ -158,9 +158,10 @@ class RemoteExecute : public ExecuteBase,
     brpc::Join(cntl_.call_id());
     SERVING_ENFORCE(!cntl_.Failed(), errors::ErrorCode::NETWORK_ERROR,
                     "call ({}) from ({}) execute failed, msg:{}",
-                    exe_ctx_.TargetId(), exe_ctx_.LocalId(), cntl_.ErrorText());
+                    exec_ctx_.TargetId(), exec_ctx_.LocalId(),
+                    cntl_.ErrorText());
     executing_ = false;
-    exe_ctx_.CheckAndUpdateResponse();
+    exec_ctx_.CheckAndUpdateResponse();
   }
 
  protected:
@@ -181,8 +182,8 @@ class LocalExecute : public ExecuteBase {
         execution_core_(std::move(execution_core)) {}
 
   void Run() override {
-    exe_ctx_.Execute(execution_core_);
-    exe_ctx_.CheckAndUpdateResponse();
+    exec_ctx_.Execute(execution_core_);
+    exec_ctx_.CheckAndUpdateResponse();
   }
 
  protected:

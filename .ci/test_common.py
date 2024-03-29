@@ -56,7 +56,6 @@ from secretflow_serving_lib.link_function_pb2 import LinkFunctionType
 g_script_name = os.path.abspath(sys.argv[0])
 g_script_dir = os.path.dirname(g_script_name)
 g_repo_dir = os.path.dirname(g_script_dir)
-g_clean_up_service = True
 g_clean_up_files = True
 
 
@@ -76,6 +75,35 @@ def global_ip_config(index):
         "metrics_port": metrics_port[index],
         "brpc_builtin_service_port": brpc_builtin_port[index],
     }
+
+
+def exec_cmd(cmd, background=False, envs=None):
+    print("Execute: ", cmd)
+    try:
+        if not background:
+            ret = subprocess.run(
+                cmd, shell=True, check=True, capture_output=True, env=envs
+            )
+            print(f"Execute end: {cmd}, ret:{ret}")
+            ret.check_returncode()
+            return ret
+        else:
+            proc = subprocess.Popen(cmd.split(), shell=False, env=envs)
+            return proc
+    except subprocess.CalledProcessError as exc:
+        print(f"Execute failed: {exc.stderr}")
+        raise
+
+
+def build_predict_cmd(host: str, port: int, request_body: str):
+    url = f"http://{host}:{port}/PredictionService/Predict"
+    return f'curl --location "{url}" --header "Content-Type: application/json" --data \'{request_body}\''
+
+
+def build_get_model_info_cmd(host: str, port: int, service_spec_id: str):
+    body_dict = {"service_spec": {"id": service_spec_id}}
+    url = f"http://{host}:{port}/ModelService/GetModelInfo"
+    return f'curl --location "{url}" --header "Content-Type: application/json" --data \'{json.dumps(body_dict)}\''
 
 
 class ModelBuilder:
@@ -317,9 +345,8 @@ def dump_json(obj, filename, indent=2):
 
 
 @dataclass
-class PartyConfig:
+class ServerBaseConifg:
     id: str
-    feature_mapping: Dict[str, str]
     cluster_ip: str
     host: str
     service_port: int
@@ -328,6 +355,11 @@ class PartyConfig:
     brpc_builtin_service_port: int
     channel_protocol: str
     model_id: str
+
+
+@dataclass
+class PartyConfig(ServerBaseConifg):
+    feature_mapping: Dict[str, str]
     graph_def: GraphDef
     query_datas: List[str] = None
     query_context: str = None
@@ -428,8 +460,28 @@ class ConfigDumper:
             self._dump_serving_config(config_path, config, model_name, model_sha256)
 
 
+class ProcRunGuard:
+    def __init__(self):
+        self.sub_proc_list = []
+
+    def __del__(self):
+        self.cleanup_sub_procs()
+
+    def run_cmd(self, cmd, background=False, envs=None):
+        ret = exec_cmd(cmd, background, envs)
+        if background:
+            self.sub_proc_list.append(ret)
+        else:
+            return ret
+
+    def cleanup_sub_procs(self):
+        for proc in self.sub_proc_list:
+            proc.kill()
+            proc.wait()
+
+
 # for every testcase, there should be a TestConfig instance
-class TestConfig:
+class TestConfig(ProcRunGuard):
     def __init__(
         self,
         model_path: str,
@@ -443,6 +495,8 @@ class TestConfig:
         tar_name=None,
         specific_party=None,
     ):
+        super().__init__()
+
         self.header_dict = header_dict
         self.service_spec_id = service_spec_id
         self.predefined_features = predefined_features
@@ -456,7 +510,6 @@ class TestConfig:
             serving_config_name if serving_config_name is not None else "serving.config"
         )
         self.tar_name = tar_name if tar_name is not None else "model.tar.gz"
-        self.background_proc = []
         self.specific_party = specific_party
 
     def dump_config(self):
@@ -504,66 +557,41 @@ class TestConfig:
             self.header_dict, self.service_spec_id, fs_param, pre_features
         )
 
-    def make_model_info_request(self):
-        body_dict = {"service_spec": {"id": self.service_spec_id}}
-        return json.dumps(body_dict)
-
     def make_predict_curl_cmd(self, party: str):
-        url = None
+        cmd = None
+        request_body = self.make_request().to_json()
         for p_cfg in self.party_config:
             if p_cfg.id == party:
-                url = f"http://{p_cfg.host}:{p_cfg.service_port}/PredictionService/Predict"
+                cmd = build_predict_cmd(p_cfg.host, p_cfg.service_port, request_body)
                 break
-        if not url:
+        if not cmd:
             raise Exception(
                 f"{party} is not in TestConfig({self.config.get_party_ids()})"
             )
-        curl_wrapper = CurlWrapper(
-            url=url,
-            header="Content-Type: application/json",
-            data=self.make_request().to_json(),
-        )
-        return curl_wrapper.cmd()
+        return cmd
 
     def make_get_model_info_curl_cmd(self, party: str):
-        url = None
+        cmd = None
         for p_cfg in self.party_config:
             if p_cfg.id == party:
-                url = f"http://{p_cfg.cluster_ip}/ModelService/GetModelInfo"
+                cmd = build_get_model_info_cmd(
+                    p_cfg.host, p_cfg.service_port, self.service_spec_id
+                )
                 break
-        if not url:
+        if not cmd:
             raise Exception(
                 f"{party} is not in TestConfig({self.config.get_party_ids()})"
             )
-        curl_wrapper = CurlWrapper(
-            url=url,
-            header="Content-Type: application/json",
-            data=self.make_model_info_request(),
-        )
-        return curl_wrapper.cmd()
-
-    def _exe_cmd(self, cmd, background=False):
-        print("Execute: ", cmd)
-        if not background:
-            ret = subprocess.run(cmd, shell=True, check=True, capture_output=True)
-            ret.check_returncode()
-            return ret
-        else:
-            proc = subprocess.Popen(cmd.split(), shell=False)
-            self.background_proc.append(proc)
-            return proc
+        return cmd
 
     def finish(self):
-        if g_clean_up_service:
-            for proc in self.background_proc:
-                proc.kill()
-                proc.wait()
+        self.cleanup_sub_procs()
         if g_clean_up_files:
             os.system(f"rm -rf {self.model_path}")
 
-    def exe_start_server_scripts(self, start_interval_s=0):
+    def exec_start_server_scripts(self, start_interval_s=0):
         for arg in self.get_server_start_args():
-            self._exe_cmd(
+            self.run_cmd(
                 f"./bazel-bin/secretflow_serving/server/secretflow_serving {arg}", True
             )
             if start_interval_s:
@@ -572,11 +600,11 @@ class TestConfig:
         # wait 10s for servers be ready
         time.sleep(10)
 
-    def exe_curl_request_scripts(self, party: str):
-        return self._exe_cmd(self.make_predict_curl_cmd(party))
+    def exec_curl_request_scripts(self, party: str):
+        return self.run_cmd(self.make_predict_curl_cmd(party))
 
-    def exe_get_model_info_request_scripts(self, party: str):
-        return self._exe_cmd(self.make_get_model_info_curl_cmd(party))
+    def exec_get_model_info_request_scripts(self, party: str):
+        return self.run_cmd(self.make_get_model_info_curl_cmd(party))
 
 
 def make_feature(name: str, value: List[Any], f_type: str):
@@ -630,19 +658,6 @@ class PredictRequest:
                 for i in self.predefined_feature
             ]
         return json.dumps(ret)
-
-
-class CurlWrapper:
-    def __init__(self, url: str, header: str, data: str):
-        self.url = url
-        self.header = header
-        self.data = data
-
-    def cmd(self):
-        return f'curl --location "{self.url}" --header "{self.header}" --data \'{self.data}\''
-
-    def exe(self):
-        return os.popen(self.cmd())
 
 
 # base class
