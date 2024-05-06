@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:serving.bzl", "serving_cc_library")
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -63,4 +63,39 @@ serving_cc_library(
         "//secretflow_serving/util:oss_client",
     ],
     alwayslink = True,
+)
+
+serving_cc_library(
+    name = "http_source",
+    srcs = ["http_source.cc"],
+    hdrs = ["http_source.h"],
+    deps = [
+        ":factory",
+        "//secretflow_serving/util:network",
+        "//secretflow_serving/util:oss_client",
+        "@com_github_brpc_brpc//:brpc",
+        "@yacl//yacl/utils:elapsed_timer",
+    ],
+    alwayslink = True,
+)
+
+proto_library(
+    name = "http_service_proto",
+    srcs = [
+        "http_service.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "http_service_cc_proto",
+    deps = [":http_service_proto"],
+)
+
+serving_cc_test(
+    name = "http_source_test",
+    srcs = ["http_source_test.cc"],
+    deps = [
+        ":http_service_cc_proto",
+        ":http_source",
+    ],
 )

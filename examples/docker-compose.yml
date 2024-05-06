@@ -20,6 +20,7 @@ services:
       - /root/sf_serving/secretflow_serving
       - --serving_config_file=/root/sf_serving/examples/alice/serving.config
       - --logging_config_file=/root/sf_serving/examples/alice/logging.config
+      - --trace_config_file=/root/sf_serving/examples/alice/trace.config
     restart: always
     network_mode: host
   serving_bob:
@@ -28,5 +29,6 @@ services:
       - /root/sf_serving/secretflow_serving
       - --serving_config_file=/root/sf_serving/examples/bob/serving.config
       - --logging_config_file=/root/sf_serving/examples/bob/logging.config
+      - --trace_config_file=/root/sf_serving/examples/bob/trace.config
     restart: always
     network_mode: host

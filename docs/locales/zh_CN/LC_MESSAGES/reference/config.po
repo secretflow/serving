@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-08 14:41+0800\n"
+"POT-Creation-Date: 2024-04-22 11:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,95 +29,107 @@ msgstr ""
 msgid "Services"
 msgstr ""
 
-#: ../../source/reference/config.md:28 ../../source/reference/config.md:131
+#: ../../source/reference/config.md:31 ../../source/reference/config.md:147
 msgid "Messages"
 msgstr ""
 
-#: ../../source/reference/config.md:32
+#: ../../source/reference/config.md:35
 msgid "[ChannelDesc](#channeldesc)"
 msgstr ""
 
-#: ../../source/reference/config.md:33
+#: ../../source/reference/config.md:36
 msgid "[ClusterConfig](#clusterconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:34
+#: ../../source/reference/config.md:37
 msgid "[PartyDesc](#partydesc)"
 msgstr ""
 
-#: ../../source/reference/config.md:40
+#: ../../source/reference/config.md:43
 msgid "[CsvOptions](#csvoptions)"
 msgstr ""
 
-#: ../../source/reference/config.md:41
+#: ../../source/reference/config.md:44
 msgid "[FeatureSourceConfig](#featuresourceconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:42
+#: ../../source/reference/config.md:45
 msgid "[HttpOptions](#httpoptions)"
 msgstr ""
 
-#: ../../source/reference/config.md:43
+#: ../../source/reference/config.md:46
 msgid "[MockOptions](#mockoptions)"
 msgstr ""
 
-#: ../../source/reference/config.md:49
+#: ../../source/reference/config.md:52
 msgid "[LoggingConfig](#loggingconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:55
+#: ../../source/reference/config.md:58
 msgid "[FileSourceMeta](#filesourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:56
+#: ../../source/reference/config.md:59
+msgid "[HttpSourceMeta](#httpsourcemeta)"
+msgstr ""
+
+#: ../../source/reference/config.md:60
 msgid "[ModelConfig](#modelconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:57
+#: ../../source/reference/config.md:61
 msgid "[OSSSourceMeta](#osssourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:63
+#: ../../source/reference/config.md:67
 msgid "[ServerConfig](#serverconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:64
+#: ../../source/reference/config.md:68
 msgid "[ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry)"
 msgstr ""
 
-#: ../../source/reference/config.md:70
+#: ../../source/reference/config.md:74
 msgid "[ServingConfig](#servingconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:76
+#: ../../source/reference/config.md:80
 msgid "[TlsConfig](#tlsconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:81 ../../source/reference/config.md:372
+#: ../../source/reference/config.md:86
+msgid "[TraceConfig](#traceconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:87
+msgid "[TraceLogConfig](#tracelogconfig)"
+msgstr ""
+
+#: ../../source/reference/config.md:92 ../../source/reference/config.md:432
 msgid "Enums"
 msgstr ""
 
-#: ../../source/reference/config.md:88
+#: ../../source/reference/config.md:99
 msgid "[MockDataType](#mockdatatype)"
 msgstr ""
 
-#: ../../source/reference/config.md:94
+#: ../../source/reference/config.md:105
 msgid "[LogLevel](#loglevel)"
 msgstr ""
 
-#: ../../source/reference/config.md:100
+#: ../../source/reference/config.md:111
 msgid "[SourceType](#sourcetype)"
 msgstr ""
 
-#: ../../source/reference/config.md:113
+#: ../../source/reference/config.md:127
 msgid "[Scalar Value Types](#scalar-value-types)"
 msgstr ""
 
-#: ../../source/reference/config.md:136
+#: ../../source/reference/config.md:152
 msgid "ChannelDesc"
 msgstr ""
 
-#: ../../source/reference/config.md:137
+#: ../../source/reference/config.md:153
 msgid "Description for channels between joined parties"
 msgstr ""
 
@@ -198,11 +210,11 @@ msgstr ""
 msgid "time between retries, default: 5000ms"
 msgstr ""
 
-#: ../../source/reference/config.md:153
+#: ../../source/reference/config.md:169
 msgid "ClusterConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:154
+#: ../../source/reference/config.md:170
 msgid "Runtime config for a serving cluster"
 msgstr ""
 
@@ -230,11 +242,11 @@ msgstr ""
 msgid "[ ChannelDesc](#channeldesc )"
 msgstr ""
 
-#: ../../source/reference/config.md:167
+#: ../../source/reference/config.md:183
 msgid "PartyDesc"
 msgstr ""
 
-#: ../../source/reference/config.md:168
+#: ../../source/reference/config.md:184
 msgid "Description for a joined party"
 msgstr ""
 
@@ -254,11 +266,11 @@ msgstr ""
 msgid "e.g. 127.0.0.1:9001 commucation adress between paries."
 msgstr ""
 
-#: ../../source/reference/config.md:182
+#: ../../source/reference/config.md:198
 msgid "CsvOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:183
+#: ../../source/reference/config.md:199
 msgid "Options of a csv feature source."
 msgstr ""
 
@@ -282,11 +294,11 @@ msgid ""
 "a subset of id column"
 msgstr ""
 
-#: ../../source/reference/config.md:195
+#: ../../source/reference/config.md:211
 msgid "FeatureSourceConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:196
+#: ../../source/reference/config.md:212
 msgid "Config for a feature source"
 msgstr ""
 
@@ -320,11 +332,11 @@ msgstr ""
 msgid "[ CsvOptions](#csvoptions )"
 msgstr ""
 
-#: ../../source/reference/config.md:209
+#: ../../source/reference/config.md:225
 msgid "HttpOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:210
+#: ../../source/reference/config.md:226
 msgid ""
 "Options for a http feature source which should implement the feature "
 "service spi. The defined of spi can be found in "
@@ -357,11 +369,11 @@ msgid ""
 "(ms)"
 msgstr ""
 
-#: ../../source/reference/config.md:227
+#: ../../source/reference/config.md:243
 msgid "MockOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:228
+#: ../../source/reference/config.md:244
 msgid ""
 "Options for a mock feature source. Mock feature source will generates "
 "values(random or fixed, according to type) for the desired features."
@@ -379,11 +391,11 @@ msgstr ""
 msgid "default MDT_FIXED"
 msgstr ""
 
-#: ../../source/reference/config.md:243
+#: ../../source/reference/config.md:259
 msgid "LoggingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:244
+#: ../../source/reference/config.md:260
 msgid "Serving log config options"
 msgstr ""
 
@@ -423,19 +435,35 @@ msgstr ""
 msgid "default value: 10"
 msgstr ""
 
-#: ../../source/reference/config.md:260
+#: ../../source/reference/config.md:276
 msgid "FileSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:261
+#: ../../source/reference/config.md:277
 msgid "empty by design"
 msgstr ""
 
-#: ../../source/reference/config.md:267
+#: ../../source/reference/config.md:283
+msgid "HttpSourceMeta"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Max duration for a connect. -1 means wait indefinitely. Default: 60 * "
+"1000 (ms)"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Max duration of http request. -1 means wait indefinitely. Default: 120 * "
+"1000 (ms)"
+msgstr ""
+
+#: ../../source/reference/config.md:297
 msgid "ModelConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:268
+#: ../../source/reference/config.md:298
 msgid "Config for serving model"
 msgstr ""
 
@@ -501,11 +529,21 @@ msgstr ""
 msgid "[ OSSSourceMeta](#osssourcemeta )"
 msgstr ""
 
-#: ../../source/reference/config.md:285
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) kind.http_source_meta"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ HttpSourceMeta](#httpsourcemeta )"
+msgstr ""
+
+#: ../../source/reference/config.md:316
 msgid "OSSSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:286
+#: ../../source/reference/config.md:317
 msgid ""
 "Options for a Oss model source. Serving accesses data services using the "
 "AWS S3 protocol."
@@ -542,7 +580,7 @@ msgstr ""
 msgid "bucket"
 msgstr ""
 
-#: ../../source/reference/config.md:304
+#: ../../source/reference/config.md:335
 msgid "ServerConfig"
 msgstr ""
 
@@ -634,7 +672,7 @@ msgid ""
 "use default value. Default: #cpu-cores"
 msgstr ""
 
-#: ../../source/reference/config.md:325
+#: ../../source/reference/config.md:356
 msgid "ServerConfig.FeatureMappingEntry"
 msgstr ""
 
@@ -646,11 +684,11 @@ msgstr ""
 msgid "value"
 msgstr ""
 
-#: ../../source/reference/config.md:340
+#: ../../source/reference/config.md:371
 msgid "ServingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:341
+#: ../../source/reference/config.md:372
 msgid "Related config of serving"
 msgstr ""
 
@@ -690,7 +728,7 @@ msgstr ""
 msgid "[ FeatureSourceConfig](#featuresourceconfig )"
 msgstr ""
 
-#: ../../source/reference/config.md:358
+#: ../../source/reference/config.md:389
 msgid "TlsConfig"
 msgstr ""
 
@@ -720,7 +758,55 @@ msgid ""
 "the verification"
 msgstr ""
 
-#: ../../source/reference/config.md:378
+#: ../../source/reference/config.md:405
+msgid "TraceConfig"
+msgstr ""
+
+#: ../../source/reference/config.md:406
+msgid "Serving trace config options"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "trace_log_enable"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "dump trace to a logfile, default: false"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "trace_log_conf"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ TraceLogConfig](#tracelogconfig )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "if trace_log_enable is true, use this log config to dump trace info"
+msgstr ""
+
+#: ../../source/reference/config.md:418
+msgid "TraceLogConfig"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "trace_log_path"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "defaule value: \"trace.log\""
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "max_trace_log_file_size"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "max_trace_log_file_count"
+msgstr ""
+
+#: ../../source/reference/config.md:438
 msgid "MockDataType"
 msgstr ""
 
@@ -768,11 +854,11 @@ msgstr ""
 msgid "fixed value for each feature"
 msgstr ""
 
-#: ../../source/reference/config.md:392
+#: ../../source/reference/config.md:452
 msgid "LogLevel"
 msgstr ""
 
-#: ../../source/reference/config.md:393
+#: ../../source/reference/config.md:453
 msgid "Serving log level"
 msgstr ""
 
@@ -820,11 +906,11 @@ msgstr ""
 msgid "error"
 msgstr ""
 
-#: ../../source/reference/config.md:408
+#: ../../source/reference/config.md:468
 msgid "SourceType"
 msgstr ""
 
-#: ../../source/reference/config.md:409
+#: ../../source/reference/config.md:469
 msgid "Supported model source type"
 msgstr ""
 
@@ -848,7 +934,15 @@ msgstr ""
 msgid "OSS/AWS S3"
 msgstr ""
 
-#: ../../source/reference/config.md:427
+#: ../../source/reference/config.md
+msgid "ST_HTTP"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Http source"
+msgstr ""
+
+#: ../../source/reference/config.md:490
 msgid "Scalar Value Types"
 msgstr ""
 

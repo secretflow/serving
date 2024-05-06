@@ -496,12 +496,20 @@ class ExampleTest(ProcRunGuard):
         self.parties = ["alice", "bob"]
         self.serving_cmd_dict = {}
         self.serving_config_dict = {}
+
+        self.trace_configs = {}
+
+        self.trace_files = {}
         for p in self.parties:
             party_base_path = os.path.join(base_path, p)
             serving_config_file = os.path.join(party_base_path, "serving.config")
             logging_config_file = os.path.join(party_base_path, "logging.config")
+            trace_config_file = os.path.join(party_base_path, "trace.config")
+
+            self.trace_configs[p] = trace_config_file
+
             self.serving_cmd_dict[p] = (
-                f"./bazel-bin/secretflow_serving/server/secretflow_serving --serving_config_file={serving_config_file} --logging_config_file={logging_config_file}"
+                f"./bazel-bin/secretflow_serving/server/secretflow_serving --serving_config_file={serving_config_file} --logging_config_file={logging_config_file} --trace_config_file={trace_config_file}"
             )
 
             with open(serving_config_file, "r") as file:
@@ -526,13 +534,21 @@ class ExampleTest(ProcRunGuard):
                 },
             }
 
+            trace_id_prefix = "1234567890abcdef1234567890abcde"
+            self.span_id = "1234567890abcdef"
+            self.trace_id_map = {}
+            parties_index = 0
             # make request
             for p in self.parties:
+                trace_id = f"{trace_id_prefix}{parties_index}"
+                self.trace_id_map[p] = trace_id
+                parties_index += 1
                 res = self.run_cmd(
                     build_predict_cmd(
                         "127.0.0.1",
                         self.serving_config_dict[p]['serverConf']['servicePort'],
                         json.dumps(body_dict),
+                        {'X-B3-TraceId': trace_id, 'X-B3-SpanId': self.span_id},
                     )
                 )
                 out = res.stdout.decode()
@@ -541,11 +557,85 @@ class ExampleTest(ProcRunGuard):
                 assert (
                     res["status"]["code"] == 1
                 ), f'return status code({res["status"]["code"]}) should be OK(1)'
+
+            # check trace log
+            self.check_trace_log()
+
         finally:
             self.cleanup_sub_procs()
+            self.cleanup_trace_files()
+
+    def cleanup_trace_files(self):
+        for p in self.parties:
+            trace_config_file = self.trace_configs[p]
+            with open(trace_config_file, "r") as f:
+                trace_config = json.load(f)
+                trace_dir = trace_config["traceLogConf"]["traceLogPath"]
+            if os.path.exists(trace_dir):
+                os.remove(trace_dir)
+
+    def check_trace_log(self):
+        def decode_bytes(proto_bytes):
+            import base64
+
+            return base64.b16encode(base64.b64decode(proto_bytes)).lower().decode()
+
+        def get_spans_from_trace_file(trace_filename):
+            spans = []
+            with open(trace_filename, 'r') as trace_file:
+                for line in trace_file:
+                    start_index = line.find('{')
+                    if start_index == -1:
+                        continue
+                    resource_span = json.loads(line[start_index:])
+                    for scopeSpan in resource_span['scopeSpans']:
+                        spans.extend(scopeSpan['spans'])
+            return spans
+
+        stub_span_id_dict = {}
+        service_span_id_dict = {}
+
+        for p, config in self.trace_configs.items():
+            stub_span_id_dict[p] = set()
+            service_span_id_dict[p] = set()
+
+            with open(config, "r") as f:
+                trace_config = json.load(f)
+                trace_dir = trace_config["traceLogConf"]["traceLogPath"]
+            spans = get_spans_from_trace_file(trace_dir)
+            intrest_span_found = False
+            for span in spans:
+                if span['name'] == "PredictionService/Predict":
+                    assert self.trace_id_map[p] == decode_bytes(
+                        span['traceId']
+                    ), f"trace id mismatch, expected: {self.trace_id_map[p]}, actual: {decode_bytes(span['traceId'])}"
+                    assert self.span_id == decode_bytes(
+                        span['parentSpanId']
+                    ), f"parent span id mismatch, expected: {self.span_id}, actual: {decode_bytes(span['parentSpanId'])}"
+                    intrest_span_found = True
+                if (
+                    span['name'].startswith("ExecutionService")
+                    and span['kind'] == "SPAN_KIND_SERVER"
+                ):
+                    service_span_id_dict[p].add(decode_bytes(span['parentSpanId']))
+                if (
+                    span['name'].startswith("ExecutionService")
+                    and span['kind'] == "SPAN_KIND_CLIENT"
+                ):
+                    stub_span_id_dict[p].add(decode_bytes(span['spanId']))
+            assert intrest_span_found
+        assert (
+            service_span_id_dict["alice"] == stub_span_id_dict["bob"]
+        ), f"execution parent span id mismatch, expected: {service_span_id_dict['alice']}, actual: {stub_span_id_dict['bob']}"
+
+        assert (
+            service_span_id_dict["bob"] == stub_span_id_dict["alice"]
+        ), f"execution parent span id mismatch, expected: {service_span_id_dict['bob']}, actual: {stub_span_id_dict['alice']}"
 
 
 if __name__ == "__main__":
+    ExampleTest('examples').exec()
+
     # glm
     with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
         alice_trace_content = f.read()
@@ -1904,5 +1994,3 @@ if __name__ == "__main__":
     PredefineTest('model_path').exec()
     CsvTest('model_path').exec()
     SpecificTest('model_path').exec()
-
-    ExampleTest('examples').exec()

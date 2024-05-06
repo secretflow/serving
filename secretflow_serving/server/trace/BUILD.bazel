@@ -1,0 +1,82 @@
+# Copyright 2024 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//bazel:serving.bzl", "serving_cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+serving_cc_library(
+    name = "trace",
+    srcs = ["trace.cc"],
+    hdrs = ["trace.h"],
+    deps = [
+        ":brpc_http_carrier",
+        ":bthreadlocal_context_storage",
+        ":span_info_cc_proto",
+        ":spdlog_span_exporter",
+        "//secretflow_serving/apis:common_cc_proto",
+        "//secretflow_serving/config:trace_config_cc_proto",
+        "//secretflow_serving/server:serving_version",
+        "@com_github_brpc_brpc//:brpc",
+        "@io_opentelemetry_cpp//api",
+        "@io_opentelemetry_cpp//sdk:headers",
+        "@io_opentelemetry_cpp//sdk/src/trace",
+    ],
+)
+
+serving_cc_library(
+    name = "spdlog_span_exporter",
+    srcs = ["spdlog_span_exporter.cc"],
+    hdrs = ["spdlog_span_exporter.h"],
+    deps = [
+        "//secretflow_serving/config:trace_config_cc_proto",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/util:utils",
+        "@com_github_opentelemetry_proto//:trace_service_proto_cc",
+        "@io_opentelemetry_cpp//api",
+        "@io_opentelemetry_cpp//exporters/otlp:otlp_recordable",
+        "@io_opentelemetry_cpp//sdk:headers",
+    ],
+)
+
+serving_cc_library(
+    name = "bthreadlocal_context_storage",
+    srcs = ["bthreadlocal_context_storage.cc"],
+    hdrs = ["bthreadlocal_context_storage.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "@com_github_brpc_brpc//:bthread",
+        "@io_opentelemetry_cpp//api",
+    ],
+)
+
+serving_cc_library(
+    name = "brpc_http_carrier",
+    hdrs = ["brpc_http_carrier.h"],
+    deps = [
+        "//secretflow_serving/config:trace_config_cc_proto",
+        "@com_github_brpc_brpc//:bthread",
+        "@io_opentelemetry_cpp//api",
+    ],
+)
+
+proto_library(
+    name = "span_info",
+    srcs = ["span_info.proto"],
+)
+
+cc_proto_library(
+    name = "span_info_cc_proto",
+    deps = [":span_info"],
+)

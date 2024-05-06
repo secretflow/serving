@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -81,6 +81,16 @@ proto_library(
 cc_proto_library(
     name = "logging_config_cc_proto",
     deps = [":logging_config_proto"],
+)
+
+proto_library(
+    name = "trace_config_proto",
+    srcs = ["trace_config.proto"],
+)
+
+cc_proto_library(
+    name = "trace_config_cc_proto",
+    deps = [":trace_config_proto"],
 )
 
 proto_library(

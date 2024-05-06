@@ -429,7 +429,7 @@ examples:
 | ----- | ---- | ----------- |
 | header | [ Header](#header ) | Custom data. The header will be passed to the downstream system which implement the feature service spi. |
 | service_spec | [ ServiceSpec](#servicespec ) | Model service specification. |
-| fs_params | [map PredictRequest.FsParamsEntry](#predictrequest-fsparamsentry ) | The params for fetch features. Note that this should include all the parties involved in the prediction. Key: party's id. Value: params for fetch features. |
+| fs_params | [map PredictRequest.FsParamsEntry](#predictrequest-fsparamsentry ) | The params for fetch features. Note that this should include all the parties involved in the prediction. When using the feature service as the source of feature data, serving does not consume this parameter but instead passes it through to the feature service for consumption. Key: party's id. Value: params for fetch features. |
 | predefined_features | [repeated secretflow.serving.Feature](#feature ) | Optional. If defined, the request party will no longer query for the feature but will use defined fetures in `predefined_features` for the prediction. |
  <!-- end Fields -->
  <!-- end HasFields -->
@@ -466,18 +466,24 @@ examples:
     "service_spec": {
       "id": "test_service_id"
     },
-    "results": {
-      "scores": [
-        {
-          "name": "pred_y",
-          "value": 0.32456
-        },
-        {
-          "name": "pred_y",
-          "value": 0.02456
-        }
-      ]
-    }
+    "results": [
+      {
+        "scores": [
+          {
+            "name": "pred_y",
+            "value": 0.32456
+          }
+        ]
+      },
+      {
+        "scores": [
+          {
+            "name": "pred_y",
+            "value": 1.146456
+          }
+        ]
+      }
+    ]
   }
 ```
 
@@ -562,12 +568,12 @@ The definition of a feature field.
 
 
 ### FeatureParam
-The param for fetch features
+The custom parameters for fetch features.
 
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| query_datas | [repeated string](#string ) | The serialized datas for query features. Each one for query one row of features. |
+| query_datas | [repeated string](#string ) | Custom parameters data for querying feature values, the specific content format of which is determined by the feature datasource provider. Each one for query one row of features. |
 | query_context | [ string](#string ) | Optional. Represents the common part of the query datas. |
  <!-- end Fields -->
  <!-- end HasFields -->

@@ -17,9 +17,11 @@
 #include "google/protobuf/util/json_util.h"
 #include "gtest/gtest.h"
 #include "json2pb/rapidjson.h"
+#include "spdlog/spdlog.h"
 
 #include "secretflow_serving/feature_adapter/feature_adapter_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/spis/batch_feature_service.pb.h"
 #include "secretflow_serving/spis/error_code.pb.h"
@@ -60,10 +62,13 @@ class MockFeatureService
     auto status = response->mutable_status();
     status->set_code(spis::ErrorCode::OK);
 
+    SPDLOG_INFO("request Json: {}", PbToJson(request));
+
     // check header
     // check model_service_id
     // check party_id
     // check context
+    SPDLOG_INFO("request_model_service_id: {}", request->model_service_id());
     if (request->header().data().at(kTestHeaderKey) != kTestHeaderValue ||
         request->model_service_id() != kTestModelServiceId ||
         request->party_id() != kTestPartyId ||

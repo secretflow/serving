@@ -181,7 +181,7 @@ class PredictorTest : public ::testing::Test {
                 std::vector<std::string>& execution_def_jsons) {
     MockExecutionCore::Options exec_opts{"test_id", "alice", std::nullopt,
                                          std::nullopt,
-                                         std::make_shared<MockExecutable>()};
+                                         std::make_unique<MockExecutable>()};
     mock_exec_core_ = new MockExecutionCore(std::move(exec_opts));
     exec_core_ = std::shared_ptr<ExecutionCore>(mock_exec_core_);
 

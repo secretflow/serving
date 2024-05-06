@@ -69,11 +69,11 @@ class Edge final {
       : src_node_(src_node), dst_node_(dst_node), dst_input_id_(dst_input_id) {}
   ~Edge() = default;
 
-  const std::string& src_node() const { return src_node_; }
+  [[nodiscard]] const std::string& src_node() const { return src_node_; }
 
-  const std::string& dst_node() const { return dst_node_; }
+  [[nodiscard]] const std::string& dst_node() const { return dst_node_; }
 
-  size_t dst_input_id() const { return dst_input_id_; }
+  [[nodiscard]] size_t dst_input_id() const { return dst_input_id_; }
 
  private:
   const std::string src_node_;

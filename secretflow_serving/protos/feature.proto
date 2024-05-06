@@ -66,10 +66,11 @@ message Feature {
   FeatureValue value = 2;
 }
 
-// The param for fetch features
+// The custom parameters for fetch features.
 message FeatureParam {
-  // The serialized datas for query features. Each one for query one row of
-  // features.
+  // Custom parameters data for querying feature values, the specific content
+  // format of which is determined by the feature datasource provider. Each one
+  // for query one row of features.
   repeated string query_datas = 1;
   // Optional. Represents the common part of the query datas.
   string query_context = 2;

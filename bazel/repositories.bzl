@@ -35,6 +35,7 @@ def sf_serving_deps():
     _org_apache_arrow()
     _com_github_pybind11_bazel()
     _com_github_pybind11()
+    _com_github_opentelemetry_cpp()
 
     # aws s3
     _com_aws_c_common()
@@ -44,6 +45,9 @@ def sf_serving_deps():
     _com_github_curl()
     _kuscia()
     _yacl()
+
+    _com_github_madler_zlib()
+    _com_github_brpc_brpc()
 
 def _yacl():
     maybe(
@@ -164,8 +168,20 @@ def _com_github_jupp0r_prometheus_cpp():
         http_archive,
         name = "com_github_jupp0r_prometheus_cpp",
         strip_prefix = "prometheus-cpp-1.1.0",
+        sha256 = "397544fe91e183029120b4eebcfab24ed9ec833d15850aae78fd5db19062d13a",
         urls = [
             "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.1.0.tar.gz",
+        ],
+    )
+
+def _com_github_opentelemetry_cpp():
+    maybe(
+        http_archive,
+        name = "io_opentelemetry_cpp",
+        strip_prefix = "opentelemetry-cpp-1.14.2",
+        sha256 = "c7e7801c9f6228751cdb9dd4724d0f04777ed53f524c8828e73bf4c9f894e0bd",
+        urls = [
+            "https://github.com/open-telemetry/opentelemetry-cpp/archive/refs/tags/v1.14.2.tar.gz",
         ],
     )
 
@@ -337,5 +353,40 @@ def _rules_proto_grpc():
         strip_prefix = "rules_proto_grpc-4.4.0",
         urls = [
             "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/4.4.0/rules_proto_grpc-4.4.0.tar.gz",
+        ],
+    )
+
+# serving not use brpc x-bd-xxx trace header, so drop the patch of yacl
+# add for brpc compile
+def _com_github_madler_zlib():
+    maybe(
+        http_archive,
+        name = "zlib",
+        build_file = "@yacl//bazel:zlib.BUILD",
+        strip_prefix = "zlib-1.3.1",
+        sha256 = "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
+        type = ".tar.gz",
+        patch_args = ["-p1"],
+        patches = ["@yacl//bazel:patches/zlib.patch"],
+        urls = [
+            "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz",
+        ],
+    )
+
+def _com_github_brpc_brpc():
+    maybe(
+        http_archive,
+        name = "com_github_brpc_brpc",
+        sha256 = "13ffb2f1f57c679379a20367c744b3e597614a793ec036cd7580aae90798019d",
+        strip_prefix = "brpc-1.8.0",
+        type = "tar.gz",
+        patch_args = ["-p1"],
+        patches = [
+            "@yacl//bazel:patches/brpc_m1.patch",
+            "@yacl//bazel:patches/brpc_pb.patch",
+            "@sf_serving//bazel:patches/brpc.patch",
+        ],
+        urls = [
+            "https://github.com/apache/brpc/archive/refs/tags/1.8.0.tar.gz",
         ],
     )

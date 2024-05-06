@@ -37,13 +37,11 @@ class Executor {
   explicit Executor(const std::shared_ptr<Execution>& execution);
   ~Executor() = default;
 
-  std::shared_ptr<std::vector<NodeOutput>> Run(
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>&
-          inputs);
+  std::vector<NodeOutput> Run(
+      std::unordered_map<std::string, op::OpComputeInputs>& inputs);
 
   // for entry executor
-  std::shared_ptr<std::vector<NodeOutput>> Run(
-      std::shared_ptr<arrow::RecordBatch>& features);
+  std::vector<NodeOutput> Run(std::shared_ptr<arrow::RecordBatch>& features);
 
   const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema() const {
     return input_feature_schema_;
@@ -54,8 +52,7 @@ class Executor {
 
   std::vector<std::string> entry_node_names_;
 
-  std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<NodeItem>>>
-      node_items_;
+  std::shared_ptr<std::unordered_map<std::string, NodeItem>> node_items_;
 
   std::unordered_map<std::string,
                      const std::vector<std::shared_ptr<arrow::Schema>>>

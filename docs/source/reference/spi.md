@@ -106,9 +106,9 @@ examples:
         "custom_str": "id_12345"
       }
     },
-    "modelServiceId":  "test_service_id",
-    "partyId": "alice",
-    "featureFields": [
+    "model_service_id":  "test_service_id",
+    "party_id": "alice",
+    "feature_fields": [
       {
         "name": "f1",
         "type": 2
@@ -119,11 +119,11 @@ examples:
       }
     ],
     "param": {
-      "queryDatas": [
-        "x1",
-        "x2"
+      "query_datas": [
+        "xxxxxxxx",
+        "yyyyyyyy"
       ],
-      "queryContext": "context_x"
+      "query_context": "zzzzzzzz"
     }
   }
 ```
@@ -266,12 +266,12 @@ The definition of a feature field.
 
 
 ### FeatureParam
-The param for fetch features
+The custom parameters for fetch features.
 
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| query_datas | [repeated string](#string ) | The serialized datas for query features. Each one for query one row of features. |
+| query_datas | [repeated string](#string ) | Custom parameters data for querying feature values, the specific content format of which is determined by the feature datasource provider. Each one for query one row of features. |
 | query_context | [ string](#string ) | Optional. Represents the common part of the query datas. |
  <!-- end Fields -->
  <!-- end HasFields -->

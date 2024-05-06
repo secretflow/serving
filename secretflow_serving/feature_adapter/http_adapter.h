@@ -19,6 +19,7 @@
 #include "secretflow_serving/feature_adapter/feature_adapter.h"
 
 #include "secretflow_serving/protos/feature.pb.h"
+#include "secretflow_serving/spis/batch_feature_service.pb.h"
 
 namespace secretflow::serving::feature {
 
@@ -33,9 +34,8 @@ class HttpFeatureAdapter : public FeatureAdapter {
  protected:
   void OnFetchFeature(const Request& request, Response* response) override;
 
-  std::string SerializeRequest(const Request& request);
-
-  void DeserializeResponse(const std::string& res_context, Response* response);
+  std::string MakeSpiRequest(spis::Header& trace_header,
+                             const Request& request);
 
  protected:
   std::shared_ptr<google::protobuf::RpcChannel> channel_;

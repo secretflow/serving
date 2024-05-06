@@ -162,3 +162,140 @@ ModelService metrics
 +                                             +         +                                                                                                                +------------------------------+
 |                                             |         |                                                                                                                | action                       |
 +---------------------------------------------+---------+----------------------------------------------------------------------------------------------------------------+------------------------------+
+
+Trace
+======
+
+Secretflow-Serving supports `B3 Multiple Headers <https://github.com/openzipkin/b3-propagation?tab=readme-ov-file#multiple-headers>`_ trace propagation protocol and
+uses the `Opentelemetry <https://opentelemetry.io/>`_ standard to generate trace info.
+By default, trace information will not be exported, but Secretflow-Serving will still propagate trace information.
+If you want to export trace information, you can specifying ``trace_config_file`` option when starting SecretFlow-Serving.
+**However, exporting trace information may cause some performance degradation.**
+
+Configure
+----------
+
+When starting SecretFlow-Serving, you can specify a config file according to :ref:`TraceConfig` in json format like this:
+
+.. code-block:: shell
+
+    secretflow_serving --trace_log_config=trace_config.config ...
+
+You can also view the :ref:`example <trace_config_file>`.
+
+Currently SecretFlow-Serving supports export span info to a trace log file.
+You can specify a filename and other options in configuration.
+
+Format
+-------
+
+Every line of the trace log file is a `ResourceSpans <https://github.com/open-telemetry/opentelemetry-proto/blob/342e1d4c3a1fe43312823ffb53bd38327f263059/opentelemetry/proto/trace/v1/trace.proto#L48>`_ in json format.
+
+.. code-block:: json
+
+    {
+      "resource": {
+        "attributes": [
+          { "key": "telemetry.sdk.version", "value": { "stringValue": "1.14.2" } },
+          {
+            "key": "telemetry.sdk.name",
+            "value": { "stringValue": "opentelemetry" }
+          },
+          { "key": "telemetry.sdk.language", "value": { "stringValue": "cpp" } },
+          {
+            "key": "service.version",
+            "value": { "stringValue": "SF_SERVING_VERSION" }
+          },
+          {
+            "key": "service.name",
+            "value": { "stringValue": "Secretflow Serving" }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "secretflow_serving",
+            "version": "SF_SERVING_VERSION"
+          },
+          "spans": [
+            {
+              "traceId": "AABGOsNcn2QTrUhIWjlTuw==",
+              "spanId": "4PWne2b7rlU=",
+              "parentSpanId": "ovtKHRqW0xI=",
+              "name": "PredictionService/Predict",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1713441077927550883",
+              "endTimeUnixNano": "1713441077940197957",
+              "attributes": [
+                {
+                  "key": "span_info",
+                  "value": {
+                    "stringValue": "{\"modelServiceId\":\"test_service_id\",\"partyId\":\"alice\"}"
+                  }
+                },
+                {
+                  "key": "http.request.method",
+                  "value": { "stringValue": "POST" }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "secretflow.serving.apis.PredictionService.Predict"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "secretflow.serving.apis.PredictionService"
+                  }
+                },
+                { "key": "rpc.system", "value": { "stringValue": "brpc" } },
+                {
+                  "key": "server.address",
+                  "value": { "stringValue": "127.0.0.1:9010" }
+                },
+                { "key": "server.port", "value": { "intValue": "9010" } },
+                {
+                  "key": "source.address",
+                  "value": { "stringValue": "127.0.0.1:45470" }
+                },
+                { "key": "source.port", "value": { "intValue": "45470" } },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://127.0.0.1:9010/PredictionService/Predict"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": { "stringValue": "/PredictionService/Predict" }
+                },
+                { "key": "request_protocol", "value": { "stringValue": "http" } }
+              ],
+              "status": { "code": "STATUS_CODE_OK" },
+              "flags": 1
+            }
+          ]
+        }
+      ]
+    }
+
+Since ``TraceId`` and ``SpanId`` are defined as `bytes <https://protobuf.dev/programming-guides/proto3/#scalar>`_ in `proto file <https://github.com/open-telemetry/opentelemetry-proto/blob/342e1d4c3a1fe43312823ffb53bd38327f263059/opentelemetry/proto/trace/v1/trace.proto>`_,
+so if you want to view the real value, you need to do the following conversion:
+
+.. code-block:: python3
+
+    import base64
+    def decode_bytes(proto_bytes):
+        return base64.b16encode(base64.b64decode(proto_bytes)).lower().decode()
+
+
+Attributes
+-----------
+
+The spans generated by Serving contain some attributes. Some of them are filled according to
+the ``opentelemetry`` standard, which has some predefined `sematic conversions <https://opentelemetry.io/docs/specs/semconv/http/http-spans/>`_.
+Other Attributes such as ``span_info``, whose value is a instance of :ref:`SpanInfo` in json format,
+and ``request_protocol`` represents the protocol of `brpc <https://brpc.apache.org/>`_ , you can refer to `client protocol <https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols>`_
+and `server protocol <https://github.com/apache/brpc/blob/master/docs/en/server.md#protocols>`_.

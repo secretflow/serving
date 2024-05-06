@@ -18,10 +18,8 @@ namespace secretflow::serving {
 
 Propagator::Propagator(
     const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes) {
-  frame_pool_ = std::vector<FrameState>(nodes.size());
-  size_t idx = 0;
-  for (auto& [node_name, node] : nodes) {
-    auto frame = &frame_pool_[idx++];
+  for (const auto& [node_name, node] : nodes) {
+    auto frame = std::make_unique<FrameState>();
     frame->pending_count = node->GetInputNum();
     frame->compute_ctx.inputs.resize(frame->pending_count);
 
@@ -34,7 +32,7 @@ FrameState* Propagator::GetFrame(const std::string& node_name) {
   auto iter = node_frame_map_.find(node_name);
   SERVING_ENFORCE(iter != node_frame_map_.end(), errors::ErrorCode::LOGIC_ERROR,
                   "can not found frame for node: {}", node_name);
-  return iter->second;
+  return iter->second.get();
 }
 
 }  // namespace secretflow::serving

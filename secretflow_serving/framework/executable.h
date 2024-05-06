@@ -24,17 +24,16 @@ class Executable {
     size_t id;
 
     // input
+    // `features` or `node_inputs` should be set
     std::shared_ptr<arrow::RecordBatch> features;
-    std::shared_ptr<
-        std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>>
-        node_inputs;
+    std::unordered_map<std::string, op::OpComputeInputs> node_inputs;
 
     // output
-    std::shared_ptr<std::vector<NodeOutput>> outputs;
+    std::vector<NodeOutput> outputs;
   };
 
  public:
-  explicit Executable(std::vector<std::shared_ptr<Executor>> executors);
+  explicit Executable(std::vector<Executor> executors);
   virtual ~Executable() = default;
 
   virtual void Run(Task& task);
@@ -42,7 +41,7 @@ class Executable {
   virtual const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema();
 
  private:
-  std::vector<std::shared_ptr<Executor>> executors_;
+  std::vector<Executor> executors_;
 };
 
 }  // namespace secretflow::serving

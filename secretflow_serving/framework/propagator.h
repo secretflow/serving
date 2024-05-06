@@ -14,10 +14,7 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "secretflow_serving/core/exception.h"
-#include "secretflow_serving/ops/graph.h"
 #include "secretflow_serving/ops/op_kernel.h"
 
 namespace secretflow::serving {
@@ -36,7 +33,6 @@ class Propagator {
   FrameState* GetFrame(const std::string& node_name);
 
  private:
-  std::unordered_map<std::string, FrameState*> node_frame_map_;
-  std::vector<FrameState> frame_pool_;
+  std::unordered_map<std::string, std::unique_ptr<FrameState>> node_frame_map_;
 };
 }  // namespace secretflow::serving

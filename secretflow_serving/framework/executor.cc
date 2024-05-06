@@ -23,21 +23,184 @@
 
 namespace secretflow::serving {
 
+class RunContext {
+ public:
+  explicit RunContext(size_t expect_result_count)
+      : expect_result_count_(expect_result_count) {}
+
+  void AddResult(std::string node_name,
+                 std::shared_ptr<arrow::RecordBatch> table) {
+    std::lock_guard lock(results_mtx_);
+    results_.emplace_back(std::move(node_name), std::move(table));
+    if (IsFinish()) {
+      Stop();
+    }
+  }
+
+  bool IsFinish() const { return expect_result_count_ == results_.size(); }
+
+  void WaitFinish() {
+    std::unique_lock lock(results_mtx_);
+    results_cv_.wait(lock, [this] { return stop_flag_ || IsFinish(); });
+  }
+
+  std::vector<NodeOutput> GetResults() {
+    std::lock_guard lock(results_mtx_);
+    return results_;
+  }
+
+  void Stop() {
+    stop_flag_ = true;
+    results_cv_.notify_all();
+  }
+
+ private:
+  size_t expect_result_count_;
+
+  mutable std::mutex results_mtx_;
+  std::condition_variable results_cv_;
+  std::atomic<bool> stop_flag_{false};
+
+  std::vector<NodeOutput> results_;
+};
+
+class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
+ public:
+  class ExecuteOpTask : public ThreadPool::Task {
+   public:
+    ExecuteOpTask(std::string node_name,
+                  std::shared_ptr<ExecuteScheduler> sched)
+        : node_name_(std::move(node_name)), sched_(std::move(sched)) {}
+
+    const char* Name() override { return "ExecuteOpTask"; }
+
+    void Exec() override { sched_->ExecuteNode(node_name_); }
+
+    void OnException(std::exception_ptr e) noexcept override {
+      sched_->SetTaskException(e);
+    }
+
+   private:
+    const std::string node_name_;
+    std::shared_ptr<ExecuteScheduler> sched_;
+  };
+
+  ExecuteScheduler(
+      const std::shared_ptr<std::unordered_map<std::string, NodeItem>>&
+          node_items,
+      std::shared_ptr<Execution> execution, ThreadPool* thread_pool)
+      : node_items_(node_items),
+        execution_(std::move(execution)),
+        context_(execution_->GetExitNodeNum()),
+        thread_pool_(thread_pool),
+        propagator_(execution_->nodes()),
+        sched_count_(0) {}
+
+  void ExecuteNode(const std::string& node_name) {
+    if (stop_flag_.load()) {
+      return;
+    }
+
+    auto* frame = propagator_.GetFrame(node_name);
+    auto iter = node_items_->find(node_name);
+    SERVING_ENFORCE(iter != node_items_->end(),
+                    errors::ErrorCode::UNEXPECTED_ERROR);
+    const auto& node_item = iter->second;
+    node_item.op_kernel->Compute(&(frame->compute_ctx));
+    sched_count_++;
+
+    if (execution_->IsExitNode(node_item.node->node_def().name())) {
+      context_.AddResult(node_item.node->node_def().name(),
+                         frame->compute_ctx.output);
+    }
+
+    CompleteOutEdge(node_item.node->out_edges(), frame->compute_ctx.output);
+  }
+
+  void Schedule(std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+    for (const auto& node : execution_->GetEntryNodes()) {
+      auto iter = inputs.find(node->node_def().name());
+      SERVING_ENFORCE(iter != inputs.end(), errors::ErrorCode::INVALID_ARGUMENT,
+                      "can not found inputs for node:{}",
+                      node->node_def().name());
+      auto* frame = propagator_.GetFrame(node->GetName());
+      frame->compute_ctx.inputs = std::move(iter->second);
+
+      SubmitTask(node->node_def().name());
+    }
+
+    context_.WaitFinish();
+  }
+
+  void SetTaskException(std::exception_ptr& e) noexcept {
+    bool expect_flag = false;
+    // store the first exception
+    if (stop_flag_.compare_exchange_strong(expect_flag, true)) {
+      task_exception_ = e;
+      context_.Stop();
+    }
+  }
+
+  std::exception_ptr GetTaskException() { return task_exception_; }
+
+  uint64_t GetSchedCount() { return sched_count_.load(); }
+
+  std::vector<NodeOutput> GetResults() { return context_.GetResults(); }
+
+ private:
+  void CompleteOutEdge(const std::vector<std::shared_ptr<Edge>>& edges,
+                       std::shared_ptr<arrow::RecordBatch>& output) {
+    for (const auto& edge : edges) {
+      std::shared_ptr<Node> dst_node;
+      if (!execution_->TryGetNode(edge->dst_node(), &dst_node)) {
+        continue;
+      }
+
+      auto* child_frame = propagator_.GetFrame(dst_node->GetName());
+      child_frame->compute_ctx.inputs[edge->dst_input_id()].emplace_back(
+          output);
+
+      if (child_frame->pending_count.fetch_sub(1) == 1) {
+        if (edges.size() > 1) {
+          SubmitTask(dst_node->GetName());
+        } else {
+          ExecuteNode(dst_node->GetName());
+        }
+      }
+    }
+  }
+
+  void SubmitTask(const std::string& node_name) {
+    if (stop_flag_.load()) {
+      return;
+    }
+    thread_pool_->SubmitTask(
+        std::make_unique<ExecuteOpTask>(node_name, shared_from_this()));
+  }
+
+ private:
+  const std::shared_ptr<std::unordered_map<std::string, NodeItem>>& node_items_;
+  std::shared_ptr<Execution> execution_;
+
+  RunContext context_;
+  ThreadPool* thread_pool_;
+
+  Propagator propagator_;
+  std::atomic<uint64_t> sched_count_{0};
+  std::atomic<bool> stop_flag_{false};
+  std::exception_ptr task_exception_;
+};
+
 Executor::Executor(const std::shared_ptr<Execution>& execution)
     : execution_(execution) {
   // create op_kernel
-  auto nodes = execution_->nodes();
-  node_items_ = std::make_shared<
-      std::unordered_map<std::string, std::shared_ptr<NodeItem>>>();
+  node_items_ = std::make_shared<std::unordered_map<std::string, NodeItem>>();
 
-  for (const auto& [node_name, node] : nodes) {
+  for (const auto& [node_name, node] : execution_->nodes()) {
     op::OpKernelOptions ctx{node->node_def(), node->GetOpDef()};
-
-    auto item = std::make_shared<NodeItem>();
-    item->node = node;
-    item->op_kernel =
-        op::OpKernelFactory::GetInstance()->Create(std::move(ctx));
-    node_items_->emplace(node_name, item);
+    NodeItem item{node,
+                  op::OpKernelFactory::GetInstance()->Create(std::move(ctx))};
+    node_items_->emplace(node_name, std::move(item));
   }
 
   // get input schema
@@ -46,7 +209,7 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
     const auto& node_name = node->node_def().name();
     auto iter = node_items_->find(node_name);
     SERVING_ENFORCE(iter != node_items_->end(), errors::ErrorCode::LOGIC_ERROR);
-    const auto& input_schema = iter->second->op_kernel->GetAllInputSchema();
+    const auto& input_schema = iter->second.op_kernel->GetAllInputSchema();
     entry_node_names_.emplace_back(node_name);
     input_schema_map_.emplace(node_name, input_schema);
   }
@@ -77,214 +240,25 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
   }
 }
 
-std::shared_ptr<std::vector<NodeOutput>> Executor::Run(
+std::vector<NodeOutput> Executor::Run(
     std::shared_ptr<arrow::RecordBatch>& features) {
   SERVING_ENFORCE(execution_->IsEntry(), errors::ErrorCode::LOGIC_ERROR);
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
-  for (size_t i = 0; i < entry_node_names_.size(); ++i) {
-    auto op_inputs = std::make_shared<op::OpComputeInputs>();
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  for (const auto& entry_node_name : entry_node_names_) {
+    op::OpComputeInputs op_inputs;
     std::vector<std::shared_ptr<arrow::RecordBatch>> record_list = {features};
-    op_inputs->emplace_back(std::move(record_list));
-    inputs.emplace(entry_node_names_[i], std::move(op_inputs));
+    op_inputs.emplace_back(std::move(record_list));
+    inputs.emplace(entry_node_name, std::move(op_inputs));
   }
   return Run(inputs);
 }
 
-class RunContext {
- public:
-  explicit RunContext(size_t expect_result_count,
-                      std::deque<std::shared_ptr<NodeItem>> buffer = {})
-      : ready_nodes_(std::move(buffer)),
-        expect_result_count_(expect_result_count) {}
+std::vector<NodeOutput> Executor::Run(
+    std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+  auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
+                                                  ThreadPool::GetInstance());
 
-  void AddResult(std::string node_name,
-                 std::shared_ptr<arrow::RecordBatch> table) {
-    {
-      std::lock_guard lock(results_mtx_);
-
-      results_.emplace_back(std::move(node_name), std::move(table));
-      results_cv_.notify_all();
-    }
-    if (IsFinish()) {
-      Stop();
-    }
-  }
-
-  void AddReadyNode(std::shared_ptr<NodeItem> node_item) {
-    ready_nodes_.Push(std::move(node_item));
-  }
-
-  bool GetReadyNode(std::shared_ptr<NodeItem>& node_item) {
-    return ready_nodes_.WaitPop(node_item);
-  }
-
-  bool IsFinish() const { return expect_result_count_ == results_.size(); }
-
-  std::vector<NodeOutput> GetResults() {
-    std::lock_guard lock(results_mtx_);
-    return results_;
-  }
-
-  void Stop() { ready_nodes_.StopPush(); }
-
- private:
-  ThreadSafeQueue<std::shared_ptr<NodeItem>> ready_nodes_;
-
-  size_t expect_result_count_;
-
-  mutable std::mutex results_mtx_;
-  std::condition_variable results_cv_;
-  std::vector<NodeOutput> results_;
-};
-
-class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
- public:
-  class ExecuteOpTask : public ThreadPool::Task {
-   public:
-    const char* Name() override { return "ExecuteOpTask"; }
-
-    ExecuteOpTask(std::shared_ptr<NodeItem> node_item,
-                  std::shared_ptr<ExecuteScheduler> sched)
-        : node_item_(std::move(node_item)), sched_(std::move(sched)) {}
-
-    void Exec() override { sched_->ExecuteOp(node_item_); }
-
-    void OnException(std::exception_ptr e) noexcept override {
-      sched_->SetTaskException(e);
-    }
-
-   private:
-    std::shared_ptr<NodeItem> node_item_;
-    std::shared_ptr<ExecuteScheduler> sched_;
-  };
-
-  ExecuteScheduler(
-      std::shared_ptr<
-          std::unordered_map<std::string, std::shared_ptr<NodeItem>>>
-          node_items,
-      uint64_t res_cnt, const std::shared_ptr<ThreadPool>& thread_pool,
-      std::shared_ptr<Execution> execution)
-      : node_items_(std::move(node_items)),
-        context_(res_cnt),
-        thread_pool_(thread_pool),
-        execution_(std::move(execution)),
-        propagator_(execution_->nodes()),
-        sched_count_(0) {}
-
-  void AddEntryNode(const std::shared_ptr<Node>& node,
-                    std::shared_ptr<op::OpComputeInputs>& inputs) {
-    auto* frame = propagator_.GetFrame(node->GetName());
-    frame->compute_ctx.inputs = std::move(*inputs);
-    context_.AddReadyNode(node_items_->find(node->node_def().name())->second);
-  }
-
-  void ExecuteOp(const std::shared_ptr<NodeItem>& node_item) {
-    if (stop_flag_.load()) {
-      return;
-    }
-
-    auto* frame = propagator_.GetFrame(node_item->node->node_def().name());
-
-    node_item->op_kernel->Compute(&(frame->compute_ctx));
-    sched_count_++;
-
-    if (execution_->IsExitNode(node_item->node->node_def().name())) {
-      context_.AddResult(node_item->node->node_def().name(),
-                         frame->compute_ctx.output);
-    }
-
-    const auto& edges = node_item->node->out_edges();
-    for (const auto& edge : edges) {
-      CompleteOutEdge(edge, frame->compute_ctx.output);
-    }
-  }
-
-  void CompleteOutEdge(const std::shared_ptr<Edge>& edge,
-                       std::shared_ptr<arrow::RecordBatch> output) {
-    std::shared_ptr<Node> dst_node;
-    if (!execution_->TryGetNode(edge->dst_node(), &dst_node)) {
-      return;
-    }
-
-    auto* child_frame = propagator_.GetFrame(dst_node->GetName());
-    child_frame->compute_ctx.inputs[edge->dst_input_id()].emplace_back(
-        std::move(output));
-
-    if (child_frame->pending_count.fetch_sub(1) == 1) {
-      context_.AddReadyNode(
-          node_items_->find(dst_node->node_def().name())->second);
-    }
-  }
-
-  void SubmitExecuteOpTask(std::shared_ptr<NodeItem>& node_item) {
-    if (stop_flag_.load()) {
-      return;
-    }
-    thread_pool_->SubmitTask(
-        std::make_unique<ExecuteOpTask>(node_item, shared_from_this()));
-  }
-
-  void Schedule() {
-    while (!stop_flag_.load() && !context_.IsFinish()) {
-      // TODO: consider use bthread::Mutex and bthread::ConditionVariable
-      //       to make this worker can switch to others
-      std::shared_ptr<NodeItem> node_item;
-      if (!context_.GetReadyNode(node_item)) {
-        continue;
-      }
-      SubmitExecuteOpTask(node_item);
-    }
-  }
-
-  void SetTaskException(std::exception_ptr& e) noexcept {
-    bool expect_flag = false;
-    // store the first exception
-    if (stop_flag_.compare_exchange_strong(expect_flag, true)) {
-      task_exception_ = e;
-      context_.Stop();
-    }
-  }
-
-  std::exception_ptr GetTaskException() { return task_exception_; }
-
-  uint64_t GetSchedCount() { return sched_count_.load(); }
-  std::vector<NodeOutput> GetResults() { return context_.GetResults(); }
-
- private:
-  std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<NodeItem>>>
-      node_items_;
-  RunContext context_;
-  std::shared_ptr<ThreadPool> thread_pool_;
-  std::shared_ptr<Execution> execution_;
-  Propagator propagator_;
-  std::atomic<uint64_t> sched_count_{0};
-  static constexpr uint64_t READY_NODE_WAIT_MS = 10;
-  std::atomic<bool> stop_flag_{false};
-  std::exception_ptr task_exception_;
-};
-
-std::shared_ptr<std::vector<NodeOutput>> Executor::Run(
-    std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>&
-        inputs) {
-  std::vector<std::shared_ptr<op::OpComputeInputs>> entry_node_inputs;
-  for (const auto& node : execution_->GetEntryNodes()) {
-    auto iter = inputs.find(node->node_def().name());
-    SERVING_ENFORCE(iter != inputs.end(), errors::ErrorCode::INVALID_ARGUMENT,
-                    "can not found inputs for node:{}",
-                    node->node_def().name());
-    entry_node_inputs.emplace_back(iter->second);
-  }
-
-  auto sched = std::make_shared<ExecuteScheduler>(
-      node_items_, execution_->GetExitNodeNum(), ThreadPool::GetInstance(),
-      execution_);
-  const auto& entry_nodes = execution_->GetEntryNodes();
-  for (size_t i = 0; i != execution_->GetEntryNodeNum(); ++i) {
-    sched->AddEntryNode(entry_nodes[i], entry_node_inputs[i]);
-  }
-
-  sched->Schedule();
+  sched->Schedule(inputs);
 
   auto task_exception = sched->GetTaskException();
   if (task_exception) {
@@ -292,7 +266,7 @@ std::shared_ptr<std::vector<NodeOutput>> Executor::Run(
     std::rethrow_exception(task_exception);
   }
   SERVING_ENFORCE_EQ(sched->GetSchedCount(), execution_->nodes().size());
-  return std::make_shared<std::vector<NodeOutput>>(sched->GetResults());
+  return sched->GetResults();
 }
 
 }  // namespace secretflow::serving

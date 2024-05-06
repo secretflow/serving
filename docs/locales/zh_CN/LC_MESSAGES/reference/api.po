@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-19 12:47+0000\n"
+"POT-Creation-Date: 2024-04-09 17:44+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -145,7 +145,7 @@ msgstr ""
 msgid "[FeatureValue](#featurevalue)"
 msgstr ""
 
-#: ../../source/reference/api.md:108 ../../source/reference/api.md:594
+#: ../../source/reference/api.md:108 ../../source/reference/api.md:600
 msgid "Enums"
 msgstr ""
 
@@ -570,8 +570,10 @@ msgstr ""
 #: ../../source/reference/api.md
 msgid ""
 "The params for fetch features. Note that this should include all the "
-"parties involved in the prediction. Key: party's id. Value: params for "
-"fetch features."
+"parties involved in the prediction. When using the feature service as the"
+" source of feature data, serving does not consume this parameter but "
+"instead passes it through to the feature service for consumption. Key: "
+"party's id. Value: params for fetch features."
 msgstr ""
 
 #: ../../source/reference/api.md
@@ -611,11 +613,11 @@ msgid ""
 "feature query data."
 msgstr ""
 
-#: ../../source/reference/api.md:496
+#: ../../source/reference/api.md:502
 msgid "PredictResult"
 msgstr ""
 
-#: ../../source/reference/api.md:497
+#: ../../source/reference/api.md:503
 msgid "Result of single predict request."
 msgstr ""
 
@@ -631,11 +633,11 @@ msgstr ""
 msgid "According to the model, there may be one or multi scores."
 msgstr ""
 
-#: ../../source/reference/api.md:508
+#: ../../source/reference/api.md:514
 msgid "Score"
 msgstr ""
 
-#: ../../source/reference/api.md:509
+#: ../../source/reference/api.md:515
 msgid "Result of regression or one class of Classifications"
 msgstr ""
 
@@ -653,11 +655,11 @@ msgstr ""
 msgid "The value of the score."
 msgstr ""
 
-#: ../../source/reference/api.md:523
+#: ../../source/reference/api.md:529
 msgid "Status"
 msgstr ""
 
-#: ../../source/reference/api.md:524
+#: ../../source/reference/api.md:530
 msgid "Represents the status of a request"
 msgstr ""
 
@@ -677,11 +679,11 @@ msgstr ""
 msgid "The msg of this status."
 msgstr ""
 
-#: ../../source/reference/api.md:538
+#: ../../source/reference/api.md:544
 msgid "Feature"
 msgstr ""
 
-#: ../../source/reference/api.md:539
+#: ../../source/reference/api.md:545
 msgid "The definition of a feature"
 msgstr ""
 
@@ -697,11 +699,11 @@ msgstr ""
 msgid "[ FeatureValue](#featurevalue )"
 msgstr ""
 
-#: ../../source/reference/api.md:551
+#: ../../source/reference/api.md:557
 msgid "FeatureField"
 msgstr ""
 
-#: ../../source/reference/api.md:552
+#: ../../source/reference/api.md:558
 msgid "The definition of a feature field."
 msgstr ""
 
@@ -717,12 +719,12 @@ msgstr ""
 msgid "Field type of the feature"
 msgstr ""
 
-#: ../../source/reference/api.md:564
+#: ../../source/reference/api.md:570
 msgid "FeatureParam"
 msgstr ""
 
-#: ../../source/reference/api.md:565
-msgid "The param for fetch features"
+#: ../../source/reference/api.md:571
+msgid "The custom parameters for fetch features."
 msgstr ""
 
 #: ../../source/reference/api.md
@@ -735,8 +737,9 @@ msgstr ""
 
 #: ../../source/reference/api.md
 msgid ""
-"The serialized datas for query features. Each one for query one row of "
-"features."
+"Custom parameters data for querying feature values, the specific content "
+"format of which is determined by the feature datasource provider. Each "
+"one for query one row of features."
 msgstr ""
 
 #: ../../source/reference/api.md
@@ -747,11 +750,11 @@ msgstr ""
 msgid "Optional. Represents the common part of the query datas."
 msgstr ""
 
-#: ../../source/reference/api.md:577
+#: ../../source/reference/api.md:583
 msgid "FeatureValue"
 msgstr ""
 
-#: ../../source/reference/api.md:578
+#: ../../source/reference/api.md:584
 msgid "The value of a feature"
 msgstr ""
 
@@ -815,7 +818,7 @@ msgstr ""
 msgid "bool list"
 msgstr ""
 
-#: ../../source/reference/api.md:600
+#: ../../source/reference/api.md:606
 msgid "ErrorCode"
 msgstr ""
 
@@ -971,11 +974,11 @@ msgstr ""
 msgid "104"
 msgstr ""
 
-#: ../../source/reference/api.md:628
+#: ../../source/reference/api.md:634
 msgid "FeatureSourceType"
 msgstr ""
 
-#: ../../source/reference/api.md:629
+#: ../../source/reference/api.md:635
 msgid "Support feature source type"
 msgstr ""
 
@@ -1007,11 +1010,11 @@ msgstr ""
 msgid "The feature is defined in the request."
 msgstr ""
 
-#: ../../source/reference/api.md:651
+#: ../../source/reference/api.md:657
 msgid "FieldType"
 msgstr ""
 
-#: ../../source/reference/api.md:652
+#: ../../source/reference/api.md:658
 msgid "Supported feature field type."
 msgstr ""
 
@@ -1071,7 +1074,7 @@ msgstr ""
 msgid "STRING"
 msgstr ""
 
-#: ../../source/reference/api.md:668
+#: ../../source/reference/api.md:674
 msgid "Scalar Value Types"
 msgstr ""
 

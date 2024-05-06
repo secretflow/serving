@@ -15,16 +15,19 @@
 #include "secretflow_serving/feature_adapter/http_adapter.h"
 
 #include "google/protobuf/util/json_util.h"
+#include "spdlog/spdlog.h"
 #include "yacl/utils/elapsed_timer.h"
 
 #include "secretflow_serving/feature_adapter/feature_adapter_factory.h"
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/network.h"
+#include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/apis/error_code.pb.h"
+#include "secretflow_serving/apis/status.pb.h"
 #include "secretflow_serving/spis/batch_feature_service.pb.h"
 #include "secretflow_serving/spis/error_code.pb.h"
-
 namespace secretflow::serving::feature {
 
 namespace {
@@ -87,26 +90,70 @@ HttpFeatureAdapter::HttpFeatureAdapter(
 
 void HttpFeatureAdapter::OnFetchFeature(const Request& request,
                                         Response* response) {
-  auto request_body = SerializeRequest(request);
-
-  yacl::ElapsedTimer timer;
-
   brpc::Controller cntl;
   cntl.http_request().uri() = spec_.http_opts().endpoint();
   cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
   cntl.http_request().set_content_type("application/json");
-  cntl.request_attachment().append(request_body);
-  channel_->CallMethod(NULL, &cntl, NULL, NULL, NULL);
-  SERVING_ENFORCE(!cntl.Failed(), errors::ErrorCode::NETWORK_ERROR,
-                  "http request failed, endpoint:{}, detail:{}",
-                  spec_.http_opts().endpoint(), cntl.ErrorText());
 
-  DeserializeResponse(cntl.response_attachment().to_string(), response);
+  auto service_info = fmt::format("{}: {}", "HttpFeatureAdapter/OnFetchFeature",
+                                  spec_.http_opts().endpoint());
+  spis::Header trace_header;
+  auto span =
+      CreateClientSpan(&cntl, service_info, trace_header.mutable_data());
+  auto spi_request = MakeSpiRequest(trace_header, request);
+
+  cntl.request_attachment().append(spi_request);
+
+  SpanAttrOption span_option;
+  span_option.code = errors::ErrorCode::OK;
+  span_option.msg = fmt::format("fetch_feature from {} successfully",
+                                spec_.http_opts().endpoint());
+  span_option.cntl = &cntl;
+  span_option.is_client = true;
+  span_option.party_id = party_id_;
+  span_option.service_id = service_id_;
+
+  spis::BatchFetchFeatureResponse spi_response;
+
+  channel_->CallMethod(NULL, &cntl, NULL, NULL, NULL);
+  if (cntl.Failed()) {
+    span_option.code = errors::ErrorCode::NETWORK_ERROR;
+    span_option.msg =
+        fmt::format("http request failed, endpoint:{}, detail:{}",
+                    spec_.http_opts().endpoint(), cntl.ErrorText());
+  } else {
+    auto status = ::google::protobuf::util::JsonStringToMessage(
+        cntl.response_attachment().to_string(), &spi_response);
+    if (!status.ok()) {
+      span_option.code = errors::ErrorCode::DESERIALIZE_FAILED;
+      span_option.msg = fmt::format("deserialize response context failed: {}",
+                                    status.ToString());
+    } else if (spi_response.status().code() != spis::ErrorCode::OK) {
+      span_option.code = MappingErrorCode(spi_response.status().code());
+      span_option.msg = fmt::format(
+          "fetch features response error, msg: {}, code: {}",
+          spi_response.status().msg(), spi_response.status().code());
+    } else if (spi_response.features().empty()) {
+      span_option.code = errors::ErrorCode::IO_ERROR;
+      span_option.msg = "get empty features.";
+    }
+  }
+
+  SetSpanAttrs(span, span_option);
+
+  SERVING_ENFORCE(span_option.code == errors::ErrorCode::OK, span_option.code,
+                  span_option.msg);
+  response->header->mutable_data()->swap(
+      *spi_response.mutable_header()->mutable_data());
+  response->features =
+      FeaturesToRecordBatch(spi_response.features(), feature_schema_);
 }
 
-std::string HttpFeatureAdapter::SerializeRequest(const Request& request) {
+std::string HttpFeatureAdapter::MakeSpiRequest(spis::Header& trace_header,
+                                               const Request& request) {
   spis::BatchFetchFeatureRequest batch_request;
 
+  batch_request.mutable_header()->Swap(&trace_header);
   batch_request.mutable_header()->mutable_data()->insert(
       request.header->data().begin(), request.header->data().end());
   batch_request.set_model_service_id(service_id_);
@@ -127,28 +174,6 @@ std::string HttpFeatureAdapter::SerializeRequest(const Request& request) {
   }
 
   return json_str;
-}
-
-void HttpFeatureAdapter::DeserializeResponse(const std::string& res_context,
-                                             Response* response) {
-  spis::BatchFetchFeatureResponse batch_response;
-  auto status = ::google::protobuf::util::JsonStringToMessage(res_context,
-                                                              &batch_response);
-  SERVING_ENFORCE(status.ok(), errors::ErrorCode::DESERIALIZE_FAILED,
-                  "deserialize response context({}) failed: {}", res_context,
-                  status.ToString());
-  SERVING_ENFORCE(batch_response.status().code() == spis::ErrorCode::OK,
-                  MappingErrorCode(batch_response.status().code()),
-                  "fetch features response error, msg: {}, code: {}",
-                  batch_response.status().msg(),
-                  batch_response.status().code());
-  SERVING_ENFORCE(!batch_response.features().empty(),
-                  errors::ErrorCode::IO_ERROR, "get empty features.");
-
-  response->header->mutable_data()->swap(
-      *batch_response.mutable_header()->mutable_data());
-  response->features =
-      FeaturesToRecordBatch(batch_response.features(), feature_schema_);
 }
 
 REGISTER_ADAPTER(FeatureSourceConfig::OptionsCase::kHttpOpts,

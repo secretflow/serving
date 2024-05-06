@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-05 20:00+0800\n"
+"POT-Creation-Date: 2024-04-19 11:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,7 +94,11 @@ msgid ""
 "`model_export` component of SecretFlow. For more details, please refer to"
 " `model_export "
 "<https://www.secretflow.org.cn/en/docs/secretflow/component/comp_list#model_export>`_."
-msgstr "SecretFlow-Serving 的模型包可以通过使用 SecretFlow 的 `model_export` 算子产生，具体可参考 `model_export <https://www.secretflow.org.cn/zh_CN/docs/secretflow/component/comp_list#model_export>`_ "
+msgstr ""
+"SecretFlow-Serving 的模型包可以通过使用 SecretFlow 的 `model_export` 算子产生，具体可参考 "
+"`model_export "
+"<https://www.secretflow.org.cn/zh_CN/docs/secretflow/component/comp_list#model_export>`_"
+" "
 
 #: ../../source/topics/deployment/deployment.rst:43
 msgid "For ``Bob`` should use model file `serving/examples/bob/glm-test.tar.gz`."
@@ -175,17 +179,54 @@ msgstr ""
 "对于 ``Bob`` ，可以参考 `bob-logging-config "
 "<https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_。"
 
-#: ../../source/topics/deployment/deployment.rst:128
-msgid "1.4 Create docker-compose file"
-msgstr "1.4 创建 docker-compose 文件"
+#: ../../source/topics/deployment/deployment.rst:129
+msgid "1.4 Create trace config file"
+msgstr "1.4 创建 trace 配置文件"
 
-#: ../../source/topics/deployment/deployment.rst:130
+#: ../../source/topics/deployment/deployment.rst:131
+msgid ""
+"This configuration is optional, and **may cause some performance "
+"degradation**, please use it with caution. To record trace info, you can "
+"create a file called ``trace.config`` in your workspace and paste the "
+"following code in:"
+msgstr ""
+"该配置是可选的，如果打开该配置，可能会 **造成一些性能下降** ，请谨慎使用。要记录trace信息，你可以创建 ``trace.config`` "
+"文件，将如下代码粘贴到新创建的文件里："
+
+#: ../../source/topics/deployment/deployment.rst:143
+msgid ""
+"See :ref:`Trace Config <TraceConfig>` and :ref:`Trace Introduction "
+"<Trace>` for more trace config information."
+msgstr "请参考 :ref:`Trace Config <ServingConfig>` 和 :ref:`Trace Introduction <Trace>` 来获取更多trace配置相关的信息。"
+
+#: ../../source/topics/deployment/deployment.rst:147
+msgid ""
+"The above configuration is referenced from `alice-trace-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_."
+msgstr ""
+"以上配置内容参考自 `alice-trace-config "
+"<https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:149
+msgid ""
+"For ``Bob``, you should refer to `bob-trace-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/trace.config>`_"
+" ."
+msgstr ""
+"对于 ``Bob`` ，可以参考 `bob-trace-config "
+"<https://github.com/secretflow/serving/blob/main/examples/bob/trace.config>`_。"
+
+#: ../../source/topics/deployment/deployment.rst:153
+msgid "1.5 Create docker-compose file"
+msgstr "1.5 创建 docker-compose 文件"
+
+#: ../../source/topics/deployment/deployment.rst:155
 msgid ""
 "Create a file called ``docker-compose.yaml`` in your workspace and paste "
 "the following code in:"
 msgstr "在您的工作空间目录下创建一个名为 ``docker-compose.yaml`` 文件并将下列内容添加到其中："
 
-#: ../../source/topics/deployment/deployment.rst:152
+#: ../../source/topics/deployment/deployment.rst:180
 msgid ""
 "``__ALICE_PORT__``  is the published port on the host machine which is "
 "used for SecretFlow-Serving service to listen on, you need to replace it "
@@ -196,23 +237,29 @@ msgstr ""
 "服务在宿主机上的监听端口，您需要用一个可访问的端口号替换它，这里为 ``Alice`` 设置 ``9010``，为 ``Bob`` 设置 "
 "``9011``。"
 
-#: ../../source/topics/deployment/deployment.rst:156
+#: ../../source/topics/deployment/deployment.rst:181
+msgid "``trace_config_file`` line is optional."
+msgstr "``trace_config_file`` 这一行是可选的。"
+
+#: ../../source/topics/deployment/deployment.rst:185
 msgid "Step 2: Start Serving Service"
 msgstr "步骤 2：启动 Serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:158
-msgid "The file your workspace should be as follows:"
-msgstr "您工作区的文件应如下所示："
+#: ../../source/topics/deployment/deployment.rst:187
+msgid ""
+"The file your workspace should be as follows, ``trace.config`` is "
+"optional:"
+msgstr "您工作区的文件应如下所示，``trace.config``是可选的："
 
-#: ../../source/topics/deployment/deployment.rst:167
-msgid "Then you can start serving service by running docker compose up"
+#: ../../source/topics/deployment/deployment.rst:197
+msgid "Then you can start serving service by running docker compose up."
 msgstr "然后您可以运行 docker compose up 来启动 serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:174
+#: ../../source/topics/deployment/deployment.rst:204
 msgid "You can use docker logs to check whether serving works well"
 msgstr "您可以使用 docker logs 检查 serving 是否正常工作"
 
-#: ../../source/topics/deployment/deployment.rst:180
+#: ../../source/topics/deployment/deployment.rst:210
 msgid ""
 "Now, ``Alice`` serving is listening on ``9010``, you can confirm if the "
 "service is ready by accessing the ``/health`` endpoint."
@@ -220,17 +267,17 @@ msgstr ""
 "现在 ``Alice`` 的 serving 服务监听了 ``9010`` 端口，您可以通过访问 ``/health`` "
 "接口来检测服务是否已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:186
+#: ../../source/topics/deployment/deployment.rst:216
 msgid ""
 "When the endpoint returns a status code of ``200``, it means that the "
 "service is ready."
 msgstr "若接口返回状态码 ``200`` 则标志服务已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:189
+#: ../../source/topics/deployment/deployment.rst:219
 msgid "Step 3: Predict Test"
 msgstr "步骤 3：预测测试"
 
-#: ../../source/topics/deployment/deployment.rst:191
+#: ../../source/topics/deployment/deployment.rst:221
 msgid ""
 "Based on the capabilities of `Brpc "
 "<https://brpc.apache.org/docs/server/>`_, serving supports accessing "
@@ -240,7 +287,7 @@ msgstr ""
 "得益于 `Brpc <https://brpc.apache.org/docs/server/>`_ 的能力，serving "
 "能够支持通过多种协议进行访问。这里我们通过发送一个 HTTP 的预测请求来测试服务。"
 
-#: ../../source/topics/deployment/deployment.rst:193
+#: ../../source/topics/deployment/deployment.rst:223
 msgid ""
 "You can read :ref:`SecretFlow-Serving API <PredictionService>` for more "
 "information about serving APIs."
