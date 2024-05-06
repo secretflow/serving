@@ -18,6 +18,7 @@
 
 #include "secretflow_serving/ops/graph.h"
 #include "secretflow_serving/server/execution_core.h"
+#include "secretflow_serving/server/trace/trace.h"
 
 #include "secretflow_serving/apis/execution_service.pb.h"
 #include "secretflow_serving/apis/prediction_service.pb.h"
@@ -79,8 +80,16 @@ class ExecuteContext {
   void CheckAndUpdateResponse(const apis::ExecuteResponse& exec_res);
   void CheckAndUpdateResponse();
 
+  const apis::Status& ResponseStatus() const { return exec_res_.status(); }
+
+  void MergeResonseHeader(const apis::ExecuteResponse& exec_res);
+  void MergeResonseHeader();
+
   const std::string& LocalId() const { return local_id_; }
   const std::string& TargetId() const { return target_id_; }
+  const std::string& ServiceId() const { return request_->service_spec().id(); }
+  apis::ExecuteRequest& ExecReq() { return exec_req_; }
+  const apis::ExecuteRequest& ExecReq() const { return exec_req_; }
 
  private:
   void SetFeatureSource();
@@ -140,7 +149,12 @@ class RemoteExecute : public ExecuteBase,
                 std::shared_ptr<::google::protobuf::RpcChannel> channel)
       : ExecuteBase{request, response, execution, std::move(target_id),
                     std::move(local_id)},
-        channel_(std::move(channel)) {}
+        channel_(std::move(channel)) {
+    span_option.cntl = &cntl_;
+    span_option.is_client = true;
+    span_option.party_id = local_id;
+    span_option.service_id = exec_ctx_.ServiceId();
+  }
 
   virtual ~RemoteExecute() {
     if (executing_) {
@@ -150,24 +164,61 @@ class RemoteExecute : public ExecuteBase,
 
   virtual void Run() override;
   virtual void Cancel() {
-    if (executing_) {
-      brpc::StartCancel(cntl_.call_id());
+    if (!executing_) {
+      return;
     }
-  }
-  virtual void WaitToFinish() {
-    brpc::Join(cntl_.call_id());
-    SERVING_ENFORCE(!cntl_.Failed(), errors::ErrorCode::NETWORK_ERROR,
-                    "call ({}) from ({}) execute failed, msg:{}",
-                    exec_ctx_.TargetId(), exec_ctx_.LocalId(),
-                    cntl_.ErrorText());
+
     executing_ = false;
-    exec_ctx_.CheckAndUpdateResponse();
+    brpc::StartCancel(cntl_.call_id());
+
+    span_option.code = errors::ErrorCode::UNEXPECTED_ERROR;
+    span_option.msg = "remote execute task is canceled.";
+    SetSpanAttrs(span_, span_option);
+    span_->End();
+  }
+
+  virtual void WaitToFinish() {
+    if (!executing_) {
+      return;
+    }
+
+    span_option.code = errors::ErrorCode::OK;
+    span_option.msg = fmt::format("call ({}) from ({}) execute seccessfully",
+                                  exec_ctx_.TargetId(), exec_ctx_.LocalId());
+
+    brpc::Join(cntl_.call_id());
+
+    executing_ = false;
+
+    if (cntl_.Failed()) {
+      span_option.msg = fmt::format("call ({}) from ({}) network error, msg:{}",
+                                    exec_ctx_.TargetId(), exec_ctx_.LocalId(),
+                                    cntl_.ErrorText());
+      span_option.code = errors::ErrorCode::NETWORK_ERROR;
+    } else if (exec_ctx_.ResponseStatus().code() != errors::ErrorCode::OK) {
+      span_option.msg = fmt::format(fmt::format(
+          "call ({}) from ({}) execute failed: code({}), {}",
+          exec_ctx_.TargetId(), exec_ctx_.LocalId(),
+          exec_ctx_.ResponseStatus().code(), exec_ctx_.ResponseStatus().msg()));
+      span_option.code = errors::ErrorCode::NETWORK_ERROR;
+    }
+
+    SetSpanAttrs(span_, span_option);
+    span_->End();
+
+    if (span_option.code == errors::ErrorCode::OK) {
+      exec_ctx_.MergeResonseHeader();
+    } else {
+      SERVING_THROW(span_option.code, span_option.msg);
+    }
   }
 
  protected:
   std::shared_ptr<::google::protobuf::RpcChannel> channel_;
   brpc::Controller cntl_;
   bool executing_{false};
+  opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span_;
+  SpanAttrOption span_option;
 };
 
 class LocalExecute : public ExecuteBase {

@@ -123,8 +123,33 @@ See :ref:`Logging Config <LoggingConfig>` for more logging config information.
 
   For ``Bob``, you should refer to `bob-logging-config <https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_ .
 
+.. _trace_config_file:
 
-1.4 Create docker-compose file
+1.4 Create trace config file
+------------------------------
+
+This configuration is optional, and **may cause some performance degradation**, please use it with caution.
+To record trace info, you can create a file called ``trace.config`` in your workspace and paste the following code in:
+
+.. code-block:: json
+
+  {
+    "traceLogEnable": true,
+    "traceLogConf": {
+      "traceLogPath": "./trace.log"
+    }
+  }
+
+See :ref:`Trace Config <TraceConfig>` and :ref:`Trace Introduction <Trace>` for more trace config information.
+
+.. note::
+
+  The above configuration is referenced from `alice-trace-config <https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_.
+
+  For ``Bob``, you should refer to `bob-trace-config <https://github.com/secretflow/serving/blob/main/examples/bob/trace.config>`_ .
+
+
+1.5 Create docker-compose file
 ------------------------------
 
 Create a file called ``docker-compose.yaml`` in your workspace and paste the following code in:
@@ -140,31 +165,36 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
         - /root/sf_serving/secretflow_serving
         - --serving_config_file=/root/sf_serving/conf/serving.config
         - --logging_config_file=/root/sf_serving/conf/logging.config
+        - --trace_config_file=/root/sf_serving/conf/trace.config
       restart: always
       image: secretflow/serving-anolis8:latest
       ports:
         - __ALICE_PORT__:9010
       volumes:
-        - ./serving.conf:/root/sf_serving/conf/serving.config
+        - ./serving.config:/root/sf_serving/conf/serving.config
+        - ./logging.config:/root/sf_serving/conf/logging.config
+        - ./trace.config:/root/sf_serving/conf/trace.config
 
 .. note::
 
-  ``__ALICE_PORT__``  is the published port on the host machine which is used for SecretFlow-Serving service to listen on, you need to replace it with an accessible port number. In this case, we have designated it as ``9010`` for ``Alice``, ``9011`` for ``Bob``.
+  * ``__ALICE_PORT__``  is the published port on the host machine which is used for SecretFlow-Serving service to listen on, you need to replace it with an accessible port number. In this case, we have designated it as ``9010`` for ``Alice``, ``9011`` for ``Bob``.
+  * ``trace_config_file`` line is optional.
 
 
 Step 2: Start Serving Service
 =============================
 
-The file your workspace should be as follows:
+The file your workspace should be as follows, ``trace.config`` is optional:
 
 .. code-block:: bash
 
   └── serving
     ├── serving.config
     ├── logging.config
+    ├── trace.config
     └── docker-compose.yaml
 
-Then you can start serving service by running docker compose up
+Then you can start serving service by running docker compose up.
 
 .. code-block:: bash
 
@@ -196,6 +226,8 @@ You can read :ref:`SecretFlow-Serving API <PredictionService>` for more informat
 
   curl --location 'http://127.0.0.1:9010/PredictionService/Predict' \
       --header 'Content-Type: application/json' \
+      --header 'X-B3-TraceId: 463ac35c9f6413ad48485a3953bb' \
+      --header 'X-B3-SpanId: a2fb4a1d1a96d312' \
       --data '{
           "service_spec": {
               "id": "test_service_id"

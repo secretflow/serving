@@ -36,7 +36,7 @@ class ExecutionCore {
 
     std::optional<FeatureSourceConfig> feature_source_config;
 
-    std::shared_ptr<Executable> executable;
+    std::unique_ptr<Executable> executable;
 
     uint32_t op_exec_workers_num{std::thread::hardware_concurrency()};
   };

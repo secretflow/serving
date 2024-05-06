@@ -22,6 +22,7 @@ namespace secretflow::serving {
 void ExecuteContext::CheckAndUpdateResponse() {
   CheckAndUpdateResponse(exec_res_);
 }
+
 void ExecuteContext::CheckAndUpdateResponse(
     const apis::ExecuteResponse& exec_res) {
   if (!CheckStatusOk(exec_res.status())) {
@@ -30,6 +31,12 @@ void ExecuteContext::CheckAndUpdateResponse(
         fmt::format("{} exec failed: code({}), {}", target_id_,
                     exec_res.status().code(), exec_res.status().msg()));
   }
+  MergeResonseHeader(exec_res);
+}
+
+void ExecuteContext::MergeResonseHeader() { MergeResonseHeader(exec_res_); }
+
+void ExecuteContext::MergeResonseHeader(const apis::ExecuteResponse& exec_res) {
   response_->mutable_header()->mutable_data()->insert(
       exec_res.header().data().begin(), exec_res.header().data().end());
 }
@@ -120,6 +127,17 @@ void ExecuteContext::Execute(std::shared_ptr<ExecutionCore> execution_core) {
 }
 
 void RemoteExecute::Run() {
+  if (executing_) {
+    SPDLOG_ERROR("Run should only be called once.");
+    return;
+  }
+
+  std::string service_info =
+      fmt::format("ExecutionService/Execute: {}-{}", exec_ctx_.LocalId(),
+                  exec_ctx_.TargetId());
+  span_ = CreateClientSpan(&cntl_, service_info,
+                           exec_ctx_.ExecReq().mutable_header());
+
   // semisynchronous call
   exec_ctx_.Execute(channel_, &cntl_);
 

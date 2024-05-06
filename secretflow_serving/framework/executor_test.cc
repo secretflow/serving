@@ -282,8 +282,7 @@ TEST_F(ExecutorTest, MassiveWorks) {
                                                std::move(nodes));
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
   {
     // mock input
     auto input_schema =
@@ -295,11 +294,11 @@ TEST_F(ExecutorTest, MassiveWorks) {
     double_builder.Reset();
     auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
 
-    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    op::OpComputeInputs op_inputs_0;
     std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0->emplace_back(r_list_0);
+    op_inputs_0.emplace_back(std::move(r_list_0));
 
-    inputs.emplace("node_a", op_inputs_0);
+    inputs.emplace("node_a", std::move(op_inputs_0));
   }
   // run
   auto output = executor->Run(inputs);
@@ -314,15 +313,15 @@ TEST_F(ExecutorTest, MassiveWorks) {
                                   5 * MASSIVE_NODE_CNT, 6 * MASSIVE_NODE_CNT}));
   SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&expect_array));
 
-  EXPECT_EQ(output->size(), 1);
-  EXPECT_EQ(output->at(0).node_name, "node_c");
-  EXPECT_EQ(output->at(0).table->num_columns(), 1);
-  EXPECT_TRUE(output->at(0).table->schema()->Equals(expect_output_schema));
+  EXPECT_EQ(output.size(), 1);
+  EXPECT_EQ(output.at(0).node_name, "node_c");
+  EXPECT_EQ(output.at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output.at(0).table->schema()->Equals(expect_output_schema));
 
-  std::cout << output->at(0).table->column(0)->ToString() << std::endl;
+  std::cout << output.at(0).table->column(0)->ToString() << std::endl;
   std::cout << expect_array->ToString() << std::endl;
 
-  EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
+  EXPECT_TRUE(output.at(0).table->column(0)->Equals(expect_array));
 }
 
 TEST_F(ExecutorTest, ComplexMassiveWorks) {
@@ -389,8 +388,7 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
                                                std::move(nodes));
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
   {
     // mock input
     auto input_schema =
@@ -402,11 +400,11 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
     double_builder.Reset();
     auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
 
-    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    op::OpComputeInputs op_inputs_0;
     std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0->emplace_back(r_list_0);
+    op_inputs_0.emplace_back(std::move(r_list_0));
 
-    inputs.emplace("node_a", op_inputs_0);
+    inputs.emplace("node_a", std::move(op_inputs_0));
   }
   // run
   auto output = executor->Run(inputs);
@@ -421,15 +419,15 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
        5 * MASSIVE_NODE_CNT * 2, 6 * MASSIVE_NODE_CNT * 2}));
   SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&expect_array));
 
-  EXPECT_EQ(output->size(), 1);
-  EXPECT_EQ(output->at(0).node_name, "node_d");
-  EXPECT_EQ(output->at(0).table->num_columns(), 1);
-  EXPECT_TRUE(output->at(0).table->schema()->Equals(expect_output_schema));
+  EXPECT_EQ(output.size(), 1);
+  EXPECT_EQ(output.at(0).node_name, "node_d");
+  EXPECT_EQ(output.at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output.at(0).table->schema()->Equals(expect_output_schema));
 
-  std::cout << output->at(0).table->column(0)->ToString() << std::endl;
+  std::cout << output.at(0).table->column(0)->ToString() << std::endl;
   std::cout << expect_array->ToString() << std::endl;
 
-  EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
+  EXPECT_TRUE(output.at(0).table->column(0)->Equals(expect_array));
 }
 
 TEST_F(ExecutorTest, BasicWorks) {
@@ -514,17 +512,16 @@ TEST_F(ExecutorTest, BasicWorks) {
   auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
   auto input_1 = MakeRecordBatch(input_schema, 4, {array_1});
 
-  auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+  op::OpComputeInputs op_inputs_0;
   std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-  op_inputs_0->emplace_back(r_list_0);
-  auto op_inputs_1 = std::make_shared<op::OpComputeInputs>();
+  op_inputs_0.emplace_back(std::move(r_list_0));
+  op::OpComputeInputs op_inputs_1;
   std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
-  op_inputs_1->emplace_back(r_list_1);
+  op_inputs_1.emplace_back(std::move(r_list_1));
 
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
-  inputs.emplace("node_a", op_inputs_0);
-  inputs.emplace("node_b", op_inputs_1);
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  inputs.emplace("node_a", std::move(op_inputs_0));
+  inputs.emplace("node_b", std::move(op_inputs_1));
 
   // run
   auto output = executor->Run(inputs);
@@ -538,15 +535,15 @@ TEST_F(ExecutorTest, BasicWorks) {
       str_builder.AppendValues({"15", "27", "39", "51"}));
   SERVING_CHECK_ARROW_STATUS(str_builder.Finish(&expect_array));
 
-  EXPECT_EQ(output->size(), 1);
-  EXPECT_EQ(output->at(0).node_name, "node_d");
-  EXPECT_EQ(output->at(0).table->num_columns(), 1);
-  EXPECT_TRUE(output->at(0).table->schema()->Equals(expect_output_schema));
+  EXPECT_EQ(output.size(), 1);
+  EXPECT_EQ(output.at(0).node_name, "node_d");
+  EXPECT_EQ(output.at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output.at(0).table->schema()->Equals(expect_output_schema));
 
-  std::cout << output->at(0).table->column(0)->ToString() << std::endl;
+  std::cout << output.at(0).table->column(0)->ToString() << std::endl;
   std::cout << expect_array->ToString() << std::endl;
 
-  EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
+  EXPECT_TRUE(output.at(0).table->column(0)->Equals(expect_array));
 }
 
 TEST_F(ExecutorTest, ExceptionWorks) {
@@ -631,17 +628,16 @@ TEST_F(ExecutorTest, ExceptionWorks) {
   auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
   auto input_1 = MakeRecordBatch(input_schema, 4, {array_1});
 
-  auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+  op::OpComputeInputs op_inputs_0;
   std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-  op_inputs_0->emplace_back(r_list_0);
-  auto op_inputs_1 = std::make_shared<op::OpComputeInputs>();
+  op_inputs_0.emplace_back(std::move(r_list_0));
+  op::OpComputeInputs op_inputs_1;
   std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
-  op_inputs_1->emplace_back(r_list_1);
+  op_inputs_1.emplace_back(std::move(r_list_1));
 
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
-  inputs.emplace("node_a", op_inputs_0);
-  inputs.emplace("node_b", op_inputs_1);
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  inputs.emplace("node_a", std::move(op_inputs_0));
+  inputs.emplace("node_b", std::move(op_inputs_1));
 
   // run
   EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
@@ -721,8 +717,7 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
                                                std::move(nodes));
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs =
-      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
   {
     // mock input
     auto input_schema =
@@ -734,11 +729,11 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
     double_builder.Reset();
     auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
 
-    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    op::OpComputeInputs op_inputs_0;
     std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0->emplace_back(r_list_0);
+    op_inputs_0.emplace_back(std::move(r_list_0));
 
-    inputs.emplace("node_a", op_inputs_0);
+    inputs.emplace("node_a", std::move(op_inputs_0));
   }
 
   // run

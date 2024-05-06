@@ -23,24 +23,22 @@
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/core/singleton.h"
 #include "secretflow_serving/util/thread_safe_queue.h"
 
 namespace secretflow::serving {
 
-class ThreadPool {
+class ThreadPool : public Singleton<ThreadPool> {
  public:
-  static std::shared_ptr<ThreadPool> GetInstance() {
-    static std::shared_ptr<ThreadPool> thread_pool{new ThreadPool()};
-    return thread_pool;
-  }
-
   class Task {
    public:
+    virtual ~Task() = default;
+
+    virtual const char* Name() { return "Task"; }
+
     virtual void OnException(std::exception_ptr exception) noexcept = 0;
 
     virtual void Exec() = 0;
-    virtual const char* Name() { return "Task"; }
-    virtual ~Task() = default;
   };
 
   ~ThreadPool() { Stop(); }
@@ -52,12 +50,11 @@ class ThreadPool {
     }
 
     if (tasks_num_ != 0) {
-      SPDLOG_ERROR("thread pool stoped with {} tasks not executed.",
-                   tasks_num_.load());
+      SPDLOG_WARN("thread pool stoped with {} tasks not executed.",
+                  tasks_num_.load());
     }
 
     for (auto& task_queue : task_queues_) {
-      std::unique_ptr<Task> task;
       task_queue.StopPush();
     }
 
@@ -68,7 +65,7 @@ class ThreadPool {
     }
   }
 
-  bool IsRunning() const { return started_; }
+  [[nodiscard]] bool IsRunning() const { return started_; }
 
   void SubmitTask(std::unique_ptr<Task> task) {
     if (!started_) {
@@ -98,8 +95,7 @@ class ThreadPool {
     task_queues_ =
         std::vector<ThreadSafeQueue<std::unique_ptr<Task>>>(thread_num);
 
-    auto exec_task = [this](auto& task) {
-      --tasks_num_;
+    auto exec_task = [](auto& task) {
       SPDLOG_DEBUG("start execute: {}", task->Name());
       try {
         task->Exec();
@@ -114,19 +110,13 @@ class ThreadPool {
     for (int32_t i = 0; i != thread_num; ++i) {
       threads_.emplace_back(
           [this, exec_task](size_t i) {
-            size_t spurious_cnt = 0;
             while (started_) {
               std::unique_ptr<Task> task;
               if (task_queues_[i].BlockPop(task) && started_) {
                 exec_task(task);
-                continue;
+                tasks_num_--;
               }
-              if (started_ && tasks_num_ > 0) {
-                // TODO: steal tasks
-              }
-              spurious_cnt++;
             }
-            SPDLOG_DEBUG("spurious BlockPop times: {}", spurious_cnt);
           },
           i);
     }
@@ -139,8 +129,6 @@ class ThreadPool {
   }
 
  private:
-  explicit ThreadPool() {}
-
   std::vector<std::thread> threads_;
 
   std::vector<ThreadSafeQueue<std::unique_ptr<Task>>> task_queues_;

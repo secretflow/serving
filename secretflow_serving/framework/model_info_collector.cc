@@ -14,10 +14,12 @@
 
 #include "secretflow_serving/framework/model_info_collector.h"
 
+#include <sstream>
 #include <utility>
 
 #include "spdlog/spdlog.h"
 
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/apis/model_service.pb.h"
@@ -116,23 +118,43 @@ bool ModelInfoCollector::TryCollect(
   apis::GetModelInfoRequest request;
   request.mutable_service_spec()->set_id(opts_.service_id);
 
+  auto span =
+      CreateClientSpan(&cntl,
+                       fmt::format("ModelService/GetModelInfo: {}-{}",
+                                   opts_.self_party_id, remote_party_id),
+                       request.mutable_header());
+
   apis::ModelService_Stub stub(channel.get());
   stub.GetModelInfo(&cntl, &request, &response, nullptr);
+  SpanAttrOption span_option;
+  span_option.cntl = &cntl;
+  span_option.is_client = true;
+  span_option.party_id = opts_.self_party_id;
+  span_option.service_id = request.service_spec().id();
 
   if (cntl.Failed()) {
+    span_option.code = errors::ErrorCode::NETWORK_ERROR;
+    span_option.msg =
+        fmt::format("TryCollect ({}) from ({}) GetModelInfo brpc failed.",
+                    remote_party_id, opts_.self_party_id);
+
     SPDLOG_WARN(
         "call ({}) from ({}) GetModelInfo failed, msg:{}, may need retry",
         remote_party_id, opts_.self_party_id, cntl.ErrorText());
-    return false;
-  }
-  if (!CheckStatusOk(response.status())) {
+  } else if (!CheckStatusOk(response.status())) {
+    span_option.code = response.status().code();
+    span_option.msg = response.status().msg();
     SPDLOG_WARN(
         "call ({}) from ({}) GetModelInfo failed, msg:{}, may need retry",
         remote_party_id, opts_.self_party_id, response.status().msg());
-    return false;
   }
-  model_info_map_[remote_party_id] = response.model_info();
-  return true;
+
+  SetSpanAttrs(span, span_option);
+  if (span_option.code == errors::ErrorCode::OK) {
+    model_info_map_[remote_party_id] = response.model_info();
+    return true;
+  }
+  return false;
 }
 
 void ModelInfoCollector::CheckNodeViewList(

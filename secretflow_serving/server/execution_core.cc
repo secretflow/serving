@@ -113,22 +113,20 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     Executable::Task task;
     task.id = request->task().execution_id();
     task.features = features;
-    task.node_inputs = std::make_shared<std::unordered_map<
-        std::string, std::shared_ptr<op::OpComputeInputs>>>();
     for (const auto& n : request->task().nodes()) {
-      auto compute_inputs = std::make_shared<op::OpComputeInputs>();
+      op::OpComputeInputs compute_inputs;
       for (const auto& io : n.ios()) {
         std::vector<std::shared_ptr<arrow::RecordBatch>> inputs;
         for (const auto& d : io.datas()) {
           inputs.emplace_back(DeserializeRecordBatch(d));
         }
-        compute_inputs->emplace_back(std::move(inputs));
+        compute_inputs.emplace_back(std::move(inputs));
       }
-      task.node_inputs->emplace(n.name(), std::move(compute_inputs));
+      task.node_inputs.emplace(n.name(), std::move(compute_inputs));
     }
     opts_.executable->Run(task);
 
-    for (auto& output : *task.outputs) {
+    for (auto& output : task.outputs) {
       auto* node_io = response->mutable_result()->add_nodes();
       node_io->set_name(std::move(output.node_name));
       auto* io_data = node_io->add_ios();

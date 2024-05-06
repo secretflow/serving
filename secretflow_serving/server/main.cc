@@ -21,10 +21,12 @@
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/server/kuscia/config_parser.h"
 #include "secretflow_serving/server/server.h"
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/server/version.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/config/serving_config.pb.h"
+#include "secretflow_serving/config/trace_config.pb.h"
 
 DEFINE_string(config_mode, "",
               "config mode for serving, default value will use the raw config "
@@ -37,11 +39,34 @@ DEFINE_string(
     logging_config_file, "",
     "read an ascii LoggingConfig protobuf from the supplied file name.");
 
+// trace config
+DEFINE_string(
+    trace_config_file, "",
+    "read an ascii TraceConfig protobuf from the supplied file name.");
+
 #define STRING_EMPTY_VALIDATOR(str_config)                                  \
   if (str_config.empty()) {                                                 \
     SERVING_THROW(secretflow::serving::errors::ErrorCode::INVALID_ARGUMENT, \
                   "{} get empty value", #str_config);                       \
   }
+
+void InitLogger() {
+  secretflow::serving::LoggingConfig log_config;
+  if (!FLAGS_logging_config_file.empty()) {
+    secretflow::serving::LoadPbFromJsonFile(FLAGS_logging_config_file,
+                                            &log_config);
+  }
+  secretflow::serving::SetupLogging(log_config);
+}
+
+void InitTracer() {
+  secretflow::serving::TraceConfig trace_log;
+  if (!FLAGS_trace_config_file.empty()) {
+    secretflow::serving::LoadPbFromJsonFile(FLAGS_trace_config_file,
+                                            &trace_log);
+  }
+  secretflow::serving::InitTracer(trace_log);
+}
 
 int main(int argc, char* argv[]) {
   // Initialize the symbolizer to get a human-readable stack trace
@@ -52,13 +77,8 @@ int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   try {
-    // init logger
-    secretflow::serving::LoggingConfig log_config;
-    if (!FLAGS_logging_config_file.empty()) {
-      secretflow::serving::LoadPbFromJsonFile(FLAGS_logging_config_file,
-                                              &log_config);
-    }
-    secretflow::serving::SetupLogging(log_config);
+    InitLogger();
+    InitTracer();
 
     SPDLOG_INFO("version: {}", SERVING_VERSION_STRING);
 

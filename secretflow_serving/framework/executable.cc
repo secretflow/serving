@@ -20,17 +20,17 @@
 
 namespace secretflow::serving {
 
-Executable::Executable(std::vector<std::shared_ptr<Executor>> executors)
+Executable::Executable(std::vector<Executor> executors)
     : executors_(std::move(executors)) {}
 
 void Executable::Run(Task& task) {
   SERVING_ENFORCE(task.id < executors_.size(), errors::ErrorCode::LOGIC_ERROR);
   auto executor = executors_[task.id];
   if (task.features) {
-    task.outputs = executor->Run(task.features);
+    task.outputs = executor.Run(task.features);
   } else {
-    SERVING_ENFORCE(!task.node_inputs->empty(), errors::ErrorCode::LOGIC_ERROR);
-    task.outputs = executor->Run(*(task.node_inputs));
+    SERVING_ENFORCE(!task.node_inputs.empty(), errors::ErrorCode::LOGIC_ERROR);
+    task.outputs = executor.Run(task.node_inputs);
   }
 
   SPDLOG_DEBUG("Executable::Run end, task.outputs.size:{}",
@@ -39,8 +39,7 @@ void Executable::Run(Task& task) {
 
 const std::shared_ptr<const arrow::Schema>&
 Executable::GetInputFeatureSchema() {
-  const auto& schema = executors_.front()->GetInputFeatureSchema();
-
+  const auto& schema = executors_.front().GetInputFeatureSchema();
   SERVING_ENFORCE(schema, errors::ErrorCode::LOGIC_ERROR);
   return schema;
 }

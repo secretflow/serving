@@ -134,7 +134,7 @@ std::vector<arrow::Datum> BuildInputDatums(
 }  // namespace
 
 ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
-    : OpKernel(std::move(opts)) {
+    : OpKernel(std::move(opts)), result_id_(-1), dummy_flag_(false) {
   BuildInputSchema();
   BuildOutputSchema();
 
@@ -438,7 +438,7 @@ void ArrowProcessing::DoCompute(ComputeContext* ctx) {
     return;
   }
 
-  SPDLOG_INFO("replay compute: {}", compute_trace_.name());
+  SPDLOG_DEBUG("replay compute: {}", compute_trace_.name());
 
   ctx->output = ReplayCompute(ctx->inputs.front().front());
 }

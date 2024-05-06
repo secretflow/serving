@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-20 03:07+0000\n"
+"POT-Creation-Date: 2024-04-16 20:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -128,7 +128,7 @@ msgid "Key:str, Value:str"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:58
-msgid "modelServiceId"
+msgid "model_service_id"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:58
@@ -141,7 +141,6 @@ msgid "str"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:58
-#: ../../source/topics/system/feature_service.rst:60
 msgid "Model service specification id"
 msgstr ""
 
@@ -164,11 +163,15 @@ msgid "Yes"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:60
-msgid "partyId"
+msgid "party_id"
+msgstr ""
+
+#: ../../source/topics/system/feature_service.rst:60
+msgid "Party specification id"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:62
-msgid "featureFields[]"
+msgid "feature_fields[]"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:62
@@ -180,7 +183,7 @@ msgid "Request feature field list"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:64
-msgid "featureFields[].name"
+msgid "feature_fields[].name"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:64
@@ -189,10 +192,11 @@ msgid "Unique name of the feature"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:66
-msgid "featureFields[].type"
+msgid "feature_fields[].type"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:66
+#: ../../source/topics/system/feature_service.rst:138
 msgid "enum(FieldType)"
 msgstr ""
 
@@ -210,11 +214,14 @@ msgid "Object(FeatureParam)"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:68
-msgid "Custom query paramters for fetch features"
+msgid ""
+"Custom parameters data for querying feature values, the specific content "
+"format of which is determined by the feature datasource provider. Each "
+"one for query one row of features."
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:70
-msgid "param.queryDatas[]"
+msgid "param.query_datas[]"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:70
@@ -228,7 +235,7 @@ msgid ""
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:72
-msgid "param.queryContext"
+msgid "param.query_context"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:72
@@ -260,8 +267,7 @@ msgid "status.code"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:128
-#: ../../source/topics/system/feature_service.rst:138
-msgid "enum"
+msgid "enum(ErrorCode)"
 msgstr ""
 
 #: ../../source/topics/system/feature_service.rst:128
@@ -393,7 +399,7 @@ msgid ""
 "configuration to the following pattern:"
 msgstr "将 Secretflow-Serving 启动配置中的特征数据源部分配置成如下模式："
 
-#: ../../source/topics/system/feature_service.rst:169
+#: ../../source/topics/system/feature_service.rst:171
 msgid ""
 "In this configuration, the endpoint is the URL of the feature service's "
 "feature fetching interface. SecretFlow-Serving will access the feature "

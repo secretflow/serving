@@ -83,7 +83,9 @@ message PredictRequest {
   ServiceSpec service_spec = 2;
 
   // The params for fetch features. Note that this should include all the
-  // parties involved in the prediction.
+  // parties involved in the prediction. When using the feature service as the
+  // source of feature data, serving does not consume this parameter but instead
+  // passes it through to the feature service for consumption.
   // Key: party's id.
   // Value: params for fetch features.
   map<string, FeatureParam> fs_params = 3;
@@ -110,18 +112,24 @@ message PredictRequest {
 //     "service_spec": {
 //       "id": "test_service_id"
 //     },
-//     "results": {
-//       "scores": [
-//         {
-//           "name": "pred_y",
-//           "value": 0.32456
-//         },
-//         {
-//           "name": "pred_y",
-//           "value": 0.02456
-//         }
-//       ]
-//     }
+//     "results": [
+//       {
+//         "scores": [
+//           {
+//             "name": "pred_y",
+//             "value": 0.32456
+//           }
+//         ]
+//       },
+//       {
+//         "scores": [
+//           {
+//             "name": "pred_y",
+//             "value": 1.146456
+//           }
+//         ]
+//       }
+//     ]
 //   }
 // ```
 message PredictResponse {

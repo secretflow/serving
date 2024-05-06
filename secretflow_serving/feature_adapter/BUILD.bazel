@@ -54,6 +54,7 @@ serving_cc_library(
     hdrs = ["http_adapter.h"],
     deps = [
         ":feature_adapter_factory",
+        "//secretflow_serving/server/trace",
         "//secretflow_serving/spis:batch_feature_service_cc_proto",
         "//secretflow_serving/spis:error_code_cc_proto",
         "//secretflow_serving/util:network",

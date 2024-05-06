@@ -54,10 +54,8 @@ class ThreadSafeQueue {
     // wait queue not full
     {
       std::unique_lock<std::mutex> lock(mtx_);
-      if (length_ >= kMaxQueueSize) {
-        full_cv_.wait(lock,
-                      [this] { return length_ < kMaxQueueSize || stop_flag_; });
-      }
+      full_cv_.wait(lock,
+                    [this] { return length_ < kMaxQueueSize || stop_flag_; });
       if (stop_flag_) {
         empty_cv_.notify_all();
         return;
@@ -79,11 +77,9 @@ class ThreadSafeQueue {
   bool BlockPop(T& t) {
     {
       std::unique_lock<std::mutex> lock(mtx_);
+      empty_cv_.wait(lock, [this] { return stop_flag_ || (length_ > 0); });
       if (length_ <= 0) {
-        empty_cv_.wait(lock, [this] { return stop_flag_ || (length_ > 0); });
-        if (length_ <= 0) {
-          return false;
-        }
+        return false;
       }
       length_--;
       t = std::move(buffer_[head_index_]);
@@ -113,12 +109,10 @@ class ThreadSafeQueue {
   bool WaitPop(T& t) {
     {
       std::unique_lock<std::mutex> lock(mtx_);
+      empty_cv_.wait_for(lock, std::chrono::milliseconds(wait_ms_),
+                         [this] { return stop_flag_ || (length_ > 0); });
       if (length_ <= 0) {
-        empty_cv_.wait_for(lock, std::chrono::milliseconds(wait_ms_),
-                           [this] { return stop_flag_ || (length_ > 0); });
-        if (length_ <= 0) {
-          return false;
-        }
+        return false;
       }
       length_--;
       t = std::move(buffer_[head_index_]);
@@ -150,6 +144,6 @@ class ThreadSafeQueue {
 
   uint32_t wait_ms_;
 
-  static constexpr uint32_t DEFAULT_POP_WAIT_MS = 10;
+  static constexpr uint32_t DEFAULT_POP_WAIT_MS = 2;
 };
 }  // namespace secretflow::serving

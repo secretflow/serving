@@ -18,7 +18,12 @@ package(default_visibility = ["//visibility:public"])
 
 filegroup(
     name = "all_srcs",
-    srcs = glob(["**"]),
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "tests/**/*",
+        ],
+    ),
 )
 
 serving_cmake_external(

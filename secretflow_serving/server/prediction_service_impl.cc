@@ -19,6 +19,8 @@
 #include "spdlog/spdlog.h"
 #include "yacl/utils/elapsed_timer.h"
 
+#include "secretflow_serving/server/trace/trace.h"
+
 namespace secretflow::serving {
 
 PredictionServiceImpl::PredictionServiceImpl(const std::string& party_id)
@@ -43,6 +45,14 @@ void PredictionServiceImpl::Predict(
   auto* cntl = static_cast<brpc::Controller*>(controller);
   cntl->set_always_print_primitive_fields(true);
 
+  auto span =
+      CreateServerSpan(*cntl, request->header(), "PredictionService/Predict");
+  auto scope = opentelemetry::trace::Tracer::WithActiveSpan(span);
+  SpanAttrOption span_option;
+  span_option.cntl = cntl;
+  span_option.party_id = party_id_;
+  span_option.service_id = request->service_spec().id();
+
   SPDLOG_DEBUG("predict begin, request: {}", request->ShortDebugString());
   yacl::ElapsedTimer timer;
 
@@ -57,6 +67,10 @@ void PredictionServiceImpl::Predict(
 
   timer.Pause();
   SPDLOG_DEBUG("predict end, time: {}", timer.CountMs());
+
+  span_option.code = response->status().code();
+  span_option.msg = response->status().msg();
+  SetSpanAttrs(span, span_option);
 
   RecordMetrics(*request, *response, timer.CountMs(), "Predict");
 }

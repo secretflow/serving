@@ -41,3 +41,9 @@ docker run --rm -v $(pwd)/source/reference/:/out \
   -v $(pwd)/..:/protos \
   pseudomuto/protoc-gen-doc \
   --doc_opt=/out/model_md.tmpl,model.md secretflow_serving/protos/attr.proto secretflow_serving/protos/op.proto secretflow_serving/protos/graph.proto secretflow_serving/protos/bundle.proto secretflow_serving/protos/data_type.proto secretflow_serving/protos/compute_trace.proto secretflow_serving/protos/compute_trace.proto
+
+echo "5. Update span info doc."
+docker run --rm -v $(pwd)/source/reference/:/out \
+  -v $(pwd)/..:/protos \
+  pseudomuto/protoc-gen-doc \
+  --doc_opt=/out/span_info_md.tmpl,span_info.md secretflow_serving/server/trace/span_info.proto

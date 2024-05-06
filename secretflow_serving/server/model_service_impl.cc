@@ -20,6 +20,7 @@
 #include "yacl/utils/elapsed_timer.h"
 
 #include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/server/trace/trace.h"
 
 namespace secretflow::serving {
 
@@ -37,6 +38,14 @@ void ModelServiceImpl::GetModelInfo(
   auto* cntl = static_cast<brpc::Controller*>(controller);
   cntl->set_always_print_primitive_fields(true);
 
+  auto span =
+      CreateServerSpan(*cntl, request->header(), "ModelService/GetModelInfo");
+  auto scope = opentelemetry::trace::Tracer::WithActiveSpan(span);
+  SpanAttrOption span_option;
+  span_option.cntl = cntl;
+  span_option.party_id = self_party_id_;
+  span_option.service_id = request->service_spec().id();
+
   yacl::ElapsedTimer timer;
 
   response->mutable_service_spec()->CopyFrom(request->service_spec());
@@ -52,6 +61,11 @@ void ModelServiceImpl::GetModelInfo(
   }
 
   timer.Pause();
+
+  span_option.code = response->status().code();
+  span_option.msg = response->status().msg();
+  SetSpanAttrs(span, span_option);
+
   RecordMetrics(*request, *response, timer.CountMs(), "GetModelInfo");
 }
 

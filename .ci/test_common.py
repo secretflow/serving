@@ -95,9 +95,15 @@ def exec_cmd(cmd, background=False, envs=None):
         raise
 
 
-def build_predict_cmd(host: str, port: int, request_body: str):
+def build_predict_cmd(
+    host: str, port: int, request_body: str, headers: Dict[str, str] = {}
+):
+    headers_str = ""
+    for k, v in headers.items():
+        headers_str += f"--header '{k}: {v}' "
+
     url = f"http://{host}:{port}/PredictionService/Predict"
-    return f'curl --location "{url}" --header "Content-Type: application/json" --data \'{request_body}\''
+    return f'curl --location "{url}" --header "Content-Type: application/json" {headers_str} --data \'{request_body}\''
 
 
 def build_get_model_info_cmd(host: str, port: int, service_spec_id: str):

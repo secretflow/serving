@@ -25,6 +25,9 @@
 
 
 
+
+
+
 - Messages
 
 
@@ -53,6 +56,7 @@
 
 
     - [FileSourceMeta](#filesourcemeta)
+    - [HttpSourceMeta](#httpsourcemeta)
     - [ModelConfig](#modelconfig)
     - [OSSSourceMeta](#osssourcemeta)
 
@@ -74,6 +78,13 @@
 
 
     - [TlsConfig](#tlsconfig)
+
+
+
+
+
+    - [TraceConfig](#traceconfig)
+    - [TraceLogConfig](#tracelogconfig)
 
 
 
@@ -110,8 +121,13 @@
 
 
 
+
+
+
 - [Scalar Value Types](#scalar-value-types)
 
+
+ <!-- end services -->
 
  <!-- end services -->
 
@@ -264,6 +280,20 @@ empty by design
 
 
 
+### HttpSourceMeta
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| connect_timeout_ms | [ int32](#int32 ) | Max duration for a connect. -1 means wait indefinitely. Default: 60 * 1000 (ms) |
+| timeout_ms | [ int32](#int32 ) | Max duration of http request. -1 means wait indefinitely. Default: 120 * 1000 (ms) |
+| tls_config | [ TlsConfig](#tlsconfig ) | TLS related config. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
 ### ModelConfig
 Config for serving model
 
@@ -277,6 +307,7 @@ Config for serving model
 | source_type | [ SourceType](#sourcetype ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.file_source_meta | [ FileSourceMeta](#filesourcemeta ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.oss_source_meta | [ OSSSourceMeta](#osssourcemeta ) | none |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.http_source_meta | [ HttpSourceMeta](#httpsourcemeta ) | none |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -367,6 +398,35 @@ Related config of serving
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->
+
+
+
+
+### TraceConfig
+Serving trace config options
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| trace_log_enable | [ bool](#bool ) | dump trace to a logfile, default: false |
+| trace_log_conf | [ TraceLogConfig](#tracelogconfig ) | if trace_log_enable is true, use this log config to dump trace info |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### TraceLogConfig
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| trace_log_path | [ string](#string ) | defaule value: "trace.log" |
+| max_trace_log_file_size | [ int32](#int32 ) | Byte. default value: 500 * 1024 * 1024 (500MB) |
+| max_trace_log_file_count | [ int32](#int32 ) | default value: 10 |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+ <!-- end messages -->
  <!-- end Files -->
 
 ## Enums
@@ -413,7 +473,10 @@ Supported model source type
 | INVALID_SOURCE_TYPE | 0 | Placeholder for proto3 default value, do not use it. |
 | ST_FILE | 1 | Local filesystem |
 | ST_OSS | 2 | OSS/AWS S3 |
+| ST_HTTP | 3 | Http source |
 
+
+ <!-- end Enums -->
 
  <!-- end Enums -->
 

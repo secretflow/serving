@@ -18,6 +18,9 @@
 #include "brpc/controller.h"
 #include "spdlog/spdlog.h"
 #include "yacl/utils/elapsed_timer.h"
+
+#include "secretflow_serving/server/trace/trace.h"
+
 namespace secretflow::serving {
 
 ExecutionServiceImpl::ExecutionServiceImpl(
@@ -34,11 +37,23 @@ void ExecutionServiceImpl::Execute(
   brpc::Controller* cntl = static_cast<brpc::Controller*>(controller);
   cntl->set_always_print_primitive_fields(true);
 
+  auto span =
+      CreateServerSpan(*cntl, request->header(), "ExecutionService/Execute");
+  SpanAttrOption span_option;
+  span_option.cntl = cntl;
+  span_option.party_id = execution_core_->GetPartyID();
+  span_option.service_id = request->service_spec().id();
+  auto scope = opentelemetry::trace::Tracer::WithActiveSpan(span);
+
   yacl::ElapsedTimer timer;
   SPDLOG_DEBUG("execute begin, request: {}", request->ShortDebugString());
   execution_core_->Execute(request, response);
   timer.Pause();
   SPDLOG_DEBUG("execute end, response: {}", response->ShortDebugString());
+
+  span_option.code = response->status().code();
+  span_option.msg = response->status().msg();
+  SetSpanAttrs(span, span_option);
 
   RecordMetrics(*request, *response, timer.CountMs(), "Execute");
 }

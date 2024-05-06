@@ -121,14 +121,14 @@ void Server::Start() {
   Graph graph(model_bundle->graph());
 
   // build execution core
-  std::vector<std::shared_ptr<Executor>> executors;
+  std::vector<Executor> executors;
   for (const auto& execution : graph.GetExecutions()) {
-    executors.emplace_back(std::make_shared<Executor>(execution));
+    executors.emplace_back(Executor(execution));
   }
   ExecutionCore::Options exec_opts;
   exec_opts.id = opts_.service_id;
   exec_opts.party_id = self_party_id;
-  exec_opts.executable = std::make_shared<Executable>(std::move(executors));
+  exec_opts.executable = std::make_unique<Executable>(std::move(executors));
   if (opts_.server_config.op_exec_worker_num() > 0) {
     exec_opts.op_exec_workers_num = opts_.server_config.op_exec_worker_num();
   }
