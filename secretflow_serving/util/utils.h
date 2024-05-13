@@ -42,6 +42,9 @@ void JsonToPb(const std::string& json, ::google::protobuf::Message* message);
 
 std::string PbToJson(const ::google::protobuf::Message* message);
 
+std::string PbToJsonNoExcept(
+    const ::google::protobuf::Message* message) noexcept;
+
 template <typename Func>
 void FeatureVisit(Func&& visitor, const Feature& f) {
   switch (f.field().type()) {
@@ -70,7 +73,7 @@ void FeatureVisit(Func&& visitor, const Feature& f) {
       break;
     }
     default:
-      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR, "unkown field type",
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR, "unkown field type {}",
                     FieldType_Name(f.field().type()));
   }
 }
