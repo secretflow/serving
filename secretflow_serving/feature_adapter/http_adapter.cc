@@ -118,24 +118,29 @@ void HttpFeatureAdapter::OnFetchFeature(const Request& request,
   channel_->CallMethod(NULL, &cntl, NULL, NULL, NULL);
   if (cntl.Failed()) {
     span_option.code = errors::ErrorCode::NETWORK_ERROR;
-    span_option.msg =
-        fmt::format("http request failed, endpoint:{}, detail:{}",
-                    spec_.http_opts().endpoint(), cntl.ErrorText());
+    span_option.msg = fmt::format(
+        "http request failed, endpoint:{}, request: {}, error info detail:{}",
+        spec_.http_opts().endpoint(), spi_request, cntl.ErrorText());
   } else {
     auto status = ::google::protobuf::util::JsonStringToMessage(
         cntl.response_attachment().to_string(), &spi_response);
     if (!status.ok()) {
       span_option.code = errors::ErrorCode::DESERIALIZE_FAILED;
-      span_option.msg = fmt::format("deserialize response context failed: {}",
-                                    status.ToString());
+      span_option.msg = fmt::format(
+          "deserialize response context failed: request: {}, error: {}",
+          spi_request, status.ToString());
+
     } else if (spi_response.status().code() != spis::ErrorCode::OK) {
       span_option.code = MappingErrorCode(spi_response.status().code());
       span_option.msg = fmt::format(
-          "fetch features response error, msg: {}, code: {}",
-          spi_response.status().msg(), spi_response.status().code());
+          "fetch features response error, request: {}, msg: {}, code: {}",
+          spi_request, spi_response.status().msg(),
+          spi_response.status().code());
+
     } else if (spi_response.features().empty()) {
       span_option.code = errors::ErrorCode::IO_ERROR;
-      span_option.msg = "get empty features.";
+      span_option.msg =
+          fmt::format("get empty features, request: {}", spi_request);
     }
   }
 

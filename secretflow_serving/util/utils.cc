@@ -67,4 +67,13 @@ std::string PbToJson(const ::google::protobuf::Message* message) {
   return json;
 }
 
+std::string PbToJsonNoExcept(
+    const ::google::protobuf::Message* message) noexcept {
+  try {
+    return PbToJson(message);
+  } catch (...) {
+    return "ill_format_message";
+  }
+}
+
 }  // namespace secretflow::serving

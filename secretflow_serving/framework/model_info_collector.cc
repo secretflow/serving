@@ -96,6 +96,9 @@ ModelInfoCollector::ModelInfoCollector(Options opts) : opts_(std::move(opts)) {
         node_view, std::set<std::string>(node_view.parents().begin(),
                                          node_view.parents().end()));
   }
+
+  SPDLOG_INFO("local model info: party: {} : {}", opts_.self_party_id,
+              PbToJson(&model_info_));
 }
 
 void ModelInfoCollector::DoCollect() {
@@ -107,6 +110,10 @@ void ModelInfoCollector::DoCollect() {
                     "GetModelInfo from {} failed.", remote_party_id);
   }
 
+  for (const auto& [remote_party_id, model_info] : model_info_map_) {
+    SPDLOG_INFO("model info: party: {} : {}", remote_party_id,
+                PbToJson(&model_info));
+  }
   CheckAndSetSpecificMap();
 }
 

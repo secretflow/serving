@@ -20,6 +20,7 @@
 #include "secretflow_serving/feature_adapter/feature_adapter_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/thread_pool.h"
+#include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving {
 
@@ -134,12 +135,14 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     }
     response->mutable_status()->set_code(errors::ErrorCode::OK);
   } catch (const Exception& e) {
-    SPDLOG_ERROR("execute failed, code:{}, msg:{}, stack:{}", e.code(),
-                 e.what(), e.stack_trace());
+    SPDLOG_ERROR("execute failed, request: {}, code:{}, msg:{}, stack:{}",
+                 PbToJsonNoExcept(request), e.code(), e.what(),
+                 e.stack_trace());
     response->mutable_status()->set_code(e.code());
     response->mutable_status()->set_msg(e.what());
   } catch (const std::exception& e) {
-    SPDLOG_ERROR("execute failed, msg:{}", e.what());
+    SPDLOG_ERROR("execute failed, request: {}, msg:{}",
+                 PbToJsonNoExcept(request), e.what());
     response->mutable_status()->set_code(errors::ErrorCode::UNEXPECTED_ERROR);
     response->mutable_status()->set_msg(e.what());
   }

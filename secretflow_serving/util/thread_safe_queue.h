@@ -42,7 +42,7 @@ class ThreadSafeQueue {
       buffer_[i] = std::move(buffer[i]);
     }
     SERVING_ENFORCE(wait_ms_ > 0, errors::ErrorCode::INVALID_ARGUMENT,
-                    "wait_ms should not be zero", wait_ms_);
+                    "wait_ms({}) should not be zero", wait_ms_);
   }
 
   ThreadSafeQueue(const ThreadSafeQueue&) = delete;
