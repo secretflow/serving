@@ -14,6 +14,11 @@
 - [Deprecated] Python 3.8 is no longer suppoted for secretflow-serving-lib
 - [Deprecated] macOS 11.x is no longer supported for secretflow-serving-lib
 
+## 20240423 - 0.3.0b0
+
+- [Feature] Add Trace function
+- [Feature] Support http model source
+
 ## 20240325 - 0.2.1b0
 
 - [Bugfix] Fix dummy node check output schema failed
