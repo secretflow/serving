@@ -11,6 +11,10 @@
 
 > please add your unreleased change here.
 
+## 20240423 - 0.3.0b0
+
+- [Feature] Add Trace function
+- [Feature] Support http model source
 - [Deprecated] Python 3.8 is no longer suppoted for secretflow-serving-lib
 - [Deprecated] macOS 11.x is no longer supported for secretflow-serving-lib
 
