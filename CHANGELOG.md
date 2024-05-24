@@ -11,6 +11,11 @@
 
 > please add your unreleased change here.
 
+## 20240524 - 0.3.1b0
+
+- [Bugfix] fix tree predict base score miss
+- [Bugfix] fix http adapater error msg format failed
+
 ## 20240423 - 0.3.0b0
 
 - [Feature] Add Trace function

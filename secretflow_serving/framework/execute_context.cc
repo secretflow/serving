@@ -26,10 +26,9 @@ void ExecuteContext::CheckAndUpdateResponse() {
 void ExecuteContext::CheckAndUpdateResponse(
     const apis::ExecuteResponse& exec_res) {
   if (!CheckStatusOk(exec_res.status())) {
-    SERVING_THROW(
-        exec_res.status().code(),
-        fmt::format("{} exec failed: code({}), {}", target_id_,
-                    exec_res.status().code(), exec_res.status().msg()));
+    SERVING_THROW(exec_res.status().code(), "{} exec failed: code({}), {}",
+                  target_id_, exec_res.status().code(),
+                  exec_res.status().msg());
   }
   MergeResonseHeader(exec_res);
 }
