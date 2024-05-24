@@ -209,7 +209,7 @@ class RemoteExecute : public ExecuteBase,
     if (span_option.code == errors::ErrorCode::OK) {
       exec_ctx_.MergeResonseHeader();
     } else {
-      SERVING_THROW(span_option.code, span_option.msg);
+      SERVING_THROW(span_option.code, "{}", span_option.msg);
     }
   }
 
