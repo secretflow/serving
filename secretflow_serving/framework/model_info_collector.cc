@@ -119,7 +119,7 @@ void ModelInfoCollector::DoCollect() {
 
 bool ModelInfoCollector::TryCollect(
     const std::string& remote_party_id,
-    const std::shared_ptr<::google::protobuf::RpcChannel>& channel) {
+    const std::unique_ptr<::google::protobuf::RpcChannel>& channel) {
   brpc::Controller cntl;
   apis::GetModelInfoResponse response;
   apis::GetModelInfoRequest request;

@@ -40,6 +40,9 @@ TreeEnsemblePredict::TreeEnsemblePredict(OpKernelOptions opts)
       GetNodeAttr<std::string>(opts_.node_def, *opts_.op_def, "algo_func");
   func_type_ = ParseLinkFuncType(func_type_str);
 
+  base_score_ =
+      GetNodeAttr<double>(opts_.node_def, *opts_.op_def, "base_score");
+
   BuildInputSchema();
   BuildOutputSchema();
 }
@@ -65,7 +68,8 @@ void TreeEnsemblePredict::DoCompute(ComputeContext* ctx) {
   arrow::DoubleBuilder builder;
   SERVING_CHECK_ARROW_STATUS(builder.Resize(merged_array->length()));
   for (int64_t i = 0; i < merged_array->length(); ++i) {
-    auto score = ApplyLinkFunc(merged_array->Value(i), func_type_);
+    auto score = merged_array->Value(i) + base_score_;
+    score = ApplyLinkFunc(score, func_type_);
     SERVING_CHECK_ARROW_STATUS(builder.Append(score));
   }
   std::shared_ptr<arrow::Array> res_array;
@@ -90,7 +94,7 @@ void TreeEnsemblePredict::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(TREE_ENSEMBLE_PREDICT, TreeEnsemblePredict)
-REGISTER_OP(TREE_ENSEMBLE_PREDICT, "0.0.1",
+REGISTER_OP(TREE_ENSEMBLE_PREDICT, "0.0.2",
             "Accept the weighted results from multiple trees (`TREE_SELECT` + "
             "`TREE_MERGE`), merge them, and obtain the final prediction result "
             "of the tree ensemble.")
@@ -101,6 +105,8 @@ REGISTER_OP(TREE_ENSEMBLE_PREDICT, "0.0.1",
     .StringAttr("output_col_name",
                 "The column name of tree ensemble predict score", false, false)
     .Int32Attr("num_trees", "The number of ensemble's tree", false, false)
+    .DoubleAttr("base_score", "The initial prediction score, global bias.",
+                false, true, 0.0)
     .StringAttr(
         "algo_func",
         "Optional value: "

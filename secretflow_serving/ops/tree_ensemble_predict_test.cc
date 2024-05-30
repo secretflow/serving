@@ -47,6 +47,9 @@ TEST_P(TreeEnsemblePredictParamTest, Works) {
     },
     "output_col_name": {
       "s": "scores"
+    },
+    "base_score": {
+      "d": 0.1
     }
   }
 }
@@ -96,6 +99,7 @@ TEST_P(TreeEnsemblePredictParamTest, Works) {
     for (size_t col = 1; col < param.tree_weights.size(); ++col) {
       score += param.tree_weights[col][row];
     }
+    score += 0.1;
     SERVING_CHECK_ARROW_STATUS(expect_res_builder.Append(
         ApplyLinkFunc(score, ParseLinkFuncType(param.algo_func))));
   }

@@ -19,18 +19,19 @@ namespace secretflow::serving {
 template <class T>
 class Singleton {
  public:
-  static T *GetInstance() {
+  static T* GetInstance() {
     static T t;
     return &t;
   }
 
+  Singleton(const Singleton&) = delete;
+  Singleton& operator=(const Singleton&) = delete;
+  Singleton(Singleton&&) = delete;
+  Singleton& operator=(Singleton&&) = delete;
+
  protected:
   Singleton() {}
   virtual ~Singleton() {}
-  Singleton(const Singleton &) = delete;
-  Singleton &operator=(const Singleton &) = delete;
-  Singleton(Singleton &&) = delete;
-  Singleton &operator=(Singleton &&) = delete;
 };
 
 }  // namespace secretflow::serving

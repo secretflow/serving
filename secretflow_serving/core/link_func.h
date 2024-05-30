@@ -25,4 +25,10 @@ LinkFunctionType ParseLinkFuncType(const std::string& type);
 template <typename T>
 T ApplyLinkFunc(T x, LinkFunctionType type);
 
+template <typename T, typename... ARGS>
+T ApplyLinkFunc(T x, LinkFunctionType lf_type, ARGS&&... args);
+
+template <typename... ARGS>
+void CheckLinkFuncAragsValid(LinkFunctionType lf_type, ARGS&&... args);
+
 }  // namespace secretflow::serving

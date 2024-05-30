@@ -19,6 +19,32 @@
 
 namespace secretflow::serving {
 
+void ExeResponseToIoMap(
+    apis::ExecuteResponse& exec_res,
+    std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
+  auto* result = exec_res.mutable_result();
+  for (int i = 0; i < result->nodes_size(); ++i) {
+    auto* result_node_io = result->mutable_nodes(i);
+    auto prev_insert_iter = node_io_map->find(result_node_io->name());
+    if (prev_insert_iter != node_io_map->end()) {
+      // found node, merge ios
+      auto& target_node_io = prev_insert_iter->second;
+      SERVING_ENFORCE(target_node_io.ios_size() == result_node_io->ios_size(),
+                      errors::ErrorCode::LOGIC_ERROR);
+      for (int io_index = 0; io_index < target_node_io.ios_size(); ++io_index) {
+        auto* target_io = target_node_io.mutable_ios(io_index);
+        auto* io = result_node_io->mutable_ios(io_index);
+        for (int data_index = 0; data_index < io->datas_size(); ++data_index) {
+          target_io->add_datas(std::move(*(io->mutable_datas(data_index))));
+        }
+      }
+    } else {
+      auto node_name = result_node_io->name();
+      node_io_map->emplace(node_name, std::move(*result_node_io));
+    }
+  }
+}
+
 void ExecuteContext::CheckAndUpdateResponse() {
   CheckAndUpdateResponse(exec_res_);
 }
@@ -26,10 +52,9 @@ void ExecuteContext::CheckAndUpdateResponse() {
 void ExecuteContext::CheckAndUpdateResponse(
     const apis::ExecuteResponse& exec_res) {
   if (!CheckStatusOk(exec_res.status())) {
-    SERVING_THROW(
-        exec_res.status().code(),
-        fmt::format("{} exec failed: code({}), {}", target_id_,
-                    exec_res.status().code(), exec_res.status().msg()));
+    SERVING_THROW(exec_res.status().code(), "{} exec failed: code({}), {}",
+                  target_id_, exec_res.status().code(),
+                  exec_res.status().msg());
   }
   MergeResonseHeader(exec_res);
 }
@@ -41,43 +66,13 @@ void ExecuteContext::MergeResonseHeader(const apis::ExecuteResponse& exec_res) {
       exec_res.header().data().begin(), exec_res.header().data().end());
 }
 
-void ExeResponseToIoMap(
-    apis::ExecuteResponse& exec_res,
-    std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-        node_io_map) {
-  auto result = exec_res.mutable_result();
-  for (int i = 0; i < result->nodes_size(); ++i) {
-    auto result_node_io = result->mutable_nodes(i);
-    auto prev_insert_iter = node_io_map->find(result_node_io->name());
-    if (prev_insert_iter != node_io_map->end()) {
-      // found node, merge ios
-      auto& target_node_io = prev_insert_iter->second;
-      SERVING_ENFORCE(target_node_io->ios_size() == result_node_io->ios_size(),
-                      errors::ErrorCode::LOGIC_ERROR);
-      for (int io_index = 0; io_index < target_node_io->ios_size();
-           ++io_index) {
-        auto target_io = target_node_io->mutable_ios(io_index);
-        auto io = result_node_io->mutable_ios(io_index);
-        for (int data_index = 0; data_index < io->datas_size(); ++data_index) {
-          target_io->add_datas(std::move(*(io->mutable_datas(data_index))));
-        }
-      }
-    } else {
-      auto node_name = result_node_io->name();
-      node_io_map->emplace(node_name, std::make_shared<apis::NodeIo>(
-                                          std::move(*result_node_io)));
-    }
-  }
-}
-
 void ExecuteContext::GetResultNodeIo(
-    std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-        node_io_map) {
+    std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
   ExeResponseToIoMap(exec_res_, node_io_map);
 }
 
 void ExecuteContext::SetFeatureSource() {
-  auto feature_source = exec_req_.mutable_feature_source();
+  auto* feature_source = exec_req_.mutable_feature_source();
   if (execution_->IsEntry()) {
     // entry execution need features
     // get target_id's feature param
@@ -115,15 +110,34 @@ ExecuteContext::ExecuteContext(const apis::PredictRequest* request,
   SetFeatureSource();
 }
 
-void ExecuteContext::Execute(
-    std::shared_ptr<::google::protobuf::RpcChannel> channel,
-    brpc::Controller* cntl) {
-  apis::ExecutionService_Stub stub(channel.get());
+void ExecuteContext::Execute(::google::protobuf::RpcChannel* channel,
+                             brpc::Controller* cntl) {
+  apis::ExecutionService_Stub stub(channel);
   stub.Execute(cntl, &exec_req_, &exec_res_, brpc::DoNothing());
 }
 
-void ExecuteContext::Execute(std::shared_ptr<ExecutionCore> execution_core) {
+void ExecuteContext::Execute(std::shared_ptr<ExecutionCore>& execution_core) {
   execution_core->Execute(&exec_req_, &exec_res_);
+}
+
+RemoteExecute::RemoteExecute(const apis::PredictRequest* request,
+                             apis::PredictResponse* response,
+                             const std::shared_ptr<Execution>& execution,
+                             std::string target_id, std::string local_id,
+                             ::google::protobuf::RpcChannel* channel)
+    : ExecuteBase{request, response, execution, std::move(target_id),
+                  std::move(local_id)},
+      channel_(channel) {
+  span_option.cntl = &cntl_;
+  span_option.is_client = true;
+  span_option.party_id = local_id;
+  span_option.service_id = exec_ctx_.ServiceId();
+}
+
+RemoteExecute::~RemoteExecute() {
+  if (executing_) {
+    Cancel();
+  }
 }
 
 void RemoteExecute::Run() {
@@ -142,6 +156,56 @@ void RemoteExecute::Run() {
   exec_ctx_.Execute(channel_, &cntl_);
 
   executing_ = true;
+}
+
+void RemoteExecute::Cancel() {
+  if (!executing_) {
+    return;
+  }
+
+  executing_ = false;
+  brpc::StartCancel(cntl_.call_id());
+
+  span_option.code = errors::ErrorCode::UNEXPECTED_ERROR;
+  span_option.msg = "remote execute task is canceled.";
+  SetSpanAttrs(span_, span_option);
+  span_->End();
+}
+
+void RemoteExecute::WaitToFinish() {
+  if (!executing_) {
+    return;
+  }
+
+  span_option.code = errors::ErrorCode::OK;
+  span_option.msg = fmt::format("call ({}) from ({}) execute seccessfully",
+                                exec_ctx_.TargetId(), exec_ctx_.LocalId());
+
+  brpc::Join(cntl_.call_id());
+
+  executing_ = false;
+
+  if (cntl_.Failed()) {
+    span_option.msg = fmt::format("call ({}) from ({}) network error, msg:{}",
+                                  exec_ctx_.TargetId(), exec_ctx_.LocalId(),
+                                  cntl_.ErrorText());
+    span_option.code = errors::ErrorCode::NETWORK_ERROR;
+  } else if (exec_ctx_.ResponseStatus().code() != errors::ErrorCode::OK) {
+    span_option.msg = fmt::format(fmt::format(
+        "call ({}) from ({}) execute failed: code({}), {}",
+        exec_ctx_.TargetId(), exec_ctx_.LocalId(),
+        exec_ctx_.ResponseStatus().code(), exec_ctx_.ResponseStatus().msg()));
+    span_option.code = errors::ErrorCode::NETWORK_ERROR;
+  }
+
+  SetSpanAttrs(span_, span_option);
+  span_->End();
+
+  if (span_option.code == errors::ErrorCode::OK) {
+    exec_ctx_.MergeResonseHeader();
+  } else {
+    SERVING_THROW(span_option.code, "{}", span_option.msg);
+  }
 }
 
 }  // namespace secretflow::serving

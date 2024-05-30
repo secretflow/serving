@@ -107,13 +107,14 @@ std::shared_ptr<arrow::Table> ReadCsvFileToTable(
     const std::string& path,
     const std::shared_ptr<const arrow::Schema>& feature_schema);
 
-arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
-                           const std::vector<std::string>& ids);
+arrow::Datum GetRowsFilter(
+    const std::shared_ptr<arrow::ChunkedArray>& id_column,
+    const std::vector<std::string>& ids);
 
 std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
-    std::shared_ptr<arrow::Table> table, arrow::Datum filter);
+    const std::shared_ptr<arrow::Table>& table, const arrow::Datum& filter);
 
-std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
-                                                         std::string id_name);
+std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(
+    const std::string& filename, const std::string& id_name);
 
 }  // namespace secretflow::serving

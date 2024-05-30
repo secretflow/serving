@@ -36,7 +36,7 @@ class HttpSource : public Source {
 
  protected:
   std::string endpoint_;
-  std::shared_ptr<google::protobuf::RpcChannel> channel_;
+  std::unique_ptr<google::protobuf::RpcChannel> channel_;
 };
 
 }  // namespace secretflow::serving

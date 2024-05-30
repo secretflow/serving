@@ -31,7 +31,7 @@ namespace secretflow::serving {
 // key: node_id
 // value: channel to the executor
 using PartyChannelMap =
-    std::map<std::string, std::shared_ptr<::google::protobuf::RpcChannel>>;
+    std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>;
 
 class Predictor {
  public:
@@ -57,20 +57,19 @@ class Predictor {
   }
 
  protected:
-  virtual std::shared_ptr<RemoteExecute> BuildRemoteExecute(
+  virtual std::unique_ptr<RemoteExecute> BuildRemoteExecute(
       const apis::PredictRequest* request, apis::PredictResponse* response,
       const std::shared_ptr<Execution>& execution, std::string target_id,
-      std::shared_ptr<::google::protobuf::RpcChannel> channel);
+      const std::unique_ptr<::google::protobuf::RpcChannel>& channel);
 
-  virtual std::shared_ptr<LocalExecute> BuildLocalExecute(
+  virtual std::unique_ptr<LocalExecute> BuildLocalExecute(
       const apis::PredictRequest* request, apis::PredictResponse* response,
       const std::shared_ptr<Execution>& execution);
 
   void BuildExecCtx();
 
   void DealFinalResult(
-      std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&
-          node_io_map,
+      std::unordered_map<std::string, apis::NodeIo>& node_io_map,
       apis::PredictResponse* response);
 
  protected:

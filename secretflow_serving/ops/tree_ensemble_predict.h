@@ -37,6 +37,8 @@ class TreeEnsemblePredict : public OpKernel {
 
   int32_t num_trees_;
   LinkFunctionType func_type_;
+
+  double base_score_ = 0.0;
 };
 
 }  // namespace secretflow::serving::op

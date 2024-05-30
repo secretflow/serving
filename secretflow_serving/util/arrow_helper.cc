@@ -416,8 +416,9 @@ std::shared_ptr<arrow::Table> ReadCsvFileToTable(
   return table;
 }
 
-arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
-                           const std::vector<std::string>& ids) {
+arrow::Datum GetRowsFilter(
+    const std::shared_ptr<arrow::ChunkedArray>& id_column,
+    const std::vector<std::string>& ids) {
   arrow::StringBuilder builder;
   SERVING_CHECK_ARROW_STATUS(builder.AppendValues(ids));
   std::shared_ptr<arrow::Array> query_data_array;
@@ -442,8 +443,8 @@ arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
   return filter;
 }
 
-std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
-                                                         std::string id_name) {
+std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(
+    const std::string& filename, const std::string& id_name) {
   std::vector<std::shared_ptr<arrow::Field>> fields;
   fields.push_back(arrow::field(id_name, arrow::utf8()));
   auto schema = arrow::schema(fields);
@@ -456,7 +457,7 @@ std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
 }
 
 std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
-    std::shared_ptr<arrow::Table> table, arrow::Datum filter) {
+    const std::shared_ptr<arrow::Table>& table, const arrow::Datum& filter) {
   arrow::Datum filtered_table;
   SERVING_GET_ARROW_RESULT(arrow::compute::Filter(table, filter),
                            filtered_table);

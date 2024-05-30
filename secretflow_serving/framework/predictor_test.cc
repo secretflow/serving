@@ -94,8 +94,7 @@ class MockRemoteExecute : public RemoteExecute {
     exec_ctx_.CheckAndUpdateResponse(mock_exec_res);
   }
   void GetOutputs(
-      std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-          node_io_map) override {
+      std::unordered_map<std::string, apis::NodeIo>* node_io_map) override {
     ExeResponseToIoMap(mock_exec_res, node_io_map);
   }
   apis::ExecuteResponse mock_exec_res;
@@ -103,13 +102,14 @@ class MockRemoteExecute : public RemoteExecute {
 
 class MockPredictor : public Predictor {
  public:
-  MockPredictor(const Options& options) : Predictor(options) {}
-  std::shared_ptr<RemoteExecute> BuildRemoteExecute(
+  explicit MockPredictor(const Options& options) : Predictor(options) {}
+
+  std::unique_ptr<RemoteExecute> BuildRemoteExecute(
       const apis::PredictRequest* request, apis::PredictResponse* response,
       const std::shared_ptr<Execution>& execution, std::string target_id,
-      std::shared_ptr<::google::protobuf::RpcChannel> channel) override {
-    auto exec = std::make_shared<MockRemoteExecute>(
-        request, response, execution, target_id, opts_.party_id, channel);
+      const std::unique_ptr<::google::protobuf::RpcChannel>& channel) override {
+    auto exec = std::make_unique<MockRemoteExecute>(
+        request, response, execution, target_id, opts_.party_id, channel.get());
     exec->mock_exec_res = remote_exec_res_;
     return exec;
   }

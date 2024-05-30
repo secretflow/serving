@@ -33,7 +33,7 @@ class ModelInfoCollector {
     std::shared_ptr<ModelBundle> model_bundle;
 
     std::shared_ptr<
-        std::map<std::string, std::shared_ptr<::google::protobuf::RpcChannel>>>
+        std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>
         remote_channel_map;
   };
 
@@ -58,7 +58,7 @@ class ModelInfoCollector {
  private:
   bool TryCollect(
       const std::string& remote_party_id,
-      const std::shared_ptr<::google::protobuf::RpcChannel>& channel);
+      const std::unique_ptr<::google::protobuf::RpcChannel>& channel);
 
   void CheckAndSetSpecificMap();
 

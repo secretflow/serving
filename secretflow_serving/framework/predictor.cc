@@ -28,52 +28,52 @@ Predictor::Predictor(Options opts) : opts_(std::move(opts)) {}
 
 void Predictor::Predict(const apis::PredictRequest* request,
                         apis::PredictResponse* response) {
-  std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>
-      prev_node_io_map;
-  std::vector<std::shared_ptr<RemoteExecute>> async_running_execs;
+  std::unordered_map<std::string, apis::NodeIo> prev_node_io_map;
+  std::vector<std::unique_ptr<RemoteExecute>> async_running_execs;
   async_running_execs.reserve(opts_.channels->size());
 
   auto execute_locally =
       [&](const std::shared_ptr<Execution>& execution,
-          std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&
-              prev_io_map,
-          std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&
-              cur_io_map) {
+          std::unordered_map<std::string, apis::NodeIo>&& prev_io_map,
+          std::unordered_map<std::string, apis::NodeIo>* cur_io_map) {
         // exec locally
         auto local_exec = BuildLocalExecute(request, response, execution);
         local_exec->SetInputs(std::move(prev_io_map));
         local_exec->Run();
-        local_exec->GetOutputs(&cur_io_map);
+        local_exec->GetOutputs(cur_io_map);
       };
 
   for (const auto& e : opts_.executions) {
     async_running_execs.clear();
-    std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>
-        new_node_io_map;
+    std::unordered_map<std::string, apis::NodeIo> new_node_io_map;
     if (e->GetDispatchType() == DispatchType::DP_ALL) {
+      // remote exec
       for (const auto& [party_id, channel] : *opts_.channels) {
         auto ctx = BuildRemoteExecute(request, response, e, party_id, channel);
-        ctx->SetInputs(prev_node_io_map);
+        ctx->SetInputs(std::move(prev_node_io_map));
         ctx->Run();
-        async_running_execs.emplace_back(ctx);
+
+        async_running_execs.emplace_back(std::move(ctx));
       }
 
       // exec locally
       if (execution_core_) {
-        execute_locally(e, prev_node_io_map, new_node_io_map);
-        for (auto& exec : async_running_execs) {
-          exec->WaitToFinish();
-          exec->GetOutputs(&new_node_io_map);
-        }
+        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
       } else {
         // TODO: support no execution core scene
         SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
       }
 
+      // join async exec
+      for (const auto& exec : async_running_execs) {
+        exec->WaitToFinish();
+        exec->GetOutputs(&new_node_io_map);
+      }
+
     } else if (e->GetDispatchType() == DispatchType::DP_ANYONE) {
       // exec locally
       if (execution_core_) {
-        execute_locally(e, prev_node_io_map, new_node_io_map);
+        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
       } else {
         // TODO: support no execution core scene
         SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
@@ -81,7 +81,7 @@ void Predictor::Predict(const apis::PredictRequest* request,
     } else if (e->GetDispatchType() == DispatchType::DP_SPECIFIED) {
       if (e->SpecificToThis()) {
         SERVING_ENFORCE(execution_core_, errors::ErrorCode::UNEXPECTED_ERROR);
-        execute_locally(e, prev_node_io_map, new_node_io_map);
+        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
       } else {
         auto iter = opts_.specific_party_map.find(e->id());
         SERVING_ENFORCE(iter != opts_.specific_party_map.end(),
@@ -89,7 +89,7 @@ void Predictor::Predict(const apis::PredictRequest* request,
                         "{} execution assign to no party", e->id());
         auto ctx = BuildRemoteExecute(request, response, e, iter->second,
                                       opts_.channels->at(iter->second));
-        ctx->SetInputs(prev_node_io_map);
+        ctx->SetInputs(std::move(prev_node_io_map));
         ctx->Run();
         ctx->WaitToFinish();
         ctx->GetOutputs(&new_node_io_map);
@@ -105,29 +105,30 @@ void Predictor::Predict(const apis::PredictRequest* request,
   DealFinalResult(prev_node_io_map, response);
 }
 
-std::shared_ptr<RemoteExecute> Predictor::BuildRemoteExecute(
+std::unique_ptr<RemoteExecute> Predictor::BuildRemoteExecute(
     const apis::PredictRequest* request, apis::PredictResponse* response,
     const std::shared_ptr<Execution>& execution, std::string target_id,
-    std::shared_ptr<::google::protobuf::RpcChannel> channel) {
-  return std::make_shared<RemoteExecute>(request, response, execution,
-                                         target_id, opts_.party_id, channel);
+    const std::unique_ptr<::google::protobuf::RpcChannel>& channel) {
+  return std::make_unique<RemoteExecute>(request, response, execution,
+                                         std::move(target_id), opts_.party_id,
+                                         channel.get());
 }
 
-std::shared_ptr<LocalExecute> Predictor::BuildLocalExecute(
+std::unique_ptr<LocalExecute> Predictor::BuildLocalExecute(
     const apis::PredictRequest* request, apis::PredictResponse* response,
     const std::shared_ptr<Execution>& execution) {
-  return std::make_shared<LocalExecute>(request, response, execution,
+  return std::make_unique<LocalExecute>(request, response, execution,
                                         opts_.party_id, opts_.party_id,
                                         execution_core_);
 }
 
 void Predictor::DealFinalResult(
-    std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>& node_io_map,
+    std::unordered_map<std::string, apis::NodeIo>& node_io_map,
     apis::PredictResponse* response) {
   SERVING_ENFORCE(node_io_map.size() == 1, errors::ErrorCode::LOGIC_ERROR);
   auto& node_io = node_io_map.begin()->second;
-  SERVING_ENFORCE(node_io->ios_size() == 1, errors::ErrorCode::LOGIC_ERROR);
-  auto& ios = node_io->ios(0);
+  SERVING_ENFORCE(node_io.ios_size() == 1, errors::ErrorCode::LOGIC_ERROR);
+  const auto& ios = node_io.ios(0);
   SERVING_ENFORCE(ios.datas_size() == 1, errors::ErrorCode::LOGIC_ERROR);
   std::shared_ptr<arrow::RecordBatch> record_batch =
       DeserializeRecordBatch(ios.datas(0));

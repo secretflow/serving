@@ -59,4 +59,7 @@ enum LinkFunctionType {
   LF_SIGMOID_SR = 24;
   // LS7 if |x| <= 5.87, else SR.
   LF_SIGMOID_SEGLS = 25;
+
+  // Exp
+  LF_EXP_TAYLOR = 30;
 }

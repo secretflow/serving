@@ -37,6 +37,8 @@ class MergeY : public OpKernel {
   LinkFunctionType link_function_;
   std::string input_col_name_;
   std::string output_col_name_;
+
+  int32_t exp_iters_ = 0;
 };
 
 }  // namespace secretflow::serving::op
