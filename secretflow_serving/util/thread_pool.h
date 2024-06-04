@@ -122,7 +122,7 @@ class ThreadPool : public Singleton<ThreadPool> {
     }
   }
 
-  size_t GetTaskSize() const {
+  [[nodiscard]] size_t GetTaskSize() const {
     return std::accumulate(
         task_queues_.begin(), task_queues_.end(), 0,
         [](int size, auto& queue) { return size + queue.size(); });

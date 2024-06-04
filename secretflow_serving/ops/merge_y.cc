@@ -39,6 +39,9 @@ MergeY::MergeY(OpKernelOptions opts) : OpKernel(std::move(opts)) {
   output_col_name_ =
       GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
 
+  exp_iters_ = GetNodeAttr<int32_t>(opts_.node_def, *opts_.op_def, "exp_iters");
+  CheckLinkFuncAragsValid(link_function_, exp_iters_);
+
   BuildInputSchema();
   BuildOutputSchema();
 }
@@ -64,7 +67,8 @@ void MergeY::DoCompute(ComputeContext* ctx) {
   SERVING_CHECK_ARROW_STATUS(builder.Resize(merged_array->length()));
   for (int64_t i = 0; i < merged_array->length(); ++i) {
     auto score =
-        ApplyLinkFunc(merged_array->Value(i), link_function_) * yhat_scale_;
+        ApplyLinkFunc(merged_array->Value(i), link_function_, exp_iters_) *
+        yhat_scale_;
     SERVING_CHECK_ARROW_STATUS(builder.Append(score));
   }
   std::shared_ptr<arrow::Array> res_array;
@@ -87,7 +91,7 @@ void MergeY::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(MERGE_Y, MergeY)
-REGISTER_OP(MERGE_Y, "0.0.2",
+REGISTER_OP(MERGE_Y, "0.0.3",
             "Merge all partial y(score) and apply link function")
     .Returnable()
     .Mergeable()
@@ -102,7 +106,7 @@ REGISTER_OP(MERGE_Y, "0.0.2",
         "link_function",
         "Type of link function, defined in "
         "`secretflow_serving/protos/link_function.proto`. Optional value: "
-        "LF_EXP, "
+        "LF_EXP, LF_EXP_TAYLOR, "
         "LF_RECIPROCAL, "
         "LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, "
         "LF_SIGMOID_GA, "
@@ -114,6 +118,10 @@ REGISTER_OP(MERGE_Y, "0.0.2",
     .StringAttr("input_col_name", "The column name of partial_y", false, false)
     .StringAttr("output_col_name", "The column name of merged score", false,
                 false)
+    .Int32Attr("exp_iters",
+               "Number of iterations of `exp` approximation, valid when "
+               "`link_function` set `LF_EXP_TAYLOR`",
+               false, true, 0)
     .Input("partial_ys", "The list of partial y, data type: `double`")
     .Output("scores", "The merge result of `partial_ys`, data type: `double`");
 

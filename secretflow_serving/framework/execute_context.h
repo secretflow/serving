@@ -27,8 +27,7 @@ namespace secretflow::serving {
 
 void ExeResponseToIoMap(
     apis::ExecuteResponse& exec_res,
-    std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-        node_io_map);
+    std::unordered_map<std::string, apis::NodeIo>* node_io_map);
 
 class ExecuteContext {
  public:
@@ -40,17 +39,16 @@ class ExecuteContext {
   template <
       typename T,
       typename = std::enable_if_t<std::is_same_v<
-          std::decay_t<T>,
-          std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>>>>
+          std::decay_t<T>, std::unordered_map<std::string, apis::NodeIo>>>>
   void SetEntryNodesInputs(T&& node_io_map) {
     if (node_io_map.empty()) {
       return;
     }
-    auto task = exec_req_.mutable_task();
+    auto* task = exec_req_.mutable_task();
     task->set_execution_id(execution_->id());
     auto entry_nodes = execution_->GetEntryNodes();
     for (const auto& n : entry_nodes) {
-      auto entry_node_io = task->add_nodes();
+      auto* entry_node_io = task->add_nodes();
       entry_node_io->set_name(n->GetName());
       for (const auto& e : n->in_edges()) {
         auto iter = node_io_map.find(e->src_node());
@@ -58,7 +56,7 @@ class ExecuteContext {
                         errors::ErrorCode::LOGIC_ERROR,
                         "Input of {} cannot be found in ctx(size:{})",
                         e->src_node(), node_io_map.size());
-        for (auto& io : *(iter->second->mutable_ios())) {
+        for (auto& io : *(iter->second.mutable_ios())) {
           if constexpr (std::is_lvalue_reference_v<T&&>) {
             *(entry_node_io->mutable_ios()->Add()) = io;
           } else {
@@ -69,13 +67,11 @@ class ExecuteContext {
     }
   }
 
-  void Execute(std::shared_ptr<::google::protobuf::RpcChannel> channel,
-               brpc::Controller* cntl);
-  void Execute(std::shared_ptr<ExecutionCore> execution_core);
+  void Execute(::google::protobuf::RpcChannel* channel, brpc::Controller* cntl);
+  void Execute(std::shared_ptr<ExecutionCore>& execution_core);
 
   void GetResultNodeIo(
-      std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-          node_io_map);
+      std::unordered_map<std::string, apis::NodeIo>* node_io_map);
 
   void CheckAndUpdateResponse(const apis::ExecuteResponse& exec_res);
   void CheckAndUpdateResponse();
@@ -118,18 +114,14 @@ class ExecuteBase {
                   std::move(local_id)} {}
   virtual ~ExecuteBase() = default;
 
-  void SetInputs(std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&
-                     node_io_map) {
+  void SetInputs(std::unordered_map<std::string, apis::NodeIo>& node_io_map) {
     exec_ctx_.SetEntryNodesInputs(node_io_map);
   }
-  void SetInputs(
-      std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>&&
-          node_io_map) {
+  void SetInputs(std::unordered_map<std::string, apis::NodeIo>&& node_io_map) {
     exec_ctx_.SetEntryNodesInputs(std::move(node_io_map));
   }
   virtual void GetOutputs(
-      std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>>*
-          node_io_map) {
+      std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
     exec_ctx_.GetResultNodeIo(node_io_map);
   }
 
@@ -139,84 +131,28 @@ class ExecuteBase {
   ExecuteContext exec_ctx_;
 };
 
-class RemoteExecute : public ExecuteBase,
-                      public std::enable_shared_from_this<RemoteExecute> {
+class RemoteExecute : public ExecuteBase {
  public:
   RemoteExecute(const apis::PredictRequest* request,
                 apis::PredictResponse* response,
                 const std::shared_ptr<Execution>& execution,
                 std::string target_id, std::string local_id,
-                std::shared_ptr<::google::protobuf::RpcChannel> channel)
-      : ExecuteBase{request, response, execution, std::move(target_id),
-                    std::move(local_id)},
-        channel_(std::move(channel)) {
-    span_option.cntl = &cntl_;
-    span_option.is_client = true;
-    span_option.party_id = local_id;
-    span_option.service_id = exec_ctx_.ServiceId();
-  }
+                ::google::protobuf::RpcChannel* channel);
 
-  virtual ~RemoteExecute() {
-    if (executing_) {
-      Cancel();
-    }
-  }
+  virtual ~RemoteExecute();
 
-  virtual void Run() override;
-  virtual void Cancel() {
-    if (!executing_) {
-      return;
-    }
+  void Run() override;
 
-    executing_ = false;
-    brpc::StartCancel(cntl_.call_id());
+  virtual void Cancel();
 
-    span_option.code = errors::ErrorCode::UNEXPECTED_ERROR;
-    span_option.msg = "remote execute task is canceled.";
-    SetSpanAttrs(span_, span_option);
-    span_->End();
-  }
-
-  virtual void WaitToFinish() {
-    if (!executing_) {
-      return;
-    }
-
-    span_option.code = errors::ErrorCode::OK;
-    span_option.msg = fmt::format("call ({}) from ({}) execute seccessfully",
-                                  exec_ctx_.TargetId(), exec_ctx_.LocalId());
-
-    brpc::Join(cntl_.call_id());
-
-    executing_ = false;
-
-    if (cntl_.Failed()) {
-      span_option.msg = fmt::format("call ({}) from ({}) network error, msg:{}",
-                                    exec_ctx_.TargetId(), exec_ctx_.LocalId(),
-                                    cntl_.ErrorText());
-      span_option.code = errors::ErrorCode::NETWORK_ERROR;
-    } else if (exec_ctx_.ResponseStatus().code() != errors::ErrorCode::OK) {
-      span_option.msg = fmt::format(fmt::format(
-          "call ({}) from ({}) execute failed: code({}), {}",
-          exec_ctx_.TargetId(), exec_ctx_.LocalId(),
-          exec_ctx_.ResponseStatus().code(), exec_ctx_.ResponseStatus().msg()));
-      span_option.code = errors::ErrorCode::NETWORK_ERROR;
-    }
-
-    SetSpanAttrs(span_, span_option);
-    span_->End();
-
-    if (span_option.code == errors::ErrorCode::OK) {
-      exec_ctx_.MergeResonseHeader();
-    } else {
-      SERVING_THROW(span_option.code, span_option.msg);
-    }
-  }
+  virtual void WaitToFinish();
 
  protected:
-  std::shared_ptr<::google::protobuf::RpcChannel> channel_;
+  ::google::protobuf::RpcChannel* channel_;
   brpc::Controller cntl_;
+
   bool executing_{false};
+
   opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span_;
   SpanAttrOption span_option;
 };

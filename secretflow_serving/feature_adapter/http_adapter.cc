@@ -147,7 +147,7 @@ void HttpFeatureAdapter::OnFetchFeature(const Request& request,
   SetSpanAttrs(span, span_option);
 
   SERVING_ENFORCE(span_option.code == errors::ErrorCode::OK, span_option.code,
-                  span_option.msg);
+                  "{}", span_option.msg);
   response->header->mutable_data()->swap(
       *spi_response.mutable_header()->mutable_data());
   response->features =

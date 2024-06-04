@@ -6,11 +6,11 @@ SecretFlow-Serving Operator List
 ================================
 
 
-Last update: Fri Mar  1 17:28:55 2024
+Last update: Wed May 29 20:14:58 2024
 ## MERGE_Y
 
 
-Operator version: 0.0.2
+Operator version: 0.0.3
 
 Merge all partial y(score) and apply link function
 ### Attrs
@@ -18,8 +18,9 @@ Merge all partial y(score) and apply link function
 
 |Name|Description|Type|Required|Notes|
 | :--- | :--- | :--- | :--- | :--- |
+|exp_iters|Number of iterations of `exp` approximation, valid when `link_function` set `LF_EXP_TAYLOR`|Integer32|N|Default: 0.|
 |output_col_name|The column name of merged score|String|Y||
-|link_function|Type of link function, defined in `secretflow_serving/protos/link_function.proto`. Optional value: LF_EXP, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|Y||
+|link_function|Type of link function, defined in `secretflow_serving/protos/link_function.proto`. Optional value: LF_EXP, LF_EXP_TAYLOR, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|Y||
 |input_col_name|The column name of partial_y|String|Y||
 |yhat_scale|In order to prevent value overflow, GLM training is performed on the scaled y label. So in the prediction process, you need to enlarge yhat back to get the real predicted value, `yhat = yhat_scale * link(X * W)`|Double|N|Default: 1.0.|
 
@@ -188,7 +189,7 @@ Merge the `TREE_SELECT` output from multiple parties to obtain a unique predicti
 ## TREE_ENSEMBLE_PREDICT
 
 
-Operator version: 0.0.1
+Operator version: 0.0.2
 
 Accept the weighted results from multiple trees (`TREE_SELECT` + `TREE_MERGE`), merge them, and obtain the final prediction result of the tree ensemble.
 ### Attrs
@@ -196,6 +197,7 @@ Accept the weighted results from multiple trees (`TREE_SELECT` + `TREE_MERGE`), 
 
 |Name|Description|Type|Required|Notes|
 | :--- | :--- | :--- | :--- | :--- |
+|base_score|The initial prediction score, global bias.|Double|N|Default: 0.0.|
 |num_trees|The number of ensemble's tree|Integer32|Y||
 |output_col_name|The column name of tree ensemble predict score|String|Y||
 |algo_func|Optional value: LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|N|Default: LF_IDENTITY.|

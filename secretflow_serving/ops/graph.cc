@@ -153,7 +153,7 @@ Graph::Graph(GraphDef graph_def) : def_(std::move(graph_def)) {
   // and execution_defs
 
   graph_view_.set_version(def_.version());
-  for (auto& node : def_.node_list()) {
+  for (const auto& node : def_.node_list()) {
     NodeView view;
     *(view.mutable_name()) = node.name();
     *(view.mutable_op()) = node.op();

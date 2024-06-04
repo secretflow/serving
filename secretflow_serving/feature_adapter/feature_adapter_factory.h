@@ -62,7 +62,7 @@ class FeatureAdapterFactory : public Singleton<FeatureAdapterFactory> {
 template <class T>
 class Register {
  public:
-  Register(FeatureSourceConfig::OptionsCase opts_case) {
+  explicit Register(FeatureSourceConfig::OptionsCase opts_case) {
     FeatureAdapterFactory::GetInstance()->Register<T>(opts_case);
   }
 };

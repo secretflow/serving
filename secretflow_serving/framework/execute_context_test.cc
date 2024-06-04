@@ -242,20 +242,20 @@ TEST_F(ExecuteContextTest, BuildExecCtx) {
   {
     auto& exec_response = ctx_bob->ExeResponse();
     exec_response.mutable_result()->set_execution_id(0);
-    auto node = exec_response.mutable_result()->add_nodes();
+    auto* node = exec_response.mutable_result()->add_nodes();
     node->set_name("mock_node_1");
-    auto io = node->add_ios();
+    auto* io = node->add_ios();
     io->add_datas("mock_bob_data");
   }
   {
     auto& exec_response = ctx_alice->ExeResponse();
     exec_response.mutable_result()->set_execution_id(0);
-    auto node_1 = exec_response.mutable_result()->add_nodes();
+    auto* node_1 = exec_response.mutable_result()->add_nodes();
     node_1->set_name("mock_node_1");
     node_1->add_ios()->add_datas("mock_alice_data");
   }
 
-  std::unordered_map<std::string, std::shared_ptr<apis::NodeIo>> node_io_map;
+  std::unordered_map<std::string, apis::NodeIo> node_io_map;
   ctx_bob->GetResultNodeIo(&node_io_map);
   ctx_alice->GetResultNodeIo(&node_io_map);
 

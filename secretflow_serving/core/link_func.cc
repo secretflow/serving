@@ -54,6 +54,18 @@ T SRSig(T x) {
   return 0.5F * (x / std::sqrt(1.0F + std::pow(x, 2))) + 0.5F;
 }
 
+// see https://lvdmaaten.github.io/publications/papers/crypten.pdf
+//   exp(x) = (1 + x / n) ^ n, when n is infinite large.
+template <typename T>
+T ExpTaylor(T x, int32_t n) {
+  SERVING_ENFORCE_GT(n, 0);
+  return std::pow(1.0F + x / n, n);
+}
+
+void ExpItersValidator(int32_t n) {
+  SERVING_ENFORCE_GT(n, 0, "exp_iters should be greater than 0");
+}
+
 }  // namespace
 
 LinkFunctionType ParseLinkFuncType(const std::string& type) {
@@ -63,6 +75,16 @@ LinkFunctionType ParseLinkFuncType(const std::string& type) {
                   "unsupported link func type:{}", type);
   return lf_type;
 }
+
+template <typename... ARGS>
+void CheckLinkFuncAragsValid(LinkFunctionType lf_type, ARGS&&... args) {
+  if (lf_type == LF_EXP_TAYLOR) {
+    ExpItersValidator(std::forward<ARGS>(args)...);
+  }
+}
+
+template void CheckLinkFuncAragsValid(LinkFunctionType, int32_t&);
+template void CheckLinkFuncAragsValid(LinkFunctionType, int32_t&&);
 
 template <typename T>
 T ApplyLinkFunc(T x, LinkFunctionType lf_type) {
@@ -164,7 +186,19 @@ T ApplyLinkFunc(T x, LinkFunctionType lf_type) {
   }
 }
 
+template <typename T, typename... ARGS>
+T ApplyLinkFunc(T x, LinkFunctionType lf_type, ARGS&&... args) {
+  if (lf_type == LinkFunctionType::LF_EXP_TAYLOR) {
+    return ExpTaylor(x, std::forward<ARGS>(args)...);
+  }
+  return ApplyLinkFunc(x, lf_type);
+}
+
 template float ApplyLinkFunc(float, LinkFunctionType);
+template float ApplyLinkFunc(float, LinkFunctionType, int32_t&&);
+template float ApplyLinkFunc(float, LinkFunctionType, int32_t&);
 template double ApplyLinkFunc(double, LinkFunctionType);
+template double ApplyLinkFunc(double, LinkFunctionType, int32_t&&);
+template double ApplyLinkFunc(double, LinkFunctionType, int32_t&);
 
 }  // namespace secretflow::serving

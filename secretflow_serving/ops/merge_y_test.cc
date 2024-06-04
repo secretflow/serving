@@ -27,6 +27,7 @@ namespace secretflow::serving::op {
 struct Param {
   std::string link_func;
   double yhat_scale;
+  int32_t exp_iters = 0;
 };
 
 class MergeYParamTest : public ::testing::TestWithParam<Param> {
@@ -58,14 +59,17 @@ TEST_P(MergeYParamTest, Works) {
   {
     AttrValue link_func_value;
     link_func_value.set_s(param.link_func);
-    node_def.mutable_attr_values()->insert(
-        {"link_function", std::move(link_func_value)});
+    node_def.mutable_attr_values()->insert({"link_function", link_func_value});
   }
   {
     AttrValue scale_value;
     scale_value.set_d(param.yhat_scale);
-    node_def.mutable_attr_values()->insert(
-        {"yhat_scale", std::move(scale_value)});
+    node_def.mutable_attr_values()->insert({"yhat_scale", scale_value});
+  }
+  {
+    AttrValue exp_iters_value;
+    exp_iters_value.set_i32(param.exp_iters);
+    node_def.mutable_attr_values()->insert({"exp_iters", exp_iters_value});
   }
 
   // mock input values
@@ -74,10 +78,12 @@ TEST_P(MergeYParamTest, Works) {
 
   // expect result
   double expect_score_0 =
-      ApplyLinkFunc(0.1 + 0.1 + 0.1, ParseLinkFuncType(param.link_func)) *
+      ApplyLinkFunc(0.1 + 0.1 + 0.1, ParseLinkFuncType(param.link_func),
+                    param.exp_iters) *
       param.yhat_scale;
   double expect_score_1 =
-      ApplyLinkFunc(0.11 + 0.12 + 0.13, ParseLinkFuncType(param.link_func)) *
+      ApplyLinkFunc(0.11 + 0.12 + 0.13, ParseLinkFuncType(param.link_func),
+                    param.exp_iters) *
       param.yhat_scale;
   double epsilon = 1E-13;
 
@@ -146,15 +152,16 @@ TEST_P(MergeYParamTest, Works) {
 INSTANTIATE_TEST_SUITE_P(
     MergeYParamTestSuite, MergeYParamTest,
     ::testing::Values(
-        Param{"LF_EXP", 1.0}, Param{"LF_RECIPROCAL", 1.1},
-        Param{"LF_IDENTITY", 1.2}, Param{"LF_SIGMOID_RAW", 1.3},
-        Param{"LF_SIGMOID_MM1", 1.4}, Param{"LF_SIGMOID_MM3", 1.5},
-        Param{"LF_SIGMOID_GA", 1.6}, Param{"LF_SIGMOID_T1", 1.7},
-        Param{"LF_SIGMOID_T3", 1.8}, Param{"LF_SIGMOID_T5", 1.9},
-        Param{"LF_SIGMOID_T7", 1.01}, Param{"LF_SIGMOID_T9", 1.02},
-        Param{"LF_SIGMOID_LS7", 1.03}, Param{"LF_SIGMOID_SEG3", 1.04},
-        Param{"LF_SIGMOID_SEG5", 1.05}, Param{"LF_SIGMOID_DF", 1.06},
-        Param{"LF_SIGMOID_SR", 1.07}, Param{"LF_SIGMOID_SEGLS", 1.08}));
+        Param{"LF_EXP", 1.0}, Param{"LF_EXP_TAYLOR", 1.0, 8},
+        Param{"LF_RECIPROCAL", 1.1}, Param{"LF_IDENTITY", 1.2},
+        Param{"LF_SIGMOID_RAW", 1.3}, Param{"LF_SIGMOID_MM1", 1.4},
+        Param{"LF_SIGMOID_MM3", 1.5}, Param{"LF_SIGMOID_GA", 1.6},
+        Param{"LF_SIGMOID_T1", 1.7}, Param{"LF_SIGMOID_T3", 1.8},
+        Param{"LF_SIGMOID_T5", 1.9}, Param{"LF_SIGMOID_T7", 1.01},
+        Param{"LF_SIGMOID_T9", 1.02}, Param{"LF_SIGMOID_LS7", 1.03},
+        Param{"LF_SIGMOID_SEG3", 1.04}, Param{"LF_SIGMOID_SEG5", 1.05},
+        Param{"LF_SIGMOID_DF", 1.06}, Param{"LF_SIGMOID_SR", 1.07},
+        Param{"LF_SIGMOID_SEGLS", 1.08}));
 
 // TODO: exception case
 

@@ -38,7 +38,7 @@ class HttpFeatureAdapter : public FeatureAdapter {
                              const Request& request);
 
  protected:
-  std::shared_ptr<google::protobuf::RpcChannel> channel_;
+  std::unique_ptr<google::protobuf::RpcChannel> channel_;
   std::vector<FeatureField> feature_fields_;
 };
 

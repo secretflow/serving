@@ -37,10 +37,10 @@ std::string FillHttpPrefix(const std::string& addr, bool ssl_enabled) {
 }
 }  // namespace
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, bool enable_lb,
     const brpc::ChannelOptions& opts) {
-  auto channel = std::make_shared<brpc::Channel>();
+  auto channel = std::make_unique<brpc::Channel>();
   std::string remote_url = endpoint;
   std::string load_balancer;
   if (enable_lb) {
@@ -57,7 +57,7 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
   return channel;
 }
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, const std::string& protocol, bool enable_lb,
     int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
     const TlsConfig* tls_config) {

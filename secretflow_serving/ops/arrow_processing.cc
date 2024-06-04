@@ -338,9 +338,10 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
           arrow::compute::GetFunctionRegistry()->GetFunction(func.name()),
           arrow_func);
 
-      // Noticed, we only allowed scalar type arrow compute function
+      // Noticed, we only allowed scalar arrow compute function or cast function
       SERVING_ENFORCE(
-          arrow_func->kind() == arrow::compute::Function::Kind::SCALAR,
+          arrow_func->kind() == arrow::compute::Function::Kind::SCALAR ||
+              func.name() == "cast",
           errors::ErrorCode::LOGIC_ERROR, "unsupported arrow compute func:{}",
           func.name());
 
