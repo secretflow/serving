@@ -59,10 +59,21 @@ serving_cc_library(
 )
 
 serving_cc_library(
+    name = "model_info_processor",
+    srcs = ["model_info_processor.cc"],
+    hdrs = ["model_info_processor.h"],
+    deps = [
+        "//secretflow_serving/apis:model_service_cc_proto",
+        "//secretflow_serving/core:exception",
+    ],
+)
+
+serving_cc_library(
     name = "model_info_collector",
     srcs = ["model_info_collector.cc"],
     hdrs = ["model_info_collector.h"],
     deps = [
+        ":model_info_processor",
         "//secretflow_serving/apis:model_service_cc_proto",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/server/trace",

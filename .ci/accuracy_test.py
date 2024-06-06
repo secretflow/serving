@@ -135,8 +135,8 @@ class MinioTester(ProcRunGuard):
 
 @dataclass
 class PartyConfig(ServerBaseConifg):
-    model_package_path: str
-    csv_path: str
+    model_package_path: str = None
+    csv_path: str = None
     query_datas: List[str] = None
     query_context: str = None
 

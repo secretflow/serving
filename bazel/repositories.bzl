@@ -46,7 +46,6 @@ def sf_serving_deps():
     _kuscia()
     _yacl()
 
-    _com_github_madler_zlib()
     _com_github_brpc_brpc()
 
 def _yacl():
@@ -54,10 +53,10 @@ def _yacl():
         http_archive,
         name = "yacl",
         urls = [
-            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.4b1.tar.gz",
+            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.5b1.tar.gz",
         ],
-        strip_prefix = "yacl-0.4.4b1",
-        sha256 = "846f40f5e00cfb77427016623b9cb215e5150384a3cc7c663642d995ee7afec9",
+        strip_prefix = "yacl-0.4.5b1",
+        sha256 = "28064053b9add0db8e1e8e648421a0579f1d3e7ee8a4bbd7bd5959cb59598088",
     )
 
 def _kuscia():
@@ -358,21 +357,6 @@ def _rules_proto_grpc():
 
 # serving not use brpc x-bd-xxx trace header, so drop the patch of yacl
 # add for brpc compile
-def _com_github_madler_zlib():
-    maybe(
-        http_archive,
-        name = "zlib",
-        build_file = "@yacl//bazel:zlib.BUILD",
-        strip_prefix = "zlib-1.3.1",
-        sha256 = "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
-        type = ".tar.gz",
-        patch_args = ["-p1"],
-        patches = ["@yacl//bazel:patches/zlib.patch"],
-        urls = [
-            "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz",
-        ],
-    )
-
 def _com_github_brpc_brpc():
     maybe(
         http_archive,

@@ -26,6 +26,9 @@ class Channel;
 
 namespace secretflow::serving {
 
+std::string UriRelativeResolution(const std::string& origin_path,
+                                  const std::string& redirect_path);
+
 class HttpSource : public Source {
  public:
   HttpSource(const ModelConfig& config, const std::string& service_id);
@@ -36,7 +39,11 @@ class HttpSource : public Source {
 
  protected:
   std::string endpoint_;
-  std::unique_ptr<google::protobuf::RpcChannel> channel_;
+  inline static constexpr size_t kHttpTimeoutMs = 120 * 1000;
+  inline static constexpr size_t kConnectTimeoutMs = 60 * 1000;
+  size_t http_timeout_ms_ = kHttpTimeoutMs;
+  size_t connect_timeout_ms_ = kConnectTimeoutMs;
+  std::unique_ptr<TlsConfig> tls_config_;
 };
 
 }  // namespace secretflow::serving

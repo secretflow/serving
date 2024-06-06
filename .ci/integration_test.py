@@ -239,6 +239,10 @@ class PredefineTest(PredefinedErrorTest):
 
 
 class CsvTest(TestCase):
+    def __init__(self, path: str, use_http_feature_source: bool = False):
+        super().__init__(path)
+        self.use_http_feature_source = use_http_feature_source
+
     def get_config(self, path: str):
         dot_node_alice = make_dot_product_node_def(
             name="node_dot_product",
@@ -300,6 +304,7 @@ class CsvTest(TestCase):
                 "v1": [1, 2, 3, 4],
                 "v2": [5, 6, 7, 8],
             },
+            use_http_feature_source=self.use_http_feature_source,
         )
         bob_config = PartyConfig(
             id="bob",
@@ -310,10 +315,11 @@ class CsvTest(TestCase):
             graph_def=bob_graph,
             query_datas=["a", "b", "c"],  # Corresponds to the id column in csv
             csv_dict={
-                "id": ["a", "b", "c"],
-                "vv3": [1, 2, 3],
-                "vv2": [5, 6, 7],
+                "id": ["b", "a", "c"],
+                "vv3": [2, 1, 3],
+                "vv2": [6, 5, 7],
             },
+            use_http_feature_source=self.use_http_feature_source,
         )
         return TestConfig(
             path,
@@ -633,13 +639,11 @@ class ExampleTest(ProcRunGuard):
         ), f"execution parent span id mismatch, expected: {service_span_id_dict['bob']}, actual: {stub_span_id_dict['alice']}"
 
 
-if __name__ == "__main__":
-    ExampleTest('examples').exec()
-
+def get_mock_feature_glm_test():
     # glm
     with open(".ci/simple_test/node_processing_alice.json", "rb") as f:
         alice_trace_content = f.read()
-    MockFeatureTest(
+    return MockFeatureTest(
         service_id="glm",
         path='model_path',
         nodes={
@@ -811,10 +815,11 @@ if __name__ == "__main__":
                 "v10": "x10",
             },
         },
-    ).exec()
+    )
 
-    # sgb
-    MockFeatureTest(
+
+def get_mock_feature_sgb_test():
+    return MockFeatureTest(
         service_id="sgb",
         path='sgb_model',
         nodes={
@@ -1484,10 +1489,11 @@ if __name__ == "__main__":
             ],
         },
         specific_party="alice",
-    ).exec()
+    )
 
-    # sgb with alice no feature
-    MockFeatureTest(
+
+def get_sgb_alice_no_feature_test():
+    return MockFeatureTest(
         service_id="sgb_bob_no_feature",
         path='sgb_model',
         nodes={
@@ -1893,10 +1899,11 @@ if __name__ == "__main__":
             ],
         },
         specific_party="alice",
-    ).exec()
+    )
 
-    # glm with bob no feature
-    MockFeatureTest(
+
+def get_glm_bob_no_feature_test():
+    return MockFeatureTest(
         service_id="glm_with_bob_no_feature",
         path='model_path',
         nodes={
@@ -1988,9 +1995,20 @@ if __name__ == "__main__":
             },
             "bob": {},
         },
-    ).exec()
+    )
+
+
+if __name__ == "__main__":
+    ExampleTest('examples').exec()
+
+    get_mock_feature_glm_test().exec()
+    get_mock_feature_sgb_test().exec()
+
+    get_sgb_alice_no_feature_test().exec()
+    get_glm_bob_no_feature_test().exec()
 
     PredefinedErrorTest('model_path').exec()
     PredefineTest('model_path').exec()
     CsvTest('model_path').exec()
+    CsvTest('model_path', use_http_feature_source=True).exec()
     SpecificTest('model_path').exec()
