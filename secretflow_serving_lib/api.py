@@ -32,10 +32,11 @@ def get_all_ops() -> List[op_pb2.OpDef]:
 
 
 def get_op(name: str) -> op_pb2.OpDef:
-    content = libserving.get_op_def_impl(name)
-    o = op_pb2.OpDef()
-    o.ParseFromString(content)
-    return o
+    ops = get_all_ops()
+    for op in ops:
+        if name.lower() == op.name.lower():
+            return op
+    raise ValueError(f"op {name} not found in {[op.name for op in ops]}")
 
 
 def get_graph_version() -> str:

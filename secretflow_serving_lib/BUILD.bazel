@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -39,8 +39,12 @@ pybind_extension(
     deps = [
         ":exported_symbols.lds",
         ":version_script.lds",
+        "//secretflow_serving/framework:model_info_processor",
         "//secretflow_serving/ops",
+        "//secretflow_serving/ops:graph",
         "//secretflow_serving/ops:graph_version",
+        "//secretflow_serving/protos:bundle_cc_proto",
+        "//secretflow_serving/protos:graph_cc_proto",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -71,6 +75,7 @@ py_library(
     name = "api",
     srcs = [
         "api.py",
+        "graph_builder.py",
         ":protos",
     ],
     data = [
@@ -91,6 +96,14 @@ py_library(
 py_test(
     name = "api_test",
     srcs = ["api_test.py"],
+    deps = [
+        ":init",
+    ],
+)
+
+py_test(
+    name = "graph_builder_test",
+    srcs = ["graph_builder_test.py"],
     deps = [
         ":init",
     ],

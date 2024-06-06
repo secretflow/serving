@@ -18,7 +18,7 @@
 
 #include "brpc/controller.h"
 
-#include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/framework/model_info_processor.h"
 
 #include "secretflow_serving/protos/bundle.pb.h"
 
@@ -51,35 +51,21 @@ class ModelInfoCollector {
     retry_interval_ms_ = retry_interval_ms;
   }
 
-  std::unordered_map<size_t, std::string> GetSpecificMap() const {
-    return specific_party_map_;
-  }
+  std::unordered_map<size_t, std::string> GetSpecificMap() const;
 
  private:
   bool TryCollect(
       const std::string& remote_party_id,
       const std::unique_ptr<::google::protobuf::RpcChannel>& channel);
 
-  void CheckAndSetSpecificMap();
-
-  void CheckNodeViewList(
-      const ::google::protobuf::RepeatedPtrField<
-          ::secretflow::serving::NodeView>& remote_node_views,
-      const std::string& remote_party_id);
-
  private:
   Options opts_;
 
   ModelInfo model_info_;
 
-  // key: execution_id(index), value: party_id
-  std::unordered_map<size_t, std::string> specific_party_map_;
-
-  // key: node name, value: <node view, parents>
-  std::unordered_map<std::string, std::pair<NodeView, std::set<std::string>>>
-      local_node_views_;
-
   std::unordered_map<std::string, ModelInfo> model_info_map_;
+
+  std::unique_ptr<ModelInfoProcessor> model_info_processor_;
 
   uint32_t max_retry_cnt_{60};
   uint32_t retry_interval_ms_{5000};

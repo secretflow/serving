@@ -66,6 +66,7 @@ def global_ip_config(index):
     communication_port = [8710, 8711]
     metrics_port = [8318, 8319]
     brpc_builtin_port = [8328, 8329]
+    http_feature_source_port = [8338, 8339]
     assert index < len(cluster_ip)
     return {
         "cluster_ip": cluster_ip[index],
@@ -74,6 +75,7 @@ def global_ip_config(index):
         "communication_port": communication_port[index],
         "metrics_port": metrics_port[index],
         "brpc_builtin_service_port": brpc_builtin_port[index],
+        "http_feature_source_port": http_feature_source_port[index],
     }
 
 
@@ -110,6 +112,26 @@ def build_get_model_info_cmd(host: str, port: int, service_spec_id: str):
     body_dict = {"service_spec": {"id": service_spec_id}}
     url = f"http://{host}:{port}/ModelService/GetModelInfo"
     return f'curl --location "{url}" --header "Content-Type: application/json" --data \'{json.dumps(body_dict)}\''
+
+
+class ProcRunGuard:
+    def __init__(self):
+        self.sub_proc_list = []
+
+    def __del__(self):
+        self.cleanup_sub_procs()
+
+    def run_cmd(self, cmd, background=False, envs=None):
+        ret = exec_cmd(cmd, background, envs)
+        if background:
+            self.sub_proc_list.append(ret)
+        else:
+            return ret
+
+    def cleanup_sub_procs(self):
+        for proc in self.sub_proc_list:
+            proc.kill()
+            proc.wait()
 
 
 class ModelBuilder:
@@ -361,15 +383,17 @@ class ServerBaseConifg:
     brpc_builtin_service_port: int
     channel_protocol: str
     model_id: str
+    http_feature_source_port: int = None
 
 
 @dataclass
 class PartyConfig(ServerBaseConifg):
-    feature_mapping: Dict[str, str]
-    graph_def: GraphDef
+    feature_mapping: Dict[str, str] = None
+    graph_def: GraphDef = None
     query_datas: List[str] = None
     query_context: str = None
-    csv_dict: Dict[str, Any] = None
+    csv_dict: Dict[str, Any] = None  # must contain id column
+    use_http_feature_source: bool = False
 
 
 class ConfigDumper:
@@ -380,6 +404,7 @@ class ConfigDumper:
         serving_config_filename: str,
         tar_name: str,
         service_id: str,
+        proc_guard: ProcRunGuard = None,
     ):
         self.service_id = service_id
         self.party_configs = party_configs
@@ -387,6 +412,7 @@ class ConfigDumper:
         self.log_config = log_config_filename
         self.serving_config = serving_config_filename
         self.tar_name = tar_name
+        self.proc_guard = proc_guard
         for config in self.party_configs:
             self.parties.append({"id": config.id, "address": config.cluster_ip})
 
@@ -424,6 +450,53 @@ class ConfigDumper:
     def _dump_serving_config(
         self, path: str, config: PartyConfig, model_name: str, model_sha256: str
     ):
+        def dump_csv(path: str, data_dict: Dict[str, List[Any]]) -> str:
+            filename = "feature_source.csv"
+            file_path = os.path.join(path, filename)
+            with open(file_path, "w") as ofile:
+                writer = csv.DictWriter(ofile, fieldnames=list(data_dict.keys()))
+                writer.writeheader()
+                rows = []
+                for key, value in data_dict.items():
+                    if len(rows) == 0:
+                        rows = [{} for _ in value]
+                    assert len(value) == len(
+                        rows
+                    ), f"row count {len(value)} of {key} in data_dict is diff with {len(rows)}."
+                    for i in range(len(value)):
+                        rows[i][key] = value[i]
+                print("CSV Rows: ", rows)
+                for row in rows:
+                    writer.writerow(row)
+            return file_path
+
+        def start_simple_feature_service(port: int, csv_path: str):
+            self.proc_guard.run_cmd(
+                f"./bazel-bin/secretflow_serving/tools/simple_feature_service/simple_feature_service --port={port} --csv_filename={csv_path} --csv_id_column_name=id ",
+                background=True,
+            )
+
+        feature_source_config = {"mockOpts": {"type": "MDT_RANDOM"}}
+
+        if config.csv_dict:
+            assert 'id' in config.csv_dict, 'csv_dict should contain id column'
+            csv_path = dump_csv(path, config.csv_dict)
+
+        if config.use_http_feature_source:
+            assert (
+                config.csv_dict is not None
+            ), "http_feature_source require a csv file, so csv_dict must be set"
+            start_simple_feature_service(config.http_feature_source_port, csv_path)
+            feature_source_config = {
+                "http_opts": {
+                    "endpoint": f"127.0.0.1:{config.http_feature_source_port}/BatchFeatureService/BatchFetchFeature"
+                }
+            }
+        elif config.csv_dict:
+            feature_source_config = {
+                "csv_opts": {"file_path": csv_path, "id_name": "id"}
+            }
+
         config_dict = {
             "id": self.service_id,
             "serverConf": {
@@ -446,11 +519,7 @@ class ConfigDumper:
                 "parties": self.parties,
                 "channel_desc": {"protocol": config.channel_protocol},
             },
-            "featureSourceConf": (
-                self.make_csv_config(config.csv_dict, path)
-                if config.csv_dict
-                else {"mockOpts": {"type": "MDT_RANDOM"}}
-            ),
+            "featureSourceConf": feature_source_config,
         }
         dump_json(config_dict, os.path.join(path, self.serving_config))
 
@@ -464,26 +533,6 @@ class ConfigDumper:
                 config_path, config.graph_def
             )
             self._dump_serving_config(config_path, config, model_name, model_sha256)
-
-
-class ProcRunGuard:
-    def __init__(self):
-        self.sub_proc_list = []
-
-    def __del__(self):
-        self.cleanup_sub_procs()
-
-    def run_cmd(self, cmd, background=False, envs=None):
-        ret = exec_cmd(cmd, background, envs)
-        if background:
-            self.sub_proc_list.append(ret)
-        else:
-            return ret
-
-    def cleanup_sub_procs(self):
-        for proc in self.sub_proc_list:
-            proc.kill()
-            proc.wait()
 
 
 # for every testcase, there should be a TestConfig instance
@@ -525,6 +574,7 @@ class TestConfig(ProcRunGuard):
             self.serving_config_name,
             self.tar_name,
             self.service_spec_id,
+            self,
         ).dump(self.model_path)
 
     def get_server_start_args(self):

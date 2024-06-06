@@ -97,5 +97,6 @@ serving_cc_test(
     deps = [
         ":http_service_cc_proto",
         ":http_source",
+        "//secretflow_serving/util:sys_util",
     ],
 )

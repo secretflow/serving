@@ -274,9 +274,13 @@ void Graph::CheckEdgeValidate() {
 void Graph::BuildExecution() {
   std::unordered_set<std::string> node_name_set;
   const auto& execution_def_list = def_.execution_list();
-  SERVING_ENFORCE(!execution_def_list.empty(), errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(!execution_def_list.empty(), errors::ErrorCode::LOGIC_ERROR,
+                  "no execution in graph");
   for (int i = 0; i < execution_def_list.size(); ++i) {
     std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+    SERVING_ENFORCE(!execution_def_list[i].nodes().empty(),
+                    errors::ErrorCode::LOGIC_ERROR, "no node in execution:{}",
+                    i);
     for (const auto& n_name : execution_def_list[i].nodes()) {
       auto n_iter = nodes_.find(n_name);
       SERVING_ENFORCE(n_iter != nodes_.end(), errors::ErrorCode::LOGIC_ERROR,
@@ -308,7 +312,6 @@ void Graph::CheckExecutionValidate() {
                     "The dispatch types of two adjacent executions cannot be "
                     "the same, cur exeution id {}, type: {}",
                     e->id(), DispatchType_Name(e->GetDispatchType()));
-    prev_dispatch_type = e->GetDispatchType();
 
     if (e->IsEntry()) {
       SERVING_ENFORCE(e->GetDispatchType() == DispatchType::DP_ALL,
@@ -321,6 +324,18 @@ void Graph::CheckExecutionValidate() {
       SERVING_ENFORCE(e->IsExitNode(exit_node_->GetName()),
                       errors::ErrorCode::LOGIC_ERROR);
     }
+    // if previous execution is DP_ALL, first op should be mergeable
+    if (prev_dispatch_type == DispatchType::DP_ALL) {
+      for (auto& node : e->GetEntryNodes()) {
+        SERVING_ENFORCE(node->GetOpDef()->tag().mergeable(),
+                        errors::ErrorCode::LOGIC_ERROR,
+                        "previous execution is DP_ALL, but first op({}) is not "
+                        "mergeable.",
+                        node->GetName());
+      }
+    }
+
+    prev_dispatch_type = e->GetDispatchType();
   }
 }
 

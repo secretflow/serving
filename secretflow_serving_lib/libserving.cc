@@ -23,10 +23,15 @@
 #include "pybind11/stl.h"
 #include "yacl/base/exception.h"
 
+#include "secretflow_serving/framework/model_info_processor.h"
+#include "secretflow_serving/ops/graph.h"
 #include "secretflow_serving/ops/graph_version.h"
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+
+#include "secretflow_serving/protos/bundle.pb.h"
+#include "secretflow_serving/protos/graph.pb.h"
 
 namespace py = pybind11;
 
@@ -67,6 +72,30 @@ PYBIND11_MODULE(libserving, m) {
   });
 
   m.def(
+      "graph_validator_impl",
+      [](const py::bytes& graph_def_str) -> py::bytes {
+        GraphDef graph_def;
+        graph_def.ParseFromString(graph_def_str);
+        Graph graph(graph_def);
+
+        return graph_def_str;
+      },
+      py::arg("graph_def_str"));
+
+  m.def(
+      "get_graph_view_impl",
+      [](const py::bytes& graph_def_str) -> py::bytes {
+        GraphDef graph_def;
+        graph_def.ParseFromString(graph_def_str);
+        Graph graph(graph_def);
+        auto view = graph.GetView();
+        std::string view_str;
+        YACL_ENFORCE(view.SerializeToString(&view_str));
+        return view_str;
+      },
+      py::arg("graph_def_str"));
+
+  m.def(
       "get_op_def_impl",
       [](const std::string& name) -> py::bytes {
         std::string result;
@@ -78,6 +107,28 @@ PYBIND11_MODULE(libserving, m) {
 
   m.def("get_graph_def_version_impl",
         []() -> std::string { return SERVING_GRAPH_VERSION_STRING; });
+
+  m.def(
+      "check_graph_view_impl",
+      [](const std::map<std::string, std::string> graph_views) {
+        YACL_ENFORCE(graph_views.size() > 1);
+        auto iter = graph_views.begin();
+        auto lcoal_party_id = iter->first;
+        ModelInfo local_model_info;
+        std::unordered_map<std::string, ModelInfo> remote_model_infos;
+        local_model_info.mutable_graph_view()->ParseFromString(iter->second);
+        iter++;
+        while (iter != graph_views.end()) {
+          ModelInfo model_info;
+          model_info.mutable_graph_view()->ParseFromString(iter->second);
+          remote_model_infos[iter->first] = model_info;
+          iter++;
+        }
+
+        ModelInfoProcessor processor(lcoal_party_id, local_model_info,
+                                     remote_model_infos);
+      },
+      py::arg("graph_views"));
 }
 
 }  // namespace secretflow::serving::op

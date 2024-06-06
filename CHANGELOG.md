@@ -11,6 +11,13 @@
 
 > please add your unreleased change here.
 
+- [Feature] `MERGE_Y` operator support `EXP_TAYLOR` link function
+
+## 20240524 - 0.3.1b0
+
+- [Bugfix] fix tree predict base score miss
+- [Bugfix] fix http adapater error msg format failed
+
 ## 20240423 - 0.3.0b0
 
 - [Feature] Add Trace function

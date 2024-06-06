@@ -55,11 +55,11 @@ T SRSig(T x) {
 }
 
 // see https://lvdmaaten.github.io/publications/papers/crypten.pdf
-//   exp(x) = (1 + x / n) ^ n, when n is infinite large.
+//   exp(x) = (1 + x / (2 ^ n)) ^ (2 ^ n), when n is infinite large.
 template <typename T>
 T ExpTaylor(T x, int32_t n) {
   SERVING_ENFORCE_GT(n, 0);
-  return std::pow(1.0F + x / n, n);
+  return std::pow(1.0F + x / std::pow(2, n), std::pow(2, n));
 }
 
 void ExpItersValidator(int32_t n) {

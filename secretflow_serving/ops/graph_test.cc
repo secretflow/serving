@@ -116,6 +116,7 @@ REGISTER_OP(TEST_OP_1, "0.0.1", "test_desc")
 REGISTER_OP(TEST_OP_2, "0.0.1", "test_desc")
     .Returnable()
     .StringAttr("attr_s", "attr_s_desc", false, false)
+    .Mergeable()
     .Input("input", "input_desc")
     .Output("output", "output_desc");
 REGISTER_OP(TEST_OP_3, "0.0.1", "test_desc")

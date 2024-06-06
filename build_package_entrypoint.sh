@@ -33,6 +33,35 @@ fi
 echo "binary version: ${new_version}"
 sed -i "s/SF_SERVING_VERSION/${new_version}/g" ${BASE_DIR}/secretflow_serving/server/version.h
 
-bazel build --verbose_failures -c opt //:sf_serving
+show_help() {
+    echo "Usage: bash build_package_entrypoint.sh [OPTION]"
+    echo "  -j bazel_jobs"
+    echo "          specifies the limit number of bazel jobs."
+    echo
+}
 
-cp bazel-bin/sf_serving.tar.gz ./
+bazel_jobs=0
+while getopts "j:" options; do
+  case "${options}" in
+  j)
+    bazel_jobs=${OPTARG}
+    if [[ ${bazel_jobs} -le 0 ]]; then
+        echo "-j value shall be greater than 0, get ${OPTARG}."
+        exit 1
+    fi
+    ;;
+  *)
+    show_help
+    exit 1
+    ;;
+  esac
+done
+
+if [[ ${bazel_jobs} -le 0 ]]; then
+    bazel build --verbose_failures -c opt //:sf_serving
+else
+    bazel build --verbose_failures -c opt //:sf_serving --jobs ${bazel_jobs}
+fi
+
+
+cp bazel-bin/sf_serving.tar.gz ${BASE_DIR}/
