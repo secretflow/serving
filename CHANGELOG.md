@@ -11,7 +11,12 @@
 
 > please add your unreleased change here.
 
+## 20240625 - 0.4.0b0
+
 - [Feature] `MERGE_Y` operator support `EXP_TAYLOR` link function
+- [Feature] add graph_builder function to secretflow_serving_lib
+- [Feature] handle 30x http code for model pulling
+- [Feature] support `cast` function of arrow in preprocessing operator
 
 ## 20240524 - 0.3.1b0
 
