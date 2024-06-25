@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/base-ci:latest as builder
+FROM secretflow/base-ci:latest AS builder
 
 RUN yum install -y \
     wget autoconf bison flex git protobuf-devel libnl3-devel \
