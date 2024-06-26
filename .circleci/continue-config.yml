@@ -51,6 +51,7 @@ commands:
           name: "build"
           command: |
             sh ./build_wheel_entrypoint.sh
+            bazel build <<parameters.bazel_targets>> -c opt
       - run:
           name: "test"
           command: |
