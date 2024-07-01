@@ -22,7 +22,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "SecretFlow-Serving"
-copyright = "2023 Ant Group Co., Ltd."
+copyright = "2024 Ant Group Co., Ltd."
 author = "SecretFlow-Serving authors"
 release = "0.1"
 

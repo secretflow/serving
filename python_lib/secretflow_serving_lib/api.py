@@ -16,11 +16,12 @@ from __future__ import annotations
 
 from typing import List
 
-from . import op_pb2
 from . import libserving  # type: ignore
+from . import op_pb2
 
 
 def get_all_ops() -> List[op_pb2.OpDef]:
+    '''Get all OpDef of Operators provided by Secretflow-Serving.'''
     ret = []
     contents = libserving.get_all_op_defs_impl()
     for c in contents:
@@ -32,6 +33,11 @@ def get_all_ops() -> List[op_pb2.OpDef]:
 
 
 def get_op(name: str) -> op_pb2.OpDef:
+    '''Get the OpDef of specific Operator provided by Secretflow-Serving.
+
+    Args:
+        name: The name of Operator.
+    '''
     ops = get_all_ops()
     for op in ops:
         if name.lower() == op.name.lower():
@@ -40,4 +46,5 @@ def get_op(name: str) -> op_pb2.OpDef:
 
 
 def get_graph_version() -> str:
+    '''Get the version of GraphDef defined in Secretflow-Serving.'''
     return libserving.get_graph_def_version_impl()

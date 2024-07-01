@@ -73,3 +73,12 @@ ExecutionDef
 
 * nodes: Represents the nodes contained in this execution. Note that these node names should be findable and unique within the node definitions. One node can only exist in one execution and must exist in one.
 * config: The runtime config of the execution. It describes the scheduling logic and session-related states of this execution unit. for more details, please check :ref:`RuntimeConfig  <RuntimeConfig>`.
+
+Secretflow Serving Library
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since Secretflow-Serving Load models trained by `Secretflow <https://github.com/secretflow/secretflow>`_,
+Secretflow-Serving needs to export its :doc:`operators </topics/graph/operator_list>`. So
+`secretflow-serving-lib <https://pypi.org/project/secretflow-serving-lib/>`_ is a python library that
+provides interfaces to obtain Secretflow-Serving operators and export model files that Secretflow-Serving can load.
+For more details, please check :doc:`secretflow-serving-lib docs  </reference/modules>`.
