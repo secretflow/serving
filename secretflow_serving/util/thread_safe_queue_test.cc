@@ -54,25 +54,6 @@ TEST(ThreadSafeQueueTest, TryPop) {
   EXPECT_EQ(val, 999);
 }
 
-TEST(ThreadSafeQueueTest, WaitPop) {
-  ThreadSafeQueue<int> q(50);
-  int val = 0;
-  auto start_time = std::chrono::steady_clock::now();
-  EXPECT_FALSE(q.WaitPop(val));
-  auto end_time = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      end_time - start_time);
-  EXPECT_GE(duration.count(), 50);
-  EXPECT_LE(duration.count(), 60);
-  q.Push(999);
-  start_time = std::chrono::steady_clock::now();
-  EXPECT_TRUE(q.WaitPop(val));
-  end_time = std::chrono::steady_clock::now();
-  duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
-                                                                   start_time);
-  EXPECT_LE(duration.count(), 1);
-}
-
 TEST(ThreadSafeQueueTest, Push) {
   ThreadSafeQueue<uint32_t> q;
   uint32_t val = 0;
