@@ -59,17 +59,20 @@ PYBIND11_MODULE(libserving, m) {
         }
       });
 
-  m.def("get_all_op_defs_impl", []() -> std::vector<py::bytes> {
-    std::vector<py::bytes> result;
-    auto op_defs = OpFactory::GetInstance()->GetAllOps();
-    std::for_each(op_defs.begin(), op_defs.end(),
-                  [&](const std::shared_ptr<const OpDef>& op) {
-                    std::string content;
-                    YACL_ENFORCE(op->SerializeToString(&content));
-                    result.emplace_back(std::move(content));
-                  });
-    return result;
-  });
+  m.def(
+      "get_all_op_defs_impl",
+      []() -> std::vector<py::bytes> {
+        std::vector<py::bytes> result;
+        auto op_defs = OpFactory::GetInstance()->GetAllOps();
+        std::for_each(op_defs.begin(), op_defs.end(),
+                      [&](const std::shared_ptr<const OpDef>& op) {
+                        std::string content;
+                        YACL_ENFORCE(op->SerializeToString(&content));
+                        result.emplace_back(std::move(content));
+                      });
+        return result;
+      },
+      "Get the serialized strings of all OpDef serving providing");
 
   m.def(
       "graph_validator_impl",
@@ -80,7 +83,7 @@ PYBIND11_MODULE(libserving, m) {
 
         return graph_def_str;
       },
-      py::arg("graph_def_str"));
+      py::arg("graph_def_str"), "Validate the serialized string of GraphDef");
 
   m.def(
       "get_graph_view_impl",
@@ -93,7 +96,8 @@ PYBIND11_MODULE(libserving, m) {
         YACL_ENFORCE(view.SerializeToString(&view_str));
         return view_str;
       },
-      py::arg("graph_def_str"));
+      py::arg("graph_def_str"),
+      "Get the serialized string of GraphView from GraphDef");
 
   m.def(
       "get_op_def_impl",
@@ -103,10 +107,12 @@ PYBIND11_MODULE(libserving, m) {
         YACL_ENFORCE(def->SerializeToString(&result));
         return result;
       },
-      py::arg("name"));
+      py::arg("name"), "Get the serialized string of the specific OpDef");
 
-  m.def("get_graph_def_version_impl",
-        []() -> std::string { return SERVING_GRAPH_VERSION_STRING; });
+  m.def(
+      "get_graph_def_version_impl",
+      []() -> std::string { return SERVING_GRAPH_VERSION_STRING; },
+      "Get the version of GraphDef format");
 
   m.def(
       "check_graph_view_impl",
@@ -128,7 +134,8 @@ PYBIND11_MODULE(libserving, m) {
         ModelInfoProcessor processor(lcoal_party_id, local_model_info,
                                      remote_model_infos);
       },
-      py::arg("graph_views"));
+      py::arg("graph_views"),
+      "Check whether the GraphViews of multiple parties are consistent");
 }
 
 }  // namespace secretflow::serving::op

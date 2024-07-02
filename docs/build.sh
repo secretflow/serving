@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+set -e
+
 usage() { echo "Usage: $0 [-l <en|zh_CN>]" 1>&2; exit 1; }
 
 
@@ -40,7 +42,11 @@ if [[ "$l" != "en" && "$l" != "zh_CN" ]]; then
     usage
 fi
 
+if [ -e source/library/secretflow_serving_lib ]; then
+    rm -rf source/library/secretflow_serving_lib
+fi
 
 SPHINX_APIDOC_OPTIONS=members,autosummary
+
 make clean
 env PYTHONPATH=$PYTHONPATH:$PWD/.. make SPHINXOPTS="-D language='${l}'" html

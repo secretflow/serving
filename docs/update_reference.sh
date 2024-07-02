@@ -18,6 +18,8 @@
 # LIST=$(find ../secretflow_serving/apis -name "*.proto" | cut -c 4- | sort -t '\0' -n)
 # echo ${LIST}
 
+set -e
+
 echo "1. Update spi doc."
 docker run --rm -v $(pwd)/source/reference/:/out \
   -v $(pwd)/..:/protos \
@@ -47,3 +49,9 @@ docker run --rm -v $(pwd)/source/reference/:/out \
   -v $(pwd)/..:/protos \
   pseudomuto/protoc-gen-doc \
   --doc_opt=/out/span_info_md.tmpl,span_info.md secretflow_serving/server/trace/span_info.proto
+
+echo "6. Update secretflow_serving_lib doc."
+cd ..
+bash build_wheel_entrypoint.sh > /dev/null 2>&1
+cd -
+sphinx-apidoc -f -d 2 -t source/topics/library/templates -o source/reference ../python_lib/secretflow_serving_lib/

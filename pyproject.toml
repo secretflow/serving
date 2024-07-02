@@ -10,6 +10,7 @@ ignore_directives = [
     "include",
     "mermaid",
     "autoclass",
+    "automodule",
     "autofunction",
 ]
 ignore_languages = [

@@ -35,3 +35,9 @@ This part contains detailed explanation of Model, Configs, SPIs and APIs.
    :caption: SpanInfo
 
    span_info
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules
+
+   modules

@@ -1,8 +1,8 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2023 Ant Group Co., Ltd.
+# Copyright (C) 2024 Ant Group Co., Ltd.
 # This file is distributed under the same license as the SecretFlow-Serving
 # package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
 msgid ""
 msgstr ""
@@ -17,22 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: ../../source/topics/index.rst:7
-msgid "system"
-msgstr "系统"
-
-#: ../../source/topics/index.rst:15
-msgid "deployment"
-msgstr "部署"
-
-#: ../../source/topics/index.rst:22
-msgid "graph"
-msgstr "模型图"
-
-#: ../../source/topics/index.rst:30 ../../source/topics/index.rst:36
-msgid "algorithm"
-msgstr "算法"
-
-#: ../../source/topics/index.rst:4
-msgid "Topics"
-msgstr "主题"
+#: ../../source/reference/modules.rst:2
+msgid "secretflow_serving_lib"
+msgstr ""

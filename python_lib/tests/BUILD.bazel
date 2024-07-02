@@ -1,6 +1,4 @@
-#! /bin/bash
-#
-# Copyright 2022 Ant Group Co., Ltd.
+# Copyright 2023 Ant Group Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
 
-cd python_lib
-rm -rf dist
-python setup.py bdist_wheel
-python -m pip install dist/*.whl --force-reinstall
-cd -
+load("@rules_python//python:defs.bzl", "py_test")
 
-python -c "import secretflow_serving_lib"
+package(default_visibility = ["//visibility:public"])
+
+py_test(
+    name = "api_test",
+    srcs = ["api_test.py"],
+    deps = [
+        "//python_lib/secretflow_serving_lib:init",
+    ],
+)
+
+py_test(
+    name = "graph_builder_test",
+    srcs = ["graph_builder_test.py"],
+    deps = [
+        "//python_lib/secretflow_serving_lib:init",
+    ],
+)
