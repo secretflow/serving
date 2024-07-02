@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-19 02:30+0000\n"
+"POT-Creation-Date: 2024-06-28 09:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,14 +94,17 @@ msgstr ""
 "</topics/graph/operator_list>`"
 
 #: ../../source/index.rst:50
-msgid "**Reference**: :doc:`SecretFlow-Serving model </reference/model>`"
-msgstr "**参考**：:doc:`SecretFlow-Serving 模型 </reference/model>`"
+msgid ""
+"**Reference**: :doc:`SecretFlow-Serving model </reference/model>` | :doc"
+":`secretflow-serving-lib docs </reference/modules>`"
+msgstr "**参考**：:doc:`SecretFlow-Serving 模型 </reference/model>` | :doc"
+":`secretflow-serving-lib 文档 </reference/modules>`"
 
-#: ../../source/index.rst:54
+#: ../../source/index.rst:55
 msgid "Prediction Algorithms"
 msgstr "预测算法"
 
-#: ../../source/index.rst:56
+#: ../../source/index.rst:57
 msgid ""
 "**Introduction**: :doc:`Introduction to prediction algorithms "
 "</topics/algorithm/intro>`"

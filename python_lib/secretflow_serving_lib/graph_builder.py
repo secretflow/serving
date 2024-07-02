@@ -21,6 +21,7 @@ import numpy as np
 from google.protobuf import json_format
 
 from . import libserving  # type: ignore
+from .api import get_op
 from .attr_pb2 import AttrType, AttrValue
 from .bundle_pb2 import FileFormatType, ModelBundle, ModelInfo, ModelManifest
 from .graph_pb2 import (
@@ -32,8 +33,6 @@ from .graph_pb2 import (
     RuntimeConfig,
 )
 from .op_pb2 import OpDef
-
-from .api import get_op
 
 
 def construct_attr_value(attr_type: AttrType, value) -> AttrValue:
@@ -78,16 +77,6 @@ def construct_attr_value(attr_type: AttrType, value) -> AttrValue:
         raise Exception(f"unsupported attr attr_type: {attr_type}")
 
     return ret
-
-
-def get_op(op: str):
-    contents = libserving.get_all_op_defs_impl()
-    for c in contents:
-        o = OpDef()
-        o.ParseFromString(c)
-        if op.lower() == o.name.lower():
-            return o
-    raise Exception("can't find op def : {op}")
 
 
 def construct_attr_dict(op: str, attrs: dict) -> dict:
@@ -184,7 +173,10 @@ class _GraphProtoWrapper:
 
 
 class GraphBuilder:
+    '''Builder for GraphDef'''
+
     def __init__(self):
+        '''Initialized with a default execution with type of DP_ALL'''
         self.nodes = set()
         self.graph = _GraphProtoWrapper(libserving.get_graph_def_version_impl())
 
@@ -192,6 +184,14 @@ class GraphBuilder:
         self.begin_new_execution()
 
     def add_node(self, name: str, op: str, parents_name: List[str], **kwargs):
+        '''Add a node to the last execution.
+
+        Args:
+            name: name of the node
+            op: op name
+            parents_name: list of parent node names
+            kwargs: attrs of the node specified by corresponding OpDef
+        '''
         assert self.graph.get_execution_count() > 0, "no execution added yet"
         if name in self.nodes:
             raise Exception(f"node {name} already exists")
@@ -201,6 +201,7 @@ class GraphBuilder:
         )
 
     def get_execution_count(self):
+        '''Get number of executions.'''
         return len(self.graph.executions)
 
     def begin_new_execution(
@@ -209,6 +210,18 @@ class GraphBuilder:
         specific_flag: bool = False,
         session_run: bool = False,
     ):
+        '''Start a new execution for node adding
+
+        Args:
+            dispatch_type: dispatch type for execution, DP_ALL by default
+
+                - DP_ALL: executed by all parties,
+                - DP_ANYONE: executed by all anyone of parties,
+                - DP_SPECIFIED: executed by the party with specific_flag is True
+
+            specific_flag: whether to executed by this party, False by default, if True, dispatch_type must be DP_SPECIFIED
+            session_run: whether to run in session mode, False by default
+        '''
         return self.graph.add_execution(
             _ExecutionProtoWrapper(
                 DispatchType.Value(dispatch_type), specific_flag, session_run
@@ -216,6 +229,7 @@ class GraphBuilder:
         )
 
     def build_proto(self) -> GraphDef:
+        '''Get the GraphDef include all nodes and executions'''
         graph_def_str = libserving.graph_validator_impl(
             self.graph.proto().SerializeToString()
         )
@@ -224,6 +238,7 @@ class GraphBuilder:
         return graph
 
     def build_view_proto(self) -> GraphView:
+        '''Get the GraphDef of Graph'''
         graph_view_str = libserving.get_graph_view_impl(
             self.graph.proto().SerializeToString()
         )
@@ -235,8 +250,16 @@ class GraphBuilder:
 def build_serving_tar(
     name: str, desc: str, graph_def: GraphDef, bundle_type: str = "json"
 ) -> io.BytesIO:
-    """
-    bundle_type: json or pb
+    """Build tar model file which can be loaded by Secretflow-Serving.
+
+    Args:
+        name: name of the model
+        desc: description of the model
+        graph_def: GraphDef of the model
+        bundle_type: type of model file, json or pb, default is json
+
+    Returns:
+        io.BytesIO: io stream
     """
     assert bundle_type in [
         "json",
@@ -249,14 +272,18 @@ def build_serving_tar(
 
     meta = ModelManifest()
     meta.bundle_path = "model_file"
-    meta_data = json_format.MessageToJson(meta, indent=0).encode("utf-8")
 
     if bundle_type == "json":
         meta.bundle_format = FileFormatType.FF_JSON
-        bundle_data = json_format.MessageToJson(bundle, indent=0).encode("utf-8")
+        bundle_data = json_format.MessageToJson(
+            bundle, indent=0, preserving_proto_field_name=True
+        ).encode("utf-8")
     elif bundle_type == "pb":
         meta.bundle_format = FileFormatType.FF_PB
         bundle_data = bundle.SerializeToString()
+    meta_data = json_format.MessageToJson(
+        meta, indent=0, preserving_proto_field_name=True
+    ).encode("utf-8")
 
     io_handle = io.BytesIO()
     with tarfile.open(fileobj=io_handle, mode="w:gz") as tar:
@@ -273,4 +300,9 @@ def build_serving_tar(
 
 
 def check_graph_views(graph_view_dict: Dict[str, str]):
+    '''Check whether the GraphViews of multiple parties are consistent.
+
+    Args:
+        graph_view_dict: key is party name, value is corresponding graph_view
+    '''
     libserving.check_graph_view_impl(graph_view_dict)

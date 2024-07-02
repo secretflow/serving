@@ -57,9 +57,9 @@ commands:
 
             sh ./build_wheel_entrypoint.sh
             python3 -m pip install twine
-            ls dist/*.whl
+            ls python_lib/dist/*.whl
 
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} dist/*.whl
+            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} python_lib/dist/*.whl
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs

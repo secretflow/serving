@@ -48,7 +48,8 @@ Graph
   :doc:`Operators </topics/graph/operator_list>`
 
 - **Reference**:
-  :doc:`SecretFlow-Serving model </reference/model>`
+  :doc:`SecretFlow-Serving model </reference/model>` |
+  :doc:`secretflow-serving-lib docs </reference/modules>`
 
 Prediction Algorithms
 ---------------------
@@ -57,7 +58,6 @@ Prediction Algorithms
   :doc:`Introduction to prediction algorithms </topics/algorithm/intro>`
 
 .. toctree::
-    :hidden:
 
     intro/index
     topics/index

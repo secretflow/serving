@@ -75,14 +75,16 @@ def read_requirements(*filepath):
 class SetupSpec:
     def __init__(self, name: str, description: str):
         self.name: str = name
-        self.version = find_version("version.txt", "secretflow_serving_lib/version.py")
+        self.version = find_version(
+            "../version.txt", "./secretflow_serving_lib/version.py"
+        )
         self.description: str = description
         self.files_to_include: list = []
         self.install_requires: list = []
         self.extras: dict = {}
 
     def get_packages(self):
-        return setuptools.find_packages("./secretflow_serving_lib")
+        return setuptools.find_packages("./")
 
 
 setup_spec = SetupSpec(
@@ -93,23 +95,23 @@ setup_spec = SetupSpec(
 # These are the directories where automatically generated Python protobuf
 # bindings are created.
 generated_python_directories = [
-    "bazel-bin/secretflow_serving_lib",
-    "bazel-bin/secretflow_serving/protos",
+    "../bazel-bin/python_lib",
+    "../bazel-bin/secretflow_serving/protos",
 ]
-setup_spec.install_requires = read_requirements('requirements.txt')
+setup_spec.install_requires = read_requirements("requirements.txt")
 files_to_remove = []
 
 
-# NOTE: The lists below must be kept in sync with spu/BUILD.bazel.
+# NOTE: The lists below must be kept in sync with secretflow_serving_lib/BUILD.bazel.
 serving_ops_lib_files = [
-    "bazel-bin/secretflow_serving_lib/libserving" + pyd_suffix,
+    "../bazel-bin/python_lib/secretflow_serving_lib/libserving" + pyd_suffix
 ]
 
 
 # Calls Bazel in PATH
 def bazel_invoke(invoker, cmdline, *args, **kwargs):
     try:
-        result = invoker(['bazel'] + cmdline, *args, **kwargs)
+        result = invoker(["bazel"] + cmdline, *args, **kwargs)
         return result
     except IOError:
         raise
@@ -139,8 +141,10 @@ def build(build_python, build_cpp):
     bazel_precmd_flags = []
 
     bazel_targets = []
-    bazel_targets += ["//secretflow_serving_lib:init"] if build_python else []
-    bazel_targets += ["//secretflow_serving_lib:api"] if build_cpp else []
+    bazel_targets += (
+        ["//python_lib/secretflow_serving_lib:init"] if build_python else []
+    )
+    bazel_targets += ["//python_lib/secretflow_serving_lib:api"] if build_cpp else []
 
     bazel_flags.extend(["-c", "opt"])
 
@@ -160,9 +164,15 @@ def remove_prefix(text, prefix):
 
 def copy_file(target_dir, filename, rootdir):
     source = os.path.relpath(filename, rootdir)
-    destination = os.path.join(target_dir, remove_prefix(source, 'bazel-bin/'))
+    if source.startswith('../bazel-bin/python_lib'):
+        destination = os.path.join(
+            target_dir, remove_prefix(source, "../bazel-bin/python_lib/")
+        )
+    else:
+        destination = os.path.join(target_dir, remove_prefix(source, "../bazel-bin/"))
 
     # Create the target directory if it doesn't already exist.
+    print(f'Create dir {os.path.dirname(destination)}')
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     if not os.path.exists(destination):
         print(f"Copy file from {source} to {destination}")
@@ -190,7 +200,9 @@ def pip_run(build_ext):
         for filename in os.listdir(directory):
             if filename[-3:] == ".py":
                 setup_spec.files_to_include.append(os.path.join(directory, filename))
+    print(f"generated files: {setup_spec.files_to_include}")
 
+    print(f"generated files: {setup_spec.files_to_include}")
     copied_files = 0
     for filename in setup_spec.files_to_include:
         copied_files += copy_file(build_ext.build_lib, filename, ROOT_DIR)
@@ -218,7 +230,7 @@ if os.path.isdir(build_dir):
     shutil.rmtree(build_dir)
 
 if not SKIP_BAZEL_CLEAN:
-    bazel_invoke(subprocess.check_call, ['clean'])
+    bazel_invoke(subprocess.check_call, ["clean"])
 
 # Default Linux platform tag
 plat_name = "manylinux2014_x86_64"
@@ -233,29 +245,22 @@ elif platform.machine() == "aarch64":
     # Linux aarch64
     plat_name = "manylinux_2_28_aarch64"
 
-folder_name = "secretflow_serving_lib"
-
-
-def add_folder_name(l):
-    return [folder_name + "/" + element for element in l]
-
-
 setuptools.setup(
     name=setup_spec.name,
     version=setup_spec.version,
     author="SecretFlow Team",
-    author_email='secretflow-contact@service.alipay.com',
+    author_email="secretflow-contact@service.alipay.com",
     description=(setup_spec.description),
     long_description=io.open(
-        os.path.join(ROOT_DIR, "README.md"), "r", encoding="utf-8"
+        os.path.join(ROOT_DIR, "../README.md"), "r", encoding="utf-8"
     ).read(),
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-    packages=[folder_name] + add_folder_name(setuptools.find_packages(folder_name)),
+    packages=setuptools.find_packages(exclude=("tests", "tests.*")),
     cmdclass={"build_ext": build_ext},
     # The BinaryDistribution argument triggers build_ext.
     distclass=BinaryDistribution,
@@ -263,5 +268,5 @@ setuptools.setup(
     setup_requires=["wheel"],
     extras_require=setup_spec.extras,
     license="Apache 2.0",
-    options={'bdist_wheel': {'plat_name': plat_name}},
+    options={"bdist_wheel": {"plat_name": plat_name}},
 )

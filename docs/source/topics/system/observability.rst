@@ -17,7 +17,7 @@ Format
 
 Secretflow-Serving uses the `Prometheus <https://prometheus.io/>`_ standard to generate metrics.
 The metric service is turned off by default,
-you may start metric service by specifying ``metrics_exposer_port`` of :ref:`ServerConfig`.
+you may start metric service by specifying ``metrics_exposer_port`` of :ref:`ServerConfig <SecretFlow-Serving Config>`.
 Then You can obtain the metrics by requesting :ref:`MetricsService <metrics>` on this port.
 That is to say, Serving supports pull mode.
 You could use `The Prometheus monitoring system <https://prometheus.io/>`_ to collect metrics,

@@ -16,12 +16,13 @@
 import os
 import sys
 
-import secretflow_serving_lib as serving
 
 print("about to import", file=sys.stderr)
 print("python is", sys.version_info)
 print("pid is", os.getpid())
+print("syspath is", sys.path)
 
+import python_lib.secretflow_serving_lib as serving
 
 print("imported, about to call", file=sys.stderr)
 
