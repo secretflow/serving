@@ -177,7 +177,8 @@ TEST(HttpSourceTest, RedirectWithRelativePath) {
   StartServerAddRequest("/HttpService/rel_redirect");
 }
 
-TEST(HttpSourceTest, PullGiteeZip) {
+// disable this due to gitee api limit
+TEST(HttpSourceTest, DISABLED_PullGiteeZip) {
   // make source config
   std::string model_dir = "/tmp/serving_source_test";
   ModelConfig model_config;
