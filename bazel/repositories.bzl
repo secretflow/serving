@@ -142,11 +142,11 @@ def _com_aws_sdk():
     maybe(
         http_archive,
         name = "com_aws_sdk",
-        sha256 = "758174f9788fed6cc1e266bcecb20bf738bd5ef1c3d646131c9ed15c2d6c5720",
-        strip_prefix = "aws-sdk-cpp-1.7.336",
+        sha256 = "0f1c770668550d65fd75f887d7c34bef821cd02eb8bd92cd6a43d3d00d8e94b1",
+        strip_prefix = "aws-sdk-cpp-1.11.365",
         build_file = "@sf_serving//bazel:aws.BUILD",
         urls = [
-            "https://github.com/aws/aws-sdk-cpp/archive/1.7.336.tar.gz",
+            "https://github.com/aws/aws-sdk-cpp/archive/1.11.365.tar.gz",
         ],
     )
 
