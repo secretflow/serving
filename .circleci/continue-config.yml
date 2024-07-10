@@ -91,6 +91,11 @@ jobs:
           command: |
             set +e
             declare -i test_status
+
+            ls -al ./bazel-bin/secretflow_serving/tools
+
+            ls -al ./bazel-bin/secretflow_serving/tools/simple_feature_service
+
             python3 .ci/integration_test.py 2>&1 | tee integration_test.log; test_status=${PIPESTATUS[0]}
             exit ${test_status}
       - store_artifacts:
