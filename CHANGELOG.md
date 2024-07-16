@@ -11,6 +11,10 @@
 
 > please add your unreleased change here.
 
+## 20240716 - 0.5.0b0
+
+- [DOC] add docs for secretflow_serving_lib
+
 ## 20240625 - 0.4.0b0
 
 - [Feature] `MERGE_Y` operator support `EXP_TAYLOR` link function
