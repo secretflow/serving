@@ -1,7 +1,7 @@
 myst-parser==0.19.2
 rstcheck==6.1.1
 sphinx==5.3.0
-nbsphinx==0.8.9
+nbsphinx==0.9.4
 sphinx-autobuild==2021.3.14
 pydata-sphinx-theme==0.10.1
 sphinx-markdown-parser==0.2.4
