@@ -23,7 +23,7 @@ class DotProduct : public OpKernel {
  public:
   explicit DotProduct(OpKernelOptions opts);
 
-  void Compute(ComputeContext* ctx) override;
+  void DoCompute(ComputeContext* ctx) override;
 
  protected:
   void BuildInputSchema() override;
@@ -32,12 +32,15 @@ class DotProduct : public OpKernel {
 
  private:
   std::vector<std::string> feature_name_list_;
+  std::vector<std::string> feature_type_list_;
 
   std::string output_col_name_;
 
-  double intercept_ = 0.0d;
+  double intercept_ = 0.0;
 
   Double::ColVec weights_;
+
+  bool no_feature_ = false;
 };
 
 }  // namespace secretflow::serving::op

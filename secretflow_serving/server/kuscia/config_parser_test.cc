@@ -17,6 +17,8 @@
 #include "butil/files/temp_file.h"
 #include "gtest/gtest.h"
 
+#include "secretflow_serving/util/utils.h"
+
 namespace secretflow::serving::kuscia {
 
 class KusciaConfigParserTest : public ::testing::Test {
@@ -30,10 +32,11 @@ TEST_F(KusciaConfigParserTest, Works) {
   tmpfile.save(1 + R"JSON(
 {
   "serving_id": "kd-1",
-  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceMd5\":\"ba9b4a121e139902e320a18c0610aa99\",\"sourcePath\":\"examples/alice/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceMd5\":\"bdd57c453e64bcf4a9b5fa247a7cffa1\",\"sourcePath\":\"examples/bob/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"mockOpts\":{}},\"channel_desc\":{\"protocol\":\"http\"}}}}",
-  "cluster_def": "{\"parties\":[{\"name\":\"alice\", \"role\":\"\", \"services\":[{\"portName\":\"service\", \"endpoints\":[\"kd-1-service.alice.svc\"]}, {\"portName\":\"internal\", \"endpoints\":[\"kd-1-internal.alice.svc:53510\"]}, {\"portName\":\"brpc-builtin\", \"endpoints\":[\"kd-1-brpc-builtin.alice.svc:53511\"]}]}, {\"name\":\"bob\", \"role\":\"\", \"services\":[{\"portName\":\"brpc-builtin\", \"endpoints\":[\"kd-1-brpc-builtin.bob.svc:53511\"]}, {\"portName\":\"service\", \"endpoints\":[\"kd-1-service.bob.svc\"]}, {\"portName\":\"internal\", \"endpoints\":[\"kd-1-internal.bob.svc:53510\"]}]}], \"selfPartyIdx\":0, \"selfEndpointIdx\":0}",
-  "allocated_ports": "{\"ports\":[{\"name\":\"service\", \"port\":53509, \"scope\":\"Cluster\", \"protocol\":\"HTTP\"}, {\"name\":\"internal\", \"port\":53510, \"scope\":\"Domain\", \"protocol\":\"HTTP\"}, {\"name\":\"brpc-builtin\", \"port\":53511, \"scope\":\"Domain\", \"protocol\":\"HTTP\"}]}",
-  "oss_meta": ""
+  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceSha256\":\"3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522\",\"sourcePath\":\"examples/alice/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"alice_ep\"}},\"channel_desc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceSha256\":\"330192f3a51f9498dd882478bfe08a06501e2ed4aa2543a0fb586180925eb309\",\"sourcePath\":\"examples/bob/glm-test.tar.gz\",\"sourceType\":\"ST_FILE\"},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"bob_ep\"}},\"channel_desc\":{\"protocol\":\"http\"}}}}",
+  "cluster_def": "{\"parties\":[{\"name\":\"alice\",\"role\":\"\",\"services\":[{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.alice.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.alice.svc:53510\"]},{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.alice.svc:53511\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.alice.svc\"]}]},{\"name\":\"bob\",\"role\":\"\",\"services\":[{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.bob.svc:53511\"]},{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.bob.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.bob.svc:53510\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.bob.svc\"]}]}],\"selfPartyIdx\":0,\"selfEndpointIdx\":0}",
+  "allocated_ports": "{\"ports\":[{\"name\":\"service\",\"port\":53509,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"communication\",\"port\":53508,\"scope\":\"Cluster\",\"protocol\":\"HTTP\"},{\"name\":\"internal\",\"port\":53510,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"brpc-builtin\",\"port\":53511,\"scope\":\"Domain\",\"protocol\":\"HTTP\"}]}",
+  "oss_meta": "",
+  "spi_tls_config": "{\"certificate_path\":\"abc\", \"private_key_path\":\"def\",\"ca_file_path\":\"gkh\"}"
 }
 )JSON");
 
@@ -45,7 +48,8 @@ TEST_F(KusciaConfigParserTest, Works) {
   EXPECT_EQ("glm-test-1", model_config.model_id());
   EXPECT_EQ("/tmp/alice", model_config.base_path());
   EXPECT_EQ(SourceType::ST_FILE, model_config.source_type());
-  EXPECT_EQ("ba9b4a121e139902e320a18c0610aa99", model_config.source_md5());
+  EXPECT_EQ("3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522",
+            model_config.source_sha256());
 
   auto cluster_config = config_parser.cluster_config();
   EXPECT_EQ(2, cluster_config.parties_size());
@@ -54,19 +58,24 @@ TEST_F(KusciaConfigParserTest, Works) {
 
   const auto& alice_p = cluster_config.parties(0);
   EXPECT_EQ("alice", alice_p.id());
-  EXPECT_EQ("http://kd-1-service.alice.svc", alice_p.address());
-  EXPECT_EQ("0.0.0.0:53509", alice_p.listen_address());
+  EXPECT_EQ("http://kd-1-communication.alice.svc", alice_p.address());
 
   const auto& bob_p = cluster_config.parties(1);
   EXPECT_EQ("bob", bob_p.id());
-  EXPECT_EQ("http://kd-1-service.bob.svc", bob_p.address());
-  EXPECT_TRUE(bob_p.listen_address().empty());
+  EXPECT_EQ("http://kd-1-communication.bob.svc", bob_p.address());
 
   auto feature_config = config_parser.feature_config();
-  EXPECT_TRUE(feature_config->has_mock_opts());
+  EXPECT_TRUE(feature_config->has_http_opts());
+  EXPECT_EQ(feature_config->http_opts().endpoint(), "alice_ep");
+  EXPECT_EQ(feature_config->http_opts().tls_config().certificate_path(), "abc");
+  EXPECT_EQ(feature_config->http_opts().tls_config().private_key_path(), "def");
+  EXPECT_EQ(feature_config->http_opts().tls_config().ca_file_path(), "gkh");
 
   auto server_config = config_parser.server_config();
   EXPECT_EQ(5, server_config.feature_mapping_size());
+  EXPECT_EQ("0.0.0.0", server_config.host());
+  EXPECT_EQ(53509, server_config.service_port());
+  EXPECT_EQ(53508, server_config.communication_port());
 }
 
 // TODO: exception case

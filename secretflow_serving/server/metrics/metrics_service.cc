@@ -122,7 +122,7 @@ MetricsService::Stats::Stats(
       num_scrapes(num_scrapes_family.Add({})),
       request_latencies_family(
           ::prometheus::BuildSummary()
-              .Name("exposer_request_duration_seconds")
+              .Name("exposer_request_duration_milliseconds")
               .Help("Latencies of serving scrape requests, in milliseconds")
               .Register(*registry)),
       request_latencies_s(request_latencies_family.Add(

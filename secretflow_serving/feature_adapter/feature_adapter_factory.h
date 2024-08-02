@@ -26,7 +26,7 @@ class FeatureAdapterFactory : public Singleton<FeatureAdapterFactory> {
  public:
   using CreateAdapterFunc = std::function<std::unique_ptr<FeatureAdapter>(
       const FeatureSourceConfig&, const std::string&, const std::string&,
-      const std::shared_ptr<arrow::Schema>&)>;
+      const std::shared_ptr<const arrow::Schema>&)>;
 
   template <class T>
   void Register(FeatureSourceConfig::OptionsCase opts_case) {
@@ -38,7 +38,7 @@ class FeatureAdapterFactory : public Singleton<FeatureAdapterFactory> {
         opts_case,
         [](const FeatureSourceConfig& spec, const std::string& service_id,
            const std::string& party_id,
-           const std::shared_ptr<arrow::Schema>& feature_schema) {
+           const std::shared_ptr<const arrow::Schema>& feature_schema) {
           return std::make_unique<T>(spec, service_id, party_id,
                                      feature_schema);
         });
@@ -47,7 +47,7 @@ class FeatureAdapterFactory : public Singleton<FeatureAdapterFactory> {
   std::unique_ptr<FeatureAdapter> Create(
       const FeatureSourceConfig& spec, const std::string& service_id,
       const std::string& party_id,
-      const std::shared_ptr<arrow::Schema>& feature_schema) {
+      const std::shared_ptr<const arrow::Schema>& feature_schema) {
     auto creator = creators_[spec.options_case()];
     YACL_ENFORCE(creator, "no creator registered for operator type: {}",
                  static_cast<int>(spec.options_case()));

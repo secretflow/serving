@@ -17,32 +17,21 @@
 #include <memory>
 #include <string>
 
-#include "secretflow_serving/core/exception.h"
-#include "secretflow_serving/framework/executable.h"
-#include "secretflow_serving/framework/predictor.h"
+#include "secretflow_serving/protos/bundle.pb.h"
 
 namespace secretflow::serving {
 
 class Loader {
  public:
-  struct Options {
-    std::string party_id;
-  };
-
- public:
-  Loader(const Options& opts) : opts_(opts) {
-    SERVING_ENFORCE(!opts_.party_id.empty(), errors::ErrorCode::LOGIC_ERROR);
-  }
+  explicit Loader() = default;
   virtual ~Loader() = default;
 
   virtual void Load(const std::string& file_path) = 0;
 
-  virtual std::shared_ptr<Executable> GetExecutable() = 0;
-
-  virtual std::shared_ptr<Predictor> GetPredictor() = 0;
+  std::shared_ptr<ModelBundle> GetModelBundle() { return model_bundle_; }
 
  protected:
-  Options opts_;
+  std::shared_ptr<ModelBundle> model_bundle_;
 };
 
 }  // namespace secretflow::serving

@@ -38,11 +38,10 @@ OpDefBuilder& OpDefBuilder::Int32Attr(
                     attr_def.name());
 
     if (!is_list) {
-      int32_t v = std::get<int32_t>(default_value.value());
+      auto& v = std::get<int32_t>(default_value.value());
       attr_def.mutable_default_value()->set_i32(v);
     } else {
-      std::vector<int32_t>& v_list =
-          std::get<std::vector<int32_t>>(default_value.value());
+      auto& v_list = std::get<std::vector<int32_t>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_i32s()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
@@ -69,11 +68,10 @@ OpDefBuilder& OpDefBuilder::Int64Attr(
                     "attr {}: default_value must be provided if optional",
                     attr_def.name());
     if (!is_list) {
-      int64_t v = std::get<int64_t>(default_value.value());
+      auto& v = std::get<int64_t>(default_value.value());
       attr_def.mutable_default_value()->set_i64(v);
     } else {
-      std::vector<int64_t>& v_list =
-          std::get<std::vector<int64_t>>(default_value.value());
+      auto& v_list = std::get<std::vector<int64_t>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_i64s()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
@@ -100,11 +98,10 @@ OpDefBuilder& OpDefBuilder::FloatAttr(
                     "attr {}: default_value must be provided if optional",
                     attr_def.name());
     if (!is_list) {
-      float v = std::get<float>(default_value.value());
+      auto& v = std::get<float>(default_value.value());
       attr_def.mutable_default_value()->set_f(v);
     } else {
-      std::vector<float>& v_list =
-          std::get<std::vector<float>>(default_value.value());
+      auto& v_list = std::get<std::vector<float>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_fs()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
@@ -131,11 +128,10 @@ OpDefBuilder& OpDefBuilder::DoubleAttr(
                     "attr {}: default_value must be provided if optional",
                     attr_def.name());
     if (!is_list) {
-      double v = std::get<double>(default_value.value());
+      auto& v = std::get<double>(default_value.value());
       attr_def.mutable_default_value()->set_d(v);
     } else {
-      std::vector<double>& v_list =
-          std::get<std::vector<double>>(default_value.value());
+      auto& v_list = std::get<std::vector<double>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_ds()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
@@ -162,11 +158,10 @@ OpDefBuilder& OpDefBuilder::StringAttr(
                     "attr {}: default_value must be provided if optional",
                     attr_def.name());
     if (!is_list) {
-      std::string v = std::get<std::string>(default_value.value());
+      auto& v = std::get<std::string>(default_value.value());
       attr_def.mutable_default_value()->set_s(v);
     } else {
-      std::vector<std::string>& v_list =
-          std::get<std::vector<std::string>>(default_value.value());
+      auto& v_list = std::get<std::vector<std::string>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_ss()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
@@ -193,12 +188,41 @@ OpDefBuilder& OpDefBuilder::BoolAttr(
                     "attr {}: default_value must be provided if optional",
                     attr_def.name());
     if (!is_list) {
-      bool v = std::get<bool>(default_value.value());
+      auto& v = std::get<bool>(default_value.value());
       attr_def.mutable_default_value()->set_b(v);
     } else {
-      std::vector<bool>& v_list =
-          std::get<std::vector<bool>>(default_value.value());
+      auto& v_list = std::get<std::vector<bool>>(default_value.value());
       *(attr_def.mutable_default_value()->mutable_bs()->mutable_data()) = {
+          v_list.begin(), v_list.end()};
+    }
+  }
+
+  SERVING_ENFORCE(
+      attr_defs_.emplace(attr_def.name(), std::move(attr_def)).second,
+      errors::ErrorCode::LOGIC_ERROR, "found duplicate attr:{}",
+      attr_def.name());
+
+  return *this;
+}
+
+OpDefBuilder& OpDefBuilder::BytesAttr(
+    std::string name, std::string desc, bool is_list, bool is_optional,
+    std::optional<AttrValueType<std::string>> default_value) {
+  AttrDef attr_def;
+  attr_def.set_name(std::move(name));
+  attr_def.set_desc(std::move(desc));
+  attr_def.set_type(is_list ? AttrType::AT_BYTES_LIST : AttrType::AT_BYTES);
+  attr_def.set_is_optional(is_optional);
+  if (is_optional) {
+    SERVING_ENFORCE(default_value.has_value(), errors::ErrorCode::LOGIC_ERROR,
+                    "attr {}: default_value must be provided if optional",
+                    attr_def.name());
+    if (!is_list) {
+      auto& v = std::get<std::string>(default_value.value());
+      attr_def.mutable_default_value()->set_by(v);
+    } else {
+      auto& v_list = std::get<std::vector<std::string>>(default_value.value());
+      *(attr_def.mutable_default_value()->mutable_bys()->mutable_data()) = {
           v_list.begin(), v_list.end()};
     }
   }
@@ -218,6 +242,11 @@ OpDefBuilder& OpDefBuilder::Returnable() {
 
 OpDefBuilder& OpDefBuilder::Mergeable() {
   mergeable_ = true;
+  return *this;
+}
+
+OpDefBuilder& OpDefBuilder::VariableInputs() {
+  variable_inputs_ = true;
   return *this;
 }
 
@@ -256,6 +285,13 @@ std::shared_ptr<OpDef> OpDefBuilder::Build() const {
   SERVING_ENFORCE(!output_defs_.empty(), errors::ErrorCode::LOGIC_ERROR,
                   "missing output def for op: {}", name_);
 
+  if (variable_inputs_) {
+    SERVING_ENFORCE_EQ(
+        input_defs_.size(), 1U,
+        "there should be only one input def for `variable inputs` op: {}",
+        name_);
+  }
+
   auto op_def = std::make_shared<OpDef>();
   op_def->set_name(name_);
   op_def->set_version(version_);
@@ -263,6 +299,7 @@ std::shared_ptr<OpDef> OpDefBuilder::Build() const {
 
   op_def->mutable_tag()->set_returnable(returnable_);
   op_def->mutable_tag()->set_mergeable(mergeable_);
+  op_def->mutable_tag()->set_variable_inputs(variable_inputs_);
 
   // TODO: check valid
   for (const auto& pair : attr_defs_) {

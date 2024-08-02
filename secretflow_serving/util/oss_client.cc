@@ -53,8 +53,8 @@ OssClient::OssClient(const OssOptions& options) : options_(options) {
   cfg.endpointOverride = Aws::String(options.endpoint);
   cfg.scheme = kS3Scheme;
   cfg.verifySSL = false;
-  cfg.connectTimeoutMs = options_.connectTimeoutMs;
-  cfg.requestTimeoutMs = options_.requestTimeoutMs;
+  cfg.connectTimeoutMs = options_.connect_timeout_ms;
+  cfg.requestTimeoutMs = options_.request_timeout_ms;
 
   s3_client_ = std::shared_ptr<Aws::S3::S3Client>(
       new Aws::S3::S3Client(

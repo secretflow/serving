@@ -42,6 +42,7 @@ docker run -d -it --name serving-dev-$(whoami) \
          --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
          --cap-add=NET_ADMIN \
          --privileged=true \
+         --entrypoint=bash \
          secretflow/ubuntu-base-ci:latest
 
 # attach to build container
@@ -51,7 +52,7 @@ docker exec -it serving-dev-$(whoami) bash
 #### Linux
 
 ```sh
-Install gcc>=11.2, cmake>=3.18, ninja, nasm>=2.15, python>=3.8, bazel==6.2.1
+Install gcc>=11.2, cmake>=3.18, ninja, nasm>=2.15, python>=3.9, bazel==6.2.1
 ```
 
 ### Build & UnitTest

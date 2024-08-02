@@ -15,17 +15,16 @@
 
 syntax = "proto3";
 
-import "secretflow_serving/config/tls_config.proto";
-
 package secretflow.serving;
 
 // Supported model source type
 enum SourceType {
+  // Placeholder for proto3 default value, do not use it.
   INVALID_SOURCE_TYPE = 0;
 
   // Local filesystem
   ST_FILE = 1;
-  // Oss
+  // OSS/AWS S3
   ST_OSS = 2;
 }
 
@@ -33,7 +32,8 @@ message FileSourceMeta {
   // empty by design
 }
 
-// Options for a S3 Oss model source
+// Options for a Oss model source. Serving accesses data services using the AWS
+// S3 protocol.
 message OSSSourceMeta {
   // Bucket access key
   string access_key = 1;
@@ -41,8 +41,9 @@ message OSSSourceMeta {
   // Bucket secret key
   string secret_key = 2;
 
-  // Whether to use virtual host mode,
+  // Whether to use virtual host mode, ref:
   // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+  // Defalut: False
   bool virtual_hosted = 3;
 
   string endpoint = 4;
@@ -58,12 +59,13 @@ message ModelConfig {
   // Path used to cache and load model package
   string base_path = 2;
 
-  // Represent the path of the model package in the model source
+  // The path to the model package in the data source, where the content format
+  // may vary depending on the `source_type`
   string source_path = 3;
 
   // Optional.
-  // The expect md5 of the model package
-  string source_md5 = 4;
+  // The expect sha256 of the model package
+  string source_sha256 = 4;
 
   SourceType source_type = 5;
   oneof kind {

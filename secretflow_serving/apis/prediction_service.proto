@@ -31,9 +31,10 @@ service PredictionService {
 
 // Result of regression or one class of Classifications
 message Score {
-  // name of the score.
+  // The name of the score, it depends on the attribute configuration of the
+  // model.
   string name = 1;
-  // value of the score.
+  // The value of the score.
   double value = 2;
 }
 
@@ -44,6 +45,35 @@ message PredictResult {
 }
 
 // Predict request containing one or more requests.
+// examples:
+// ```json
+//   {
+//     "header": {
+//       "data": {
+//         "custom_str": "id_12345"
+//       },
+//     },
+//     "service_spec": {
+//       "id": "test_service_id"
+//     },
+//     "fs_params": {
+//       "alice": {
+//         "query_datas": [
+//           "x1",
+//           "x2"
+//         ],
+//         "query_context": "context_x"
+//       },
+//       "bob": {
+//         "query_datas": [
+//           "y1",
+//           "y2"
+//         ],
+//         "query_context": "context_y"
+//       }
+//     }
+//   }
+// ```
 message PredictRequest {
   // Custom data. The header will be passed to the downstream system which
   // implement the feature service spi.
@@ -65,6 +95,35 @@ message PredictRequest {
 }
 
 // Predict response containing one or more responses.
+// examples:
+// ```json
+//   {
+//     "header": {
+//       "data": {
+//         "custom_value": "asdfvb"
+//       },
+//     },
+//     "status": {
+//       "code": 0,
+//       "msg": "success."
+//     },
+//     "service_spec": {
+//       "id": "test_service_id"
+//     },
+//     "results": {
+//       "scores": [
+//         {
+//           "name": "pred_y",
+//           "value": 0.32456
+//         },
+//         {
+//           "name": "pred_y",
+//           "value": 0.02456
+//         }
+//       ]
+//     }
+//   }
+// ```
 message PredictResponse {
   // Custom data. Passed by the downstream system which implement the feature
   // service spi.

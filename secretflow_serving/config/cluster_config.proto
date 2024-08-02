@@ -34,6 +34,16 @@ message ChannelDesc {
 
   // TLS related config.
   TlsConfig tls_config = 4;
+
+  // When the server starts, model information from all parties will be
+  // collected. At this time, the remote servers may not have started yet, and
+  // we need to retry. And if we connect gateway,the max waiting time for each
+  // operation will be rpc_timeout_ms + handshake_retry_interval_ms.
+  // Maximum number of retries, default: 60
+  int32 handshake_max_retry_cnt = 5;
+
+  // time between retries, default: 5000ms
+  int32 handshake_retry_interval_ms = 6;
 }
 
 // Description for a joined party
@@ -42,10 +52,8 @@ message PartyDesc {
   string id = 1;
 
   // e.g. 127.0.0.1:9001
+  // commucation adress between paries.
   string address = 2;
-
-  // Optional. Address will be used if listen_address is empty.
-  string listen_address = 3;
 }
 
 // Runtime config for a serving cluster

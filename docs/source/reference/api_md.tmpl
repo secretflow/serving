@@ -1,0 +1,89 @@
+# SecretFlow-Serving API
+
+## Table of Contents
+- Services
+{{range .Files}}
+
+{{if .HasServices}}
+  {{range .Services}}  - [{{.Name}}](#{{.Name | lower | replace "." ""}})
+  {{end}}
+{{end}}
+{{end}}
+
+- Messages
+{{range .Files}}
+
+{{if .HasMessages}}
+  {{range .Messages}}  - [{{.LongName}}](#{{.LongName | lower | replace "." "-"}})
+  {{end}}
+{{end}}
+{{end}}
+
+- Enums
+{{range .Files}}
+
+{{if .HasEnums}}
+  {{range .Enums}}  - [{{.LongName}}](#{{.LongName | lower | replace "." ""}})
+  {{end}}
+{{end}}
+{{end}}
+- [Scalar Value Types](#scalar-value-types)
+
+{{range .Files}}
+{{range .Services -}}
+
+## {{.Name}}
+{{.Description}}
+
+{{range .Methods -}}
+### {{.Name}}
+
+> **rpc** {{.Name}}([{{.RequestLongType}}](#{{.RequestLongType | lower | replace "." ""}}))
+    [{{.ResponseLongType}}](#{{.ResponseLongType | lower | replace "." ""}})
+
+{{ .Description}}
+{{end}} <!-- end methods -->
+{{end}} <!-- end services -->
+{{end}} <!-- end Files -->
+
+## Messages
+{{range .Files}}
+{{range .Messages}}
+
+
+### {{.LongName}}
+{{.Description}}
+
+{{if .HasFields}}
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+{{range .Fields -}}
+	| {{if .IsOneof}}[**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) {{.OneofDecl}}.{{end}}{{.Name}} | [{{if .IsMap}}map {{else}}{{.Label}} {{end}}{{.LongType}}](#{{if .IsMap}}{{.LongType | lower | replace "." "-"}} {{else}}{{.Type | lower | replace "." "-"}} {{end}}) | {{if .Description}}{{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}}{{else}}none{{end}} |
+{{end}} <!-- end Fields -->
+{{end}} <!-- end HasFields -->
+{{end}} <!-- end messages -->
+{{end}} <!-- end Files -->
+
+## Enums
+{{range .Files}}
+{{range .Enums}}
+
+### {{.LongName}}
+{{.Description}}
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+{{range .Values -}}
+	| {{.Name}} | {{.Number}} | {{if .Description}}{{nobr .Description}}{{else}}none{{end}} |
+{{end}}
+
+{{end}} <!-- end Enums -->
+{{end}} <!-- end Files -->
+
+## Scalar Value Types
+
+| .proto Type | Notes | C++ Type | Java Type | Python Type |
+| ----------- | ----- | -------- | --------- | ----------- |
+{{range .Scalars -}}
+  | <div><h4 id="{{.ProtoType | lower | replace "." ""}}" /></div><a name="{{.ProtoType}}" /> {{.ProtoType}} | {{.Notes}} | {{.CppType}} | {{.JavaType}} | {{.PythonType}} |
+{{end}}

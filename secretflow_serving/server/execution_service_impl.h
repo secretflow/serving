@@ -38,15 +38,13 @@ class ExecutionServiceImpl : public apis::ExecutionService {
 
  private:
   void RecordMetrics(const apis::ExecuteRequest& request,
-                     const apis::ExecuteResponse& response, double duration_ms);
+                     const apis::ExecuteResponse& response, double duration_ms,
+                     const std::string& action);
   struct Stats {
     // for service interface
     ::prometheus::Family<::prometheus::Counter>& api_request_counter_family;
-    ::prometheus::Family<::prometheus::Counter>&
-        api_request_totol_duration_family;
     ::prometheus::Family<::prometheus::Summary>&
         api_request_duration_summary_family;
-    ::prometheus::Summary& api_request_duration_summary;
 
     Stats(std::map<std::string, std::string> labels,
           const std::shared_ptr<::prometheus::Registry>& registry =

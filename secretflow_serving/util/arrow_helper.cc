@@ -17,140 +17,237 @@
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 
+#include <algorithm>
+#include <limits>
+
+#include "arrow/compute/api.h"
+
+#include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/util/utils.h"
+
 namespace secretflow::serving {
 
-std::shared_ptr<arrow::DataType> FieldTypeToDataType(FieldType field_type) {
-  const static std::map<FieldType, std::shared_ptr<arrow::DataType>>
-      kDataTypeMap = {
-          {FieldType::FIELD_BOOL, arrow::boolean()},
-          {FieldType::FIELD_INT32, arrow::int32()},
-          {FieldType::FIELD_INT64, arrow::int64()},
-          {FieldType::FIELD_FLOAT, arrow::float32()},
-          {FieldType::FIELD_DOUBLE, arrow::float64()},
-          {FieldType::FIELD_STRING, arrow::utf8()},
-      };
+namespace {
 
-  auto it = kDataTypeMap.find(field_type);
-  SERVING_ENFORCE(it != kDataTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
-                  "unknow field type: {}", FieldType_Name(field_type));
-  return it->second;
-}
-
-FieldType DataTypeToFieldType(
-    const std::shared_ptr<arrow::DataType>& data_type) {
-  const static std::map<arrow::Type::type, FieldType> kFieldTypeMap = {
-      {arrow::Type::type::BOOL, FieldType::FIELD_BOOL},
-      {arrow::Type::type::INT32, FieldType::FIELD_INT32},
-      {arrow::Type::type::INT64, FieldType::FIELD_INT64},
-      {arrow::Type::type::FLOAT, FieldType::FIELD_FLOAT},
-      {arrow::Type::type::DOUBLE, FieldType::FIELD_DOUBLE},
-      {arrow::Type::type::STRING, FieldType::FIELD_STRING},
-  };
-
-  auto it = kFieldTypeMap.find(data_type->id());
-  SERVING_ENFORCE(it != kFieldTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
-                  "unsupport arrow data type: {}",
-                  arrow::internal::ToString(data_type->id()));
-  return it->second;
-}
-
-std::shared_ptr<arrow::RecordBatch> FeaturesToTable(
-    const ::google::protobuf::RepeatedPtrField<Feature>& features) {
-  arrow::SchemaBuilder schema_builder;
-  std::vector<std::shared_ptr<arrow::Array>> arrays;
-  int num_rows = -1;
-  for (const auto& f : features) {
-    std::shared_ptr<arrow::Array> array;
-    int cur_num_rows = -1;
-    switch (f.field().type()) {
-      case FieldType::FIELD_BOOL: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::boolean())));
-        arrow::BooleanBuilder array_builder;
-        SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
-            f.value().bs().begin(), f.value().bs().end()));
-        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().bs_size();
-        break;
-      }
-      case FieldType::FIELD_INT32: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::int32())));
-        arrow::Int32Builder array_builder;
-        SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
-            f.value().i32s().begin(), f.value().i32s().end()));
-        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().i32s_size();
-        break;
-      }
-      case FieldType::FIELD_INT64: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::int64())));
-        arrow::Int64Builder array_builder;
-        SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
-            f.value().i64s().begin(), f.value().i64s().end()));
-        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().i64s_size();
-        break;
-      }
-      case FieldType::FIELD_FLOAT: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::float32())));
-        arrow::FloatBuilder array_builder;
-        SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
-            f.value().fs().begin(), f.value().fs().end()));
-        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().fs_size();
-        break;
-      }
-      case FieldType::FIELD_DOUBLE: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::float64())));
-        arrow::DoubleBuilder array_builder;
-        SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
-            f.value().ds().begin(), f.value().ds().end()));
-        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().ds_size();
-        break;
-      }
-      case FieldType::FIELD_STRING: {
-        SERVING_CHECK_ARROW_STATUS(schema_builder.AddField(
-            arrow::field(f.field().name(), arrow::utf8())));
-        arrow::StringBuilder array_builder;
-        auto ss_list = f.value().ss();
-        for (const auto& s : ss_list) {
-          SERVING_CHECK_ARROW_STATUS(array_builder.Append(s));
+struct FeatureToArrayVisitor {
+  void operator()(const FeatureField& field,
+                  const ::google::protobuf::RepeatedField<bool>& values) {
+    arrow::BooleanBuilder array_builder;
+    SERVING_CHECK_ARROW_STATUS(
+        array_builder.AppendValues(values.begin(), values.end()));
+    SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+  }
+  void operator()(const FeatureField& field,
+                  const ::google::protobuf::RepeatedField<int32_t>& values) {
+    switch (target_field->type()->id()) {
+      case arrow::Type::INT8: {
+        arrow::Int8Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, std::numeric_limits<int8_t>::min());
+          SERVING_ENFORCE_LE(v, std::numeric_limits<int8_t>::max());
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
         }
         SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
-        cur_num_rows = f.value().ss_size();
+        break;
+      }
+      case arrow::Type::UINT8: {
+        arrow::UInt8Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, 0);
+          SERVING_ENFORCE_LE(v, std::numeric_limits<uint8_t>::max());
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::INT16: {
+        arrow::Int16Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, std::numeric_limits<int16_t>::min());
+          SERVING_ENFORCE_LE(v, std::numeric_limits<int16_t>::max());
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::UINT16: {
+        arrow::UInt16Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, 0);
+          SERVING_ENFORCE_LE(v, std::numeric_limits<uint16_t>::max());
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::INT32: {
+        arrow::Int32Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(
+            array_builder.AppendValues(values.begin(), values.end()));
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
         break;
       }
       default:
-        SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR, "unkown field type",
-                      FieldType_Name(f.field().type()));
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "{} mismatch types, expect:{}, actual:{}", field.name(),
+                      FieldType_Name(DataTypeToFieldType(target_field->type())),
+                      FieldType_Name(field.type()));
     }
-    if (num_rows >= 0) {
-      SERVING_ENFORCE_EQ(num_rows, cur_num_rows,
-                         "features must have same length value.");
-    }
-    num_rows = cur_num_rows;
-    arrays.emplace_back(array);
   }
-  std::shared_ptr<arrow::Schema> schema;
-  SERVING_GET_ARROW_RESULT(schema_builder.Finish(), schema);
-  return MakeRecordBatch(schema, num_rows, std::move(arrays));
+  void operator()(const FeatureField& field,
+                  const ::google::protobuf::RepeatedField<int64_t>& values) {
+    switch (target_field->type()->id()) {
+      case arrow::Type::UINT32: {
+        arrow::UInt32Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, 0);
+          SERVING_ENFORCE_LE(v, std::numeric_limits<uint32_t>::max());
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::INT64: {
+        arrow::Int64Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(
+            array_builder.AppendValues(values.begin(), values.end()));
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::UINT64: {
+        arrow::UInt64Builder array_builder;
+        SERVING_CHECK_ARROW_STATUS(array_builder.Resize(values.size()));
+        for (const auto& v : values) {
+          SERVING_ENFORCE_GE(v, 0);
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(v));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      default:
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "{} mismatch types, expect:{}, actual:{}", field.name(),
+                      FieldType_Name(DataTypeToFieldType(target_field->type())),
+                      FieldType_Name(field.type()));
+    }
+  }
+  void operator()(const FeatureField& field,
+                  const ::google::protobuf::RepeatedField<float>& values) {
+    switch (target_field->type()->id()) {
+      case arrow::Type::HALF_FLOAT: {
+        // currently `half_float` is not completely supported.
+        // see `https://arrow.apache.org/docs/12.0/status.html`
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "float16(halffloat) is unsupported.");
+        break;
+      }
+      case arrow::Type::FLOAT: {
+        arrow::FloatBuilder array_builder;
+        SERVING_CHECK_ARROW_STATUS(
+            array_builder.AppendValues(values.begin(), values.end()));
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      default:
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "{} mismatch types, expect:{}, actual:{}", field.name(),
+                      FieldType_Name(DataTypeToFieldType(target_field->type())),
+                      FieldType_Name(field.type()));
+    }
+  }
+  void operator()(const FeatureField& field,
+                  const ::google::protobuf::RepeatedField<double>& values) {
+    SERVING_ENFORCE(target_field->type()->id() == arrow::Type::DOUBLE,
+                    errors::INVALID_ARGUMENT,
+                    "{} mismatch types, expect:{}, actual:{}", field.name(),
+                    FieldType_Name(DataTypeToFieldType(target_field->type())),
+                    FieldType_Name(field.type()));
+    arrow::DoubleBuilder array_builder;
+    SERVING_CHECK_ARROW_STATUS(
+        array_builder.AppendValues(values.begin(), values.end()));
+    SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+  }
+  void operator()(
+      const FeatureField& field,
+      const ::google::protobuf::RepeatedPtrField<std::string>& values) {
+    switch (target_field->type()->id()) {
+      case arrow::Type::STRING: {
+        arrow::StringBuilder array_builder;
+        for (const auto& s : values) {
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(s));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      case arrow::Type::BINARY: {
+        arrow::BinaryBuilder array_builder;
+        for (const auto& s : values) {
+          SERVING_CHECK_ARROW_STATUS(array_builder.Append(s));
+        }
+        SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&array));
+        break;
+      }
+      default:
+        SERVING_THROW(errors::ErrorCode::INVALID_ARGUMENT,
+                      "{} mismatch types, expect:{}, actual:{}", field.name(),
+                      FieldType_Name(DataTypeToFieldType(target_field->type())),
+                      FieldType_Name(field.type()));
+    }
+  }
+
+  std::shared_ptr<arrow::Field> target_field;
+  std::shared_ptr<arrow::Array> array;
+};
+
+}  // namespace
+
+std::shared_ptr<arrow::RecordBatch> FeaturesToRecordBatch(
+    const ::google::protobuf::RepeatedPtrField<Feature>& features,
+    const std::shared_ptr<const arrow::Schema>& target_schema) {
+  arrow::SchemaBuilder schema_builder;
+  std::vector<std::shared_ptr<arrow::Array>> arrays;
+  int num_rows = -1;
+
+  for (const auto& field : target_schema->fields()) {
+    bool found = false;
+    for (const auto& f : features) {
+      if (f.field().name() == field->name()) {
+        FeatureToArrayVisitor visitor{.target_field = field, .array = {}};
+        FeatureVisit(visitor, f);
+
+        if (num_rows >= 0) {
+          SERVING_ENFORCE_EQ(
+              num_rows, visitor.array->length(),
+              "features must have same length value. {}:{}, others:{}",
+              f.field().name(), visitor.array->length(), num_rows);
+        }
+        num_rows = visitor.array->length();
+        arrays.emplace_back(visitor.array);
+        found = true;
+        break;
+      }
+    }
+    SERVING_ENFORCE(found, errors::ErrorCode::UNEXPECTED_ERROR,
+                    "can not found feature:{} in response", field->name());
+  }
+  return MakeRecordBatch(target_schema, num_rows, std::move(arrays));
 }
 
 std::string SerializeRecordBatch(
-    std::shared_ptr<arrow::RecordBatch>& recordBatch) {
+    std::shared_ptr<arrow::RecordBatch>& record_batch) {
   std::shared_ptr<arrow::io::BufferOutputStream> out_stream;
   SERVING_GET_ARROW_RESULT(arrow::io::BufferOutputStream::Create(), out_stream);
 
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   SERVING_GET_ARROW_RESULT(
-      arrow::ipc::MakeStreamWriter(out_stream, recordBatch->schema()), writer);
+      arrow::ipc::MakeStreamWriter(out_stream, record_batch->schema()), writer);
 
-  SERVING_CHECK_ARROW_STATUS(writer->WriteRecordBatch(*recordBatch));
+  SERVING_CHECK_ARROW_STATUS(writer->WriteRecordBatch(*record_batch));
   SERVING_CHECK_ARROW_STATUS(writer->Close());
 
   std::shared_ptr<arrow::Buffer> buffer;
@@ -173,6 +270,202 @@ std::shared_ptr<arrow::RecordBatch> DeserializeRecordBatch(
   SERVING_CHECK_ARROW_STATUS(record_batch->Validate());
 
   return record_batch;
+}
+
+std::shared_ptr<arrow::Schema> DeserializeSchema(const std::string& buf) {
+  std::shared_ptr<arrow::Schema> result;
+
+  std::shared_ptr<arrow::io::RandomAccessFile> buffer_reader =
+      std::make_shared<arrow::io::BufferReader>(buf);
+
+  arrow::ipc::DictionaryMemo tmp_memo;
+  SERVING_GET_ARROW_RESULT(
+      arrow::ipc::ReadSchema(
+          std::static_pointer_cast<arrow::io::InputStream>(buffer_reader).get(),
+          &tmp_memo),
+      result);
+
+  return result;
+}
+
+std::shared_ptr<arrow::DataType> FieldTypeToDataType(FieldType field_type) {
+  const static std::unordered_map<FieldType, std::shared_ptr<arrow::DataType>>
+      kTypeMap = {
+          {FieldType::FIELD_BOOL, arrow::boolean()},
+          {FieldType::FIELD_INT32, arrow::int32()},
+          {FieldType::FIELD_INT64, arrow::int64()},
+          {FieldType::FIELD_FLOAT, arrow::float32()},
+          {FieldType::FIELD_DOUBLE, arrow::float64()},
+          {FieldType::FIELD_STRING, arrow::utf8()},
+      };
+
+  auto it = kTypeMap.find(field_type);
+  SERVING_ENFORCE(it != kTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "unsupported arrow data type: {}",
+                  FieldType_Name(field_type));
+  return it->second;
+}
+
+FieldType DataTypeToFieldType(
+    const std::shared_ptr<arrow::DataType>& data_type) {
+  const static std::unordered_map<arrow::Type::type, FieldType> kFieldTypeMap =
+      {
+          // supported data_type list:
+          // `secretflow_serving/protos/data_type.proto`
+          {arrow::Type::type::BOOL, FieldType::FIELD_BOOL},
+          {arrow::Type::type::UINT8, FieldType::FIELD_INT32},
+          {arrow::Type::type::INT8, FieldType::FIELD_INT32},
+          {arrow::Type::type::UINT16, FieldType::FIELD_INT32},
+          {arrow::Type::type::INT16, FieldType::FIELD_INT32},
+          {arrow::Type::type::INT32, FieldType::FIELD_INT32},
+          {arrow::Type::type::UINT32, FieldType::FIELD_INT64},
+          {arrow::Type::type::UINT64, FieldType::FIELD_INT64},
+          {arrow::Type::type::INT64, FieldType::FIELD_INT64},
+          // currently `half_float` is not completely supported.
+          // see `https://arrow.apache.org/docs/12.0/status.html`
+          // {arrow::Type::type::HALF_FLOAT, FieldType::FIELD_FLOAT},
+          {arrow::Type::type::FLOAT, FieldType::FIELD_FLOAT},
+          {arrow::Type::type::DOUBLE, FieldType::FIELD_DOUBLE},
+          {arrow::Type::type::STRING, FieldType::FIELD_STRING},
+          {arrow::Type::type::BINARY, FieldType::FIELD_STRING},
+      };
+
+  auto it = kFieldTypeMap.find(data_type->id());
+  SERVING_ENFORCE(it != kFieldTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "unsupported arrow data type: {}",
+                  arrow::internal::ToString(data_type->id()));
+  return it->second;
+}
+
+std::shared_ptr<arrow::DataType> DataTypeToArrowDataType(DataType data_type) {
+  const static std::unordered_map<DataType, std::shared_ptr<arrow::DataType>>
+      kDataTypeMap = {
+          {DT_BOOL, arrow::boolean()},
+          {DT_UINT8, arrow::uint8()},
+          {DT_INT8, arrow::int8()},
+          {DT_UINT16, arrow::uint16()},
+          {DT_INT16, arrow::int16()},
+          {DT_INT32, arrow::int32()},
+          {DT_UINT32, arrow::uint32()},
+          {DT_UINT64, arrow::uint64()},
+          {DT_INT64, arrow::int64()},
+          // currently `half_float` is not completely supported.
+          // see `https://arrow.apache.org/docs/12.0/status.html`
+          // {DT_FLOAT16, arrow::float16()},
+          {DT_FLOAT, arrow::float32()},
+          {DT_DOUBLE, arrow::float64()},
+          {DT_STRING, arrow::utf8()},
+          {DT_BINARY, arrow::binary()},
+      };
+
+  auto it = kDataTypeMap.find(data_type);
+  SERVING_ENFORCE(it != kDataTypeMap.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "unsupported data type: {}", DataType_Name(data_type));
+  return it->second;
+}
+
+std::shared_ptr<arrow::DataType> DataTypeToArrowDataType(
+    const std::string& data_type) {
+  DataType d_type;
+  SERVING_ENFORCE(DataType_Parse(data_type, &d_type),
+                  errors::ErrorCode::UNEXPECTED_ERROR, "unknown data type: {}",
+                  data_type);
+  return DataTypeToArrowDataType(d_type);
+}
+
+void CheckReferenceFields(const std::shared_ptr<arrow::Schema>& src,
+                          const std::shared_ptr<arrow::Schema>& dst,
+                          const std::string& additional_msg) {
+  SERVING_CHECK_ARROW_STATUS(
+      src->CanReferenceFieldsByNames(dst->field_names()));
+  for (const auto& dst_f : dst->fields()) {
+    auto src_f = src->GetFieldByName(dst_f->name());
+    SERVING_ENFORCE(
+        src_f->type()->id() == dst_f->type()->id(), errors::LOGIC_ERROR,
+        "{}. field: {} type not match, expect: {}, get: {}", additional_msg,
+        dst_f->name(), dst_f->type()->ToString(), src_f->type()->ToString());
+  }
+}
+
+std::shared_ptr<arrow::Table> ReadCsvFileToTable(
+    const std::string& path,
+    const std::shared_ptr<const arrow::Schema>& feature_schema) {
+  // read csv file
+  std::shared_ptr<arrow::io::ReadableFile> file;
+  SERVING_GET_ARROW_RESULT(arrow::io::ReadableFile::Open(path), file);
+
+  arrow::csv::ConvertOptions convert_options;
+
+  for (int i = 0; i < feature_schema->num_fields(); ++i) {
+    std::shared_ptr<arrow::Field> field = feature_schema->field(i);
+
+    convert_options.include_columns.push_back(field->name());
+    convert_options.column_types[field->name()] = field->type();
+  }
+
+  std::shared_ptr<arrow::csv::TableReader> csv_reader;
+  SERVING_GET_ARROW_RESULT(
+      arrow::csv::TableReader::Make(arrow::io::default_io_context(), file,
+                                    arrow::csv::ReadOptions::Defaults(),
+                                    arrow::csv::ParseOptions::Defaults(),
+                                    convert_options),
+      csv_reader);
+
+  std::shared_ptr<arrow::Table> table;
+  SERVING_GET_ARROW_RESULT(csv_reader->Read(), table);
+  return table;
+}
+
+arrow::Datum GetRowsFilter(const std::shared_ptr<arrow::ChunkedArray> id_column,
+                           const std::vector<std::string>& ids) {
+  arrow::StringBuilder builder;
+  SERVING_CHECK_ARROW_STATUS(builder.AppendValues(ids));
+  std::shared_ptr<arrow::Array> query_data_array;
+  SERVING_CHECK_ARROW_STATUS(builder.Finish(&query_data_array));
+  {
+    arrow::Datum is_in;
+    SERVING_GET_ARROW_RESULT(arrow::compute::IsIn(query_data_array, id_column),
+                             is_in);
+    const auto is_in_array =
+        std::static_pointer_cast<arrow::BooleanArray>(is_in.make_array());
+    SERVING_ENFORCE(is_in_array->true_count() == is_in_array->length(),
+                    errors::ErrorCode::INVALID_ARGUMENT,
+                    "query data row ids:{} do not all exists in id column of "
+                    "csv file, match count: {}.",
+                    fmt::join(ids, ","), is_in_array->true_count());
+  }
+
+  // filter query datas
+  arrow::Datum filter;
+  SERVING_GET_ARROW_RESULT(arrow::compute::IsIn(id_column, query_data_array),
+                           filter);
+  return filter;
+}
+
+std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(std::string filename,
+                                                         std::string id_name) {
+  std::vector<std::shared_ptr<arrow::Field>> fields;
+  fields.push_back(arrow::field(id_name, arrow::utf8()));
+  auto schema = arrow::schema(fields);
+  auto table = ReadCsvFileToTable(filename, schema);
+  auto id_column = table->GetColumnByName(id_name);
+  SERVING_ENFORCE(id_column, errors::ErrorCode::INVALID_ARGUMENT,
+                  "column: {} is not in csv file: {}", id_name, filename);
+
+  return id_column;
+}
+
+std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
+    std::shared_ptr<arrow::Table> table, arrow::Datum filter) {
+  arrow::Datum filtered_table;
+  SERVING_GET_ARROW_RESULT(arrow::compute::Filter(table, filter),
+                           filtered_table);
+
+  std::shared_ptr<arrow::RecordBatch> result;
+  SERVING_GET_ARROW_RESULT(filtered_table.table()->CombineChunksToBatch(),
+                           result);
+
+  return result;
 }
 
 }  // namespace secretflow::serving

@@ -1,0 +1,1641 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-02-19 12:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/reference/model.md:1
+msgid "SecretFlow-Serving Model"
+msgstr ""
+
+#: ../../source/reference/model.md:3
+msgid "Table of Contents"
+msgstr ""
+
+#: ../../source/reference/model.md:4
+msgid "Services"
+msgstr ""
+
+#: ../../source/reference/model.md:28 ../../source/reference/model.md:155
+msgid "Messages"
+msgstr ""
+
+#: ../../source/reference/model.md:32
+msgid "[AttrDef](#attrdef)"
+msgstr ""
+
+#: ../../source/reference/model.md:33
+msgid "[AttrValue](#attrvalue)"
+msgstr ""
+
+#: ../../source/reference/model.md:34
+msgid "[BoolList](#boollist)"
+msgstr ""
+
+#: ../../source/reference/model.md:35
+msgid "[BytesList](#byteslist)"
+msgstr ""
+
+#: ../../source/reference/model.md:36
+msgid "[DoubleList](#doublelist)"
+msgstr ""
+
+#: ../../source/reference/model.md:37
+msgid "[FloatList](#floatlist)"
+msgstr ""
+
+#: ../../source/reference/model.md:38
+msgid "[Int32List](#int32list)"
+msgstr ""
+
+#: ../../source/reference/model.md:39
+msgid "[Int64List](#int64list)"
+msgstr ""
+
+#: ../../source/reference/model.md:40
+msgid "[StringList](#stringlist)"
+msgstr ""
+
+#: ../../source/reference/model.md:46
+msgid "[IoDef](#iodef)"
+msgstr ""
+
+#: ../../source/reference/model.md:47
+msgid "[OpDef](#opdef)"
+msgstr ""
+
+#: ../../source/reference/model.md:48
+msgid "[OpTag](#optag)"
+msgstr ""
+
+#: ../../source/reference/model.md:54
+msgid "[ExecutionDef](#executiondef)"
+msgstr ""
+
+#: ../../source/reference/model.md:55
+msgid "[GraphDef](#graphdef)"
+msgstr ""
+
+#: ../../source/reference/model.md:56
+msgid "[GraphView](#graphview)"
+msgstr ""
+
+#: ../../source/reference/model.md:57
+msgid "[NodeDef](#nodedef)"
+msgstr ""
+
+#: ../../source/reference/model.md:58
+msgid "[NodeDef.AttrValuesEntry](#nodedef-attrvaluesentry)"
+msgstr ""
+
+#: ../../source/reference/model.md:59
+msgid "[NodeView](#nodeview)"
+msgstr ""
+
+#: ../../source/reference/model.md:60
+msgid "[RuntimeConfig](#runtimeconfig)"
+msgstr ""
+
+#: ../../source/reference/model.md:66
+msgid "[ModelBundle](#modelbundle)"
+msgstr ""
+
+#: ../../source/reference/model.md:67
+msgid "[ModelInfo](#modelinfo)"
+msgstr ""
+
+#: ../../source/reference/model.md:68
+msgid "[ModelManifest](#modelmanifest)"
+msgstr ""
+
+#: ../../source/reference/model.md:77 ../../source/reference/model.md:87
+msgid "[ComputeTrace](#computetrace)"
+msgstr ""
+
+#: ../../source/reference/model.md:78 ../../source/reference/model.md:88
+msgid "[FunctionInput](#functioninput)"
+msgstr ""
+
+#: ../../source/reference/model.md:79 ../../source/reference/model.md:89
+msgid "[FunctionOutput](#functionoutput)"
+msgstr ""
+
+#: ../../source/reference/model.md:80 ../../source/reference/model.md:90
+msgid "[FunctionTrace](#functiontrace)"
+msgstr ""
+
+#: ../../source/reference/model.md:81 ../../source/reference/model.md:91
+msgid "[Scalar](#scalar)"
+msgstr ""
+
+#: ../../source/reference/model.md:96 ../../source/reference/model.md:644
+msgid "Enums"
+msgstr ""
+
+#: ../../source/reference/model.md:100
+msgid "[AttrType](#attrtype)"
+msgstr ""
+
+#: ../../source/reference/model.md:109
+msgid "[DispatchType](#dispatchtype)"
+msgstr ""
+
+#: ../../source/reference/model.md:115
+msgid "[FileFormatType](#fileformattype)"
+msgstr ""
+
+#: ../../source/reference/model.md:121
+msgid "[DataType](#datatype)"
+msgstr ""
+
+#: ../../source/reference/model.md:127 ../../source/reference/model.md:133
+msgid "[ExtendFunctionName](#extendfunctionname)"
+msgstr ""
+
+#: ../../source/reference/model.md:137
+msgid "[Scalar Value Types](#scalar-value-types)"
+msgstr ""
+
+#: ../../source/reference/model.md:160
+msgid "AttrDef"
+msgstr ""
+
+#: ../../source/reference/model.md:161
+msgid "The definition of an attribute."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Field"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Description"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "name"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ string](#string )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Must be unique among all attr of the operator."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "desc"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Description of the attribute"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ AttrType](#attrtype )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "none"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "is_optional"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"If True, when AttrValue is not provided or is_na, default_value would be "
+"used. Else, AttrValue must be provided."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "default_value"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ AttrValue](#attrvalue )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"A reasonable default for this attribute if it's optional and the user "
+"does not supply a value. If not, the user must supply a value."
+msgstr ""
+
+#: ../../source/reference/model.md:176
+msgid "AttrValue"
+msgstr ""
+
+#: ../../source/reference/model.md:177
+msgid "The value of an attribute"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ int64](#int64 )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.f"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ float](#float )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "FLOAT"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.d"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ double](#double )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.s"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "STRING"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.b"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BOOL"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.by"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ bytes](#bytes )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BYTES"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i32s"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ Int32List](#int32list )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INTS"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i64s"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ Int64List](#int64list )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.fs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ FloatList](#floatlist )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "FLOATS"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ds"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ DoubleList](#doublelist )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ss"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ StringList](#stringlist )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "STRINGS"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.bs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ BoolList](#boollist )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BOOLS"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.bys"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ BytesList](#byteslist )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BYTESS"
+msgstr ""
+
+#: ../../source/reference/model.md:201
+msgid "BoolList"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "data"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/model.md:213
+msgid "BytesList"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated bytes](#bytes )"
+msgstr ""
+
+#: ../../source/reference/model.md:225
+msgid "DoubleList"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated double](#double )"
+msgstr ""
+
+#: ../../source/reference/model.md:237
+msgid "FloatList"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated float](#float )"
+msgstr ""
+
+#: ../../source/reference/model.md:249
+msgid "Int32List"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/model.md:261
+msgid "Int64List"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated int64](#int64 )"
+msgstr ""
+
+#: ../../source/reference/model.md:273
+msgid "StringList"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated string](#string )"
+msgstr ""
+
+#: ../../source/reference/model.md:287
+msgid "IoDef"
+msgstr ""
+
+#: ../../source/reference/model.md:288
+msgid "Define an input/output for operator."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Must be unique among all IOs of the operator."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Description of the IO"
+msgstr ""
+
+#: ../../source/reference/model.md:300
+msgid "OpDef"
+msgstr ""
+
+#: ../../source/reference/model.md:301
+msgid "The definition of a operator."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Unique name of the op"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Description of the op"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "version"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Version of the op"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "tag"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ OpTag](#optag )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "inputs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated IoDef](#iodef )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"If tag variable_inputs is true, the op should have only one `IoDef` for "
+"inputs, referring to the parameter list."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "output"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ IoDef](#iodef )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "attrs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated AttrDef](#attrdef )"
+msgstr ""
+
+#: ../../source/reference/model.md:318
+msgid "OpTag"
+msgstr ""
+
+#: ../../source/reference/model.md:319
+msgid "Representation operator property"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "returnable"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The operator's output can be the final result"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "mergeable"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"The operator accept the output of operators with different participants "
+"and will somehow merge them."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "session_run"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The operator needs to be executed in session."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "variable_inputs"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Whether this op has variable input argument. default `false`."
+msgstr ""
+
+#: ../../source/reference/model.md:335
+msgid "ExecutionDef"
+msgstr ""
+
+#: ../../source/reference/model.md:336
+msgid ""
+"The definition of a execution. A execution represents a subgraph within a"
+" graph that can be scheduled for execution in a specified pattern."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "nodes"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Represents the nodes contained in this execution. Note that these node "
+"names should be findable and unique within the node definitions. One node"
+" can only exist in one execution and must exist in one."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "config"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ RuntimeConfig](#runtimeconfig )"
+msgstr ""
+
+#: ../../source/reference/model.md ../../source/reference/model.md:424
+msgid "The runtime config of the execution."
+msgstr ""
+
+#: ../../source/reference/model.md:349
+msgid "GraphDef"
+msgstr ""
+
+#: ../../source/reference/model.md:350
+msgid ""
+"The definition of a Graph. A graph consists of a set of nodes carrying "
+"data and a set of executions that describes the scheduling of the graph."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Version of the graph"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "node_list"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated NodeDef](#nodedef )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "execution_list"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated ExecutionDef](#executiondef )"
+msgstr ""
+
+#: ../../source/reference/model.md:364
+msgid "GraphView"
+msgstr ""
+
+#: ../../source/reference/model.md:365
+msgid ""
+"The view of a graph is used to display the structure of the graph, "
+"containing only structural information and excluding the data components."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated NodeView](#nodeview )"
+msgstr ""
+
+#: ../../source/reference/model.md:379
+msgid "NodeDef"
+msgstr ""
+
+#: ../../source/reference/model.md:380
+msgid "The definition of a node."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Must be unique among all nodes of the graph."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "op"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The operator name."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "parents"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"The parent node names of the node. The order of the parent nodes should "
+"match the order of the inputs of the node."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "attr_values"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[map NodeDef.AttrValuesEntry](#nodedef-attrvaluesentry )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"The attribute values configed in the node. Note that this should include "
+"all attrs defined in the corresponding OpDef."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "op_version"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The operator version."
+msgstr ""
+
+#: ../../source/reference/model.md:395
+msgid "NodeDef.AttrValuesEntry"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "key"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "value"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ op.AttrValue](#attrvalue )"
+msgstr ""
+
+#: ../../source/reference/model.md:408
+msgid "NodeView"
+msgstr ""
+
+#: ../../source/reference/model.md:409
+msgid "The view of a node, which could be public to other parties"
+msgstr ""
+
+#: ../../source/reference/model.md:423
+msgid "RuntimeConfig"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "dispatch_type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ DispatchType](#dispatchtype )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The dispatch type of the execution."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The execution need run in session(stateful) TODO: not support yet."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "specific_flag"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "if dispatch_type is DP_SPECIFIED, only one party should be true"
+msgstr ""
+
+#: ../../source/reference/model.md:439
+msgid "ModelBundle"
+msgstr ""
+
+#: ../../source/reference/model.md:440
+msgid ""
+"Represents an exported secertflow model. It consists of a GraphDef and "
+"extra metadata required for serving."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "graph"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ GraphDef](#graphdef )"
+msgstr ""
+
+#: ../../source/reference/model.md:454
+msgid "ModelInfo"
+msgstr ""
+
+#: ../../source/reference/model.md:455
+msgid "Represents a secertflow model without private data."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "graph_view"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ GraphView](#graphview )"
+msgstr ""
+
+#: ../../source/reference/model.md:468
+msgid "ModelManifest"
+msgstr ""
+
+#: ../../source/reference/model.md:469
+msgid ""
+"The manifest of the model package. Package format is as follows: "
+"model.tar.gz  ├ MANIFIEST  ├ model_file  └ some op meta files MANIFIEST "
+"should be json format"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "bundle_path"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Model bundle file path."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "bundle_format"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ FileFormatType](#fileformattype )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The format type of the model bundle file."
+msgstr ""
+
+#: ../../source/reference/model.md:490 ../../source/reference/model.md:568
+msgid "ComputeTrace"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The name of this Compute."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "func_traces"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated FunctionTrace](#functiontrace )"
+msgstr ""
+
+#: ../../source/reference/model.md:503 ../../source/reference/model.md:581
+msgid "FunctionInput"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.data_id"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "'0' means root input data"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.custom_scalar"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ Scalar](#scalar )"
+msgstr ""
+
+#: ../../source/reference/model.md:516 ../../source/reference/model.md:594
+msgid "FunctionOutput"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "data_id"
+msgstr ""
+
+#: ../../source/reference/model.md:528 ../../source/reference/model.md:606
+msgid "FunctionTrace"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The Function name."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "option_bytes"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "The serialized function options."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[repeated FunctionInput](#functioninput )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Inputs of this function."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ FunctionOutput](#functionoutput )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Output of this function."
+msgstr ""
+
+#: ../../source/reference/model.md:543 ../../source/reference/model.md:621
+msgid "Scalar"
+msgstr ""
+
+#: ../../source/reference/model.md:544 ../../source/reference/model.md:622
+msgid "Represents a single value with a specific data type."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT8."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ui8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UINT8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.i16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ui16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UINT16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ui32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ uint32](#uint32 )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UINT32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) value.ui64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "[ uint64](#uint64 )"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UINT64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DOUBLE"
+msgstr ""
+
+#: ../../source/reference/model.md:649
+msgid "AttrType"
+msgstr ""
+
+#: ../../source/reference/model.md:650
+msgid "Supported attribute types."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Name"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Number"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UNKNOWN_AT_TYPE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "0"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Placeholder for proto3 default value, do not use it."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_INT32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "1"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_INT64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "2"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_FLOAT"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "3"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_DOUBLE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "4"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_STRING"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "5"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_BOOL"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "6"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_BYTES"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "7"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_INT32_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "11"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT32 LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_INT64_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "12"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "INT64 LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_FLOAT_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "13"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "FLOAT LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_DOUBLE_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "14"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DOUBLE LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_STRING_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "15"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "STRING LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_BOOL_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BOOL LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "AT_BYTES_LIST"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "17"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "BYTES LIST"
+msgstr ""
+
+#: ../../source/reference/model.md:678
+msgid "DispatchType"
+msgstr ""
+
+#: ../../source/reference/model.md:679
+msgid "Supported dispatch type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UNKNOWN_DP_TYPE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DP_ALL"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Dispatch all participants."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DP_ANYONE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Dispatch any participant."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DP_SPECIFIED"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Dispatch specified participant."
+msgstr ""
+
+#: ../../source/reference/model.md:694
+msgid "FileFormatType"
+msgstr ""
+
+#: ../../source/reference/model.md:695
+msgid "Support model file format"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UNKNOWN_FF_TYPE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "FF_PB"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Protobuf"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "FF_JSON"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Json It is recommended to use protobuf's official json serialization "
+"method to ensure compatibility"
+msgstr ""
+
+#: ../../source/reference/model.md:709
+msgid "DataType"
+msgstr ""
+
+#: ../../source/reference/model.md:710
+msgid ""
+"Mapping arrow::DataType "
+"`https://arrow.apache.org/docs/cpp/api/datatype.html`."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UNKNOWN_DT_TYPE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_BOOL"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Boolean as 1 bit, LSB bit-packed ordering."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_UINT8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Unsigned 8-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_INT8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Signed 8-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_UINT16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Unsigned 16-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_INT16"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Signed 16-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_UINT32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Unsigned 32-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_INT32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Signed 32-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_UINT64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "8"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Unsigned 64-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_INT64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "9"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Signed 64-bit little-endian integer."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_FLOAT"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "4-byte floating point value"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_DOUBLE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "8-byte floating point value"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_STRING"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UTF8 variable-length string as List<Char>"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "DT_BINARY"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Variable-length bytes (no guarantee of UTF8-ness)"
+msgstr ""
+
+#: ../../source/reference/model.md:736 ../../source/reference/model.md:753
+msgid "ExtendFunctionName"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "UNKOWN_EX_FUNCTION_NAME"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Placeholder for proto3 default value, do not use it"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "EFN_TB_COLUMN"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Get colunm from table(record_batch). see "
+"https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch6columnEi"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "EFN_TB_ADD_COLUMN"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Add colum to table(record_batch). see "
+"https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch9AddColumnEiNSt6stringERKNSt10shared_ptrI5ArrayEE"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "EFN_TB_REMOVE_COLUMN"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Remove colunm from table(record_batch). see "
+"https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch12RemoveColumnEi"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "EFN_TB_SET_COLUMN"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Set colunm to table(record_batch). see "
+"https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch9SetColumnEiRKNSt10shared_ptrI5FieldEERKNSt10shared_ptrI5ArrayEE"
+msgstr ""
+
+#: ../../source/reference/model.md:768
+msgid "Scalar Value Types"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ".proto Type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Notes"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "C++ Type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Java Type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Python Type"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"double\" /></div><a name=\"double\" /> double"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "double"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "float"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"float\" /></div><a name=\"float\" /> float"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"int32\" /></div><a name=\"int32\" /> int32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint32 instead."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "int32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "int"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"int64\" /></div><a name=\"int64\" /> int64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint64 instead."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "int64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "long"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "int/long"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"uint32\" /></div><a name=\"uint32\" /> uint32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Uses variable-length encoding."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "uint32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"uint64\" /></div><a name=\"uint64\" /> uint64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "uint64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"sint32\" /></div><a name=\"sint32\" /> sint32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int32s."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"sint64\" /></div><a name=\"sint64\" /> sint64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int64s."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"fixed32\" /></div><a name=\"fixed32\" /> fixed32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Always four bytes. More efficient than uint32 if values are often greater"
+" than 2^28."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"fixed64\" /></div><a name=\"fixed64\" /> fixed64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid ""
+"Always eight bytes. More efficient than uint64 if values are often "
+"greater than 2^56."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"sfixed32\" /></div><a name=\"sfixed32\" /> sfixed32"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Always four bytes."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"sfixed64\" /></div><a name=\"sfixed64\" /> sfixed64"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "Always eight bytes."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"bool\" /></div><a name=\"bool\" /> bool"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "bool"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "boolean"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"string\" /></div><a name=\"string\" /> string"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "A string must always contain UTF-8 encoded or 7-bit ASCII text."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "string"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "String"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "str/unicode"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "<div><h4 id=\"bytes\" /></div><a name=\"bytes\" /> bytes"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "May contain any arbitrary sequence of bytes."
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "ByteString"
+msgstr ""
+
+#: ../../source/reference/model.md
+msgid "str"
+msgstr ""

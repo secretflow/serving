@@ -43,6 +43,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/apis:status_cc_proto",
         "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:feature_cc_proto",
     ],
 )
 
@@ -51,9 +52,48 @@ serving_cc_library(
     srcs = ["arrow_helper.cc"],
     hdrs = ["arrow_helper.h"],
     deps = [
+        ":utils",
         "//secretflow_serving/core:exception",
-        "//secretflow_serving/protos:feature_cc_proto",
+        "//secretflow_serving/protos:data_type_cc_proto",
         "@org_apache_arrow//:arrow",
+    ],
+)
+
+serving_cc_library(
+    name = "csv_extractor",
+    srcs = ["csv_extractor.cc"],
+    hdrs = ["csv_extractor.h"],
+    deps = [
+        ":arrow_helper",
+        ":utils",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:data_type_cc_proto",
+        "//secretflow_serving/spis:batch_feature_service_cc_proto",
+    ],
+)
+
+serving_cc_library(
+    name = "thread_safe_queue",
+    hdrs = ["thread_safe_queue.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+    ],
+)
+
+serving_cc_library(
+    name = "thread_pool",
+    hdrs = ["thread_pool.h"],
+    deps = [
+        ":thread_safe_queue",
+    ],
+)
+
+serving_cc_test(
+    name = "csv_extractor_test",
+    srcs = ["csv_extractor_test.cc"],
+    deps = [
+        ":csv_extractor",
+        "@com_github_brpc_brpc//:butil",
     ],
 )
 
@@ -73,5 +113,22 @@ serving_cc_library(
         "//secretflow_serving/config:tls_config_cc_proto",
         "//secretflow_serving/core:exception",
         "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "test_utils",
+    srcs = ["test_utils.cc"],
+    hdrs = ["test_utils.h"],
+    deps = [
+        ":arrow_helper",
+    ],
+)
+
+serving_cc_test(
+    name = "thread_safe_queue_test",
+    srcs = ["thread_safe_queue_test.cc"],
+    deps = [
+        ":thread_safe_queue",
     ],
 )

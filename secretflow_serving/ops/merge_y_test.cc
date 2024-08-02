@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "secretflow_serving/core/link_func.h"
+#include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/utils.h"
@@ -73,9 +74,11 @@ TEST_P(MergeYParamTest, Works) {
 
   // expect result
   double expect_score_0 =
-      ApplyLinkFunc(0.1 + 0.1 + 0.1, param.link_func) * param.yhat_scale;
+      ApplyLinkFunc(0.1 + 0.1 + 0.1, ParseLinkFuncType(param.link_func)) *
+      param.yhat_scale;
   double expect_score_1 =
-      ApplyLinkFunc(0.11 + 0.12 + 0.13, param.link_func) * param.yhat_scale;
+      ApplyLinkFunc(0.11 + 0.12 + 0.13, ParseLinkFuncType(param.link_func)) *
+      param.yhat_scale;
   double epsilon = 1E-13;
 
   // build node
@@ -83,7 +86,7 @@ TEST_P(MergeYParamTest, Works) {
   ASSERT_EQ(mock_node->GetOpDef()->inputs_size(), 1);
   ASSERT_TRUE(mock_node->GetOpDef()->tag().returnable());
 
-  OpKernelOptions opts{mock_node};
+  OpKernelOptions opts{mock_node->node_def(), mock_node->GetOpDef()};
   auto kernel = OpKernelFactory::GetInstance()->Create(std::move(opts));
 
   // check input schema
@@ -110,7 +113,6 @@ TEST_P(MergeYParamTest, Works) {
 
   // compute
   ComputeContext compute_ctx;
-  compute_ctx.inputs = std::make_shared<OpComputeInputs>();
   std::vector<std::shared_ptr<arrow::RecordBatch>> input_list;
   for (size_t i = 0; i < feature_value_list.size(); ++i) {
     arrow::DoubleBuilder builder;
@@ -120,7 +122,7 @@ TEST_P(MergeYParamTest, Works) {
     input_list.emplace_back(
         MakeRecordBatch(input_schema_list.front(), 2, {array}));
   }
-  compute_ctx.inputs->emplace_back(std::move(input_list));
+  compute_ctx.inputs.emplace_back(std::move(input_list));
 
   kernel->Compute(&compute_ctx);
 
@@ -144,9 +146,8 @@ TEST_P(MergeYParamTest, Works) {
 INSTANTIATE_TEST_SUITE_P(
     MergeYParamTestSuite, MergeYParamTest,
     ::testing::Values(
-        Param{"LF_LOG", 1.0}, Param{"LF_LOGIT", 1.0}, Param{"LF_INVERSE", 1.0},
-        Param{"LF_LOGIT_V2", 1.0}, Param{"LF_RECIPROCAL", 1.1},
-        Param{"LF_INDENTITY", 1.2}, Param{"LF_SIGMOID_RAW", 1.3},
+        Param{"LF_EXP", 1.0}, Param{"LF_RECIPROCAL", 1.1},
+        Param{"LF_IDENTITY", 1.2}, Param{"LF_SIGMOID_RAW", 1.3},
         Param{"LF_SIGMOID_MM1", 1.4}, Param{"LF_SIGMOID_MM3", 1.5},
         Param{"LF_SIGMOID_GA", 1.6}, Param{"LF_SIGMOID_T1", 1.7},
         Param{"LF_SIGMOID_T3", 1.8}, Param{"LF_SIGMOID_T5", 1.9},
@@ -172,7 +173,7 @@ TEST_F(MergeYTest, Constructor) {
   "op": "MERGE_Y",
   "attr_values": {
     "link_function": {
-      "s": "LF_LOG"
+      "s": "LF_EXP"
     },
     "input_col_name": {
       "s": "y"
@@ -187,7 +188,8 @@ TEST_F(MergeYTest, Constructor) {
     NodeDef node_def;
     JsonToPb(json_content, &node_def);
 
-    OpKernelOptions opts{std::make_shared<Node>(std::move(node_def))};
+    auto op_def = OpFactory::GetInstance()->Get("MERGE_Y");
+    OpKernelOptions opts{std::move(node_def), op_def};
     EXPECT_NO_THROW(OpKernelFactory::GetInstance()->Create(std::move(opts)));
   }
 
@@ -214,7 +216,8 @@ TEST_F(MergeYTest, Constructor) {
     NodeDef node_def;
     JsonToPb(json_content, &node_def);
 
-    OpKernelOptions opts{std::make_shared<Node>(std::move(node_def))};
+    auto op_def = OpFactory::GetInstance()->Get("MERGE_Y");
+    OpKernelOptions opts{std::move(node_def), op_def};
     EXPECT_THROW(OpKernelFactory::GetInstance()->Create(std::move(opts)),
                  Exception);
   }
@@ -239,7 +242,8 @@ TEST_F(MergeYTest, Constructor) {
     NodeDef node_def;
     JsonToPb(json_content, &node_def);
 
-    OpKernelOptions opts{std::make_shared<Node>(std::move(node_def))};
+    auto op_def = OpFactory::GetInstance()->Get("MERGE_Y");
+    OpKernelOptions opts{std::move(node_def), op_def};
     EXPECT_THROW(OpKernelFactory::GetInstance()->Create(std::move(opts)),
                  Exception);
   }
@@ -264,7 +268,8 @@ TEST_F(MergeYTest, Constructor) {
     NodeDef node_def;
     JsonToPb(json_content, &node_def);
 
-    OpKernelOptions opts{std::make_shared<Node>(std::move(node_def))};
+    auto op_def = OpFactory::GetInstance()->Get("MERGE_Y");
+    OpKernelOptions opts{std::move(node_def), op_def};
     EXPECT_THROW(OpKernelFactory::GetInstance()->Create(std::move(opts)),
                  Exception);
   }
@@ -289,7 +294,8 @@ TEST_F(MergeYTest, Constructor) {
     NodeDef node_def;
     JsonToPb(json_content, &node_def);
 
-    OpKernelOptions opts{std::make_shared<Node>(std::move(node_def))};
+    auto op_def = OpFactory::GetInstance()->Get("MERGE_Y");
+    OpKernelOptions opts{std::move(node_def), op_def};
     EXPECT_THROW(OpKernelFactory::GetInstance()->Create(std::move(opts)),
                  Exception);
   }

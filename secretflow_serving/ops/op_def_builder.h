@@ -55,10 +55,14 @@ class OpDefBuilder final {
   OpDefBuilder& StringAttr(
       std::string name, std::string desc, bool is_list, bool is_optional,
       std::optional<AttrValueType<std::string>> default_value = std::nullopt);
+  OpDefBuilder& BytesAttr(
+      std::string name, std::string desc, bool is_list, bool is_optional,
+      std::optional<AttrValueType<std::string>> default_value = std::nullopt);
 
   // tag
   OpDefBuilder& Returnable();
   OpDefBuilder& Mergeable();
+  OpDefBuilder& VariableInputs();
 
   // io
   OpDefBuilder& Input(std::string name, std::string desc);
@@ -76,6 +80,7 @@ class OpDefBuilder final {
 
   bool returnable_ = false;
   bool mergeable_ = false;
+  bool variable_inputs_ = false;
 
   std::unordered_map<std::string, AttrDef> attr_defs_;
   std::unordered_map<std::string, IoDef> input_defs_;

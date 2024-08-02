@@ -14,62 +14,117 @@
 
 #include "secretflow_serving/framework/executor.h"
 
+#include <chrono>
+#include <thread>
+
 #include "arrow/compute/api.h"
 #include "gtest/gtest.h"
 
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/thread_pool.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving {
 
+constexpr size_t MASSIVE_NODE_CNT = 1ULL << 14;
+
 class ExecutorTest : public ::testing::Test {
  protected:
-  void SetUp() override {}
-  void TearDown() override {}
+  void SetUp() override {
+    ThreadPool::GetInstance()->Start(std::thread::hardware_concurrency());
+  }
+  void TearDown() override { ThreadPool::GetInstance()->Stop(); }
 };
 
 namespace op {
 
-class MockOpKernel0 : public OpKernel {
+#define REGISTER_TEMPLATE_OP_KERNEL(op_name, class_name, unique_class_id) \
+  static KernelRegister<class_name> regist_kernel_##unique_class_id(#op_name);
+
+template <unsigned INPUT_EDGE_COUNT, unsigned ADD_DATUM = 1>
+class AddEleOpKernel : public OpKernel {
  public:
-  explicit MockOpKernel0(OpKernelOptions opts) : OpKernel(std::move(opts)) {
+  explicit AddEleOpKernel(OpKernelOptions opts) : OpKernel(std::move(opts)) {
     auto schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64())});
-    input_schema_list_ = {schema};
+    input_schema_list_ = std::vector(INPUT_EDGE_COUNT, schema);
     output_schema_ = schema;
   }
 
   // array += 1;
-  void Compute(ComputeContext* ctx) override {
-    for (size_t i = 0; i < ctx->inputs->size(); ++i) {
-      for (size_t j = 0; j < ctx->inputs->at(i).size(); ++j) {
-        for (int col_index = 0;
-             col_index < ctx->inputs->at(i)[j]->num_columns(); ++col_index) {
+  void DoCompute(ComputeContext* ctx) override {
+    for (size_t i = 0; i < ctx->inputs.size(); ++i) {
+      for (size_t j = 0; j < ctx->inputs[i].size(); ++j) {
+        for (int col_index = 0; col_index < ctx->inputs[i][j]->num_columns();
+             ++col_index) {
           // add index num to every item.
-          auto field = ctx->inputs->at(i)[j]->schema()->field(col_index);
-          auto array = ctx->inputs->at(i)[j]->column(col_index);
-          arrow::Datum incremented_datum(1);
+          auto field = ctx->inputs[i][j]->schema()->field(col_index);
+          auto array = ctx->inputs[i][j]->column(col_index);
+          SERVING_ENFORCE(ADD_DATUM != std::numeric_limits<unsigned>::max(),
+                          serving::errors::INVALID_ARGUMENT,
+                          "add datum: {} is too large", ADD_DATUM);
+          arrow::Datum incremented_datum(ADD_DATUM);
           SERVING_GET_ARROW_RESULT(
               arrow::compute::Add(incremented_datum, array), incremented_datum);
           SERVING_GET_ARROW_RESULT(
-              ctx->inputs->at(i)[j]->SetColumn(
+              ctx->inputs[i][j]->SetColumn(
                   col_index, field, std::move(incremented_datum).make_array()),
-              ctx->inputs->at(i)[j]);
+              ctx->inputs[i][j]);
         }
       }
     }
-    ctx->output = ctx->inputs->front()[0];
+    ctx->output = ctx->inputs.front()[0];
   }
 
   void BuildInputSchema() override {}
   void BuildOutputSchema() override {}
 };
 
-class MockOpKernel1 : public OpKernel {
+template <unsigned INPUT_EDGE_COUNT>
+class EdgeReduceOpKernel : public OpKernel {
  public:
-  explicit MockOpKernel1(OpKernelOptions opts) : OpKernel(std::move(opts)) {
+  explicit EdgeReduceOpKernel(OpKernelOptions opts)
+      : OpKernel(std::move(opts)) {
+    auto schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    input_schema_list_ =
+        std::vector<std::shared_ptr<arrow::Schema>>(INPUT_EDGE_COUNT, schema);
+    output_schema_ = schema;
+  }
+
+  void DoCompute(ComputeContext* ctx) override {
+    auto res = ctx->inputs.front();
+    for (size_t i = 1; i < ctx->inputs.size(); ++i) {
+      for (size_t j = 0; j < ctx->inputs[i].size(); ++j) {
+        for (int col_index = 0; col_index < ctx->inputs[i][j]->num_columns();
+             ++col_index) {
+          // add index num to every item.
+          auto field = ctx->inputs[i][j]->schema()->field(col_index);
+          auto array = ctx->inputs[i][j]->column(col_index);
+          arrow::Datum incremented_datum;
+          SERVING_GET_ARROW_RESULT(
+              arrow::compute::Add(arrow::Datum(res[j]->column(col_index)),
+                                  array),
+              incremented_datum);
+          SERVING_GET_ARROW_RESULT(
+              res[j]->SetColumn(col_index, field,
+                                std::move(incremented_datum).make_array()),
+              res[j]);
+        }
+      }
+    }
+    ctx->output = res[0];
+  }
+
+  void BuildInputSchema() override {}
+  void BuildOutputSchema() override {}
+};
+
+class AddToStrOpKernel : public OpKernel {
+ public:
+  explicit AddToStrOpKernel(OpKernelOptions opts) : OpKernel(std::move(opts)) {
     auto schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64())});
     input_schema_list_ = {schema, schema};
@@ -78,15 +133,14 @@ class MockOpKernel1 : public OpKernel {
   }
 
   // input0-array0 + input1-arry1 then cast to string array
-  void Compute(ComputeContext* ctx) override {
-    SERVING_ENFORCE(ctx->inputs->size() == 2, errors::ErrorCode::LOGIC_ERROR);
-    SERVING_ENFORCE(ctx->inputs->front().size() == 1,
+  void DoCompute(ComputeContext* ctx) override {
+    SERVING_ENFORCE(ctx->inputs.size() == 2, errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                     errors::ErrorCode::LOGIC_ERROR);
-    SERVING_ENFORCE(ctx->inputs->at(1).size() == 1,
-                    errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE(ctx->inputs[1].size() == 1, errors::ErrorCode::LOGIC_ERROR);
 
-    auto array_0 = ctx->inputs->front()[0]->column(0);
-    auto array_1 = ctx->inputs->at(1)[0]->column(0);
+    auto array_0 = ctx->inputs.front()[0]->column(0);
+    auto array_1 = ctx->inputs[1][0]->column(0);
 
     arrow::Datum incremented_datum;
     SERVING_GET_ARROW_RESULT(arrow::compute::Add(array_0, array_1),
@@ -111,47 +165,298 @@ class MockOpKernel1 : public OpKernel {
   void BuildInputSchema() override {}
   void BuildOutputSchema() override {}
 };
+using AddEleOpKernelOneEdgeAddMax =
+    AddEleOpKernel<1, std::numeric_limits<unsigned>::max()>;
 
-REGISTER_OP_KERNEL(TEST_OP_0, MockOpKernel0);
-REGISTER_OP_KERNEL(TEST_OP_1, MockOpKernel1);
-REGISTER_OP(TEST_OP_0, "0.0.1", "test_desc")
+REGISTER_TEMPLATE_OP_KERNEL(TEST_OP_ONE_EDGE_ADD_ONE, AddEleOpKernel<1>,
+                            AddEleOpKernel_1_1);
+REGISTER_TEMPLATE_OP_KERNEL(TEST_OP_ONE_EDGE_ADD_MAX,
+                            AddEleOpKernelOneEdgeAddMax,
+                            AddEleOpKernel_1_MAX_Exception);
+REGISTER_OP_KERNEL(TEST_OP_TWO_EDGE_ADD_TO_STR, AddToStrOpKernel);
+REGISTER_TEMPLATE_OP_KERNEL(TEST_OP_REDUCE_MASSIVE_CNT,
+                            EdgeReduceOpKernel<MASSIVE_NODE_CNT>,
+                            EdgeReduceOpKernel_MASSIVE_NODE_CNT);
+REGISTER_TEMPLATE_OP_KERNEL(TEST_OP_REDUCE_2, EdgeReduceOpKernel<2>,
+                            EdgeReduceOpKernel_2);
+REGISTER_TEMPLATE_OP_KERNEL(TEST_OP_REDUCE_COMPLEX_MASSIVE_CNT,
+                            EdgeReduceOpKernel<MASSIVE_NODE_CNT * 3 / 2>,
+                            EdgeReduceOpKernel_COMPLEX_MASSIVE_CNT);
+REGISTER_OP(TEST_OP_ONE_EDGE_ADD_ONE, "0.0.1", "test_desc")
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
     .Output("output", "output_desc");
-REGISTER_OP(TEST_OP_1, "0.0.1", "test_desc")
+REGISTER_OP(TEST_OP_ONE_EDGE_ADD_MAX, "0.0.1", "test_desc")
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .Input("input", "input_desc")
+    .Output("output", "output_desc");
+REGISTER_OP(TEST_OP_TWO_EDGE_ADD_TO_STR, "0.0.1", "test_desc")
     .Returnable()
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input_0", "input_desc")
     .Input("input_1", "input_desc")
     .Output("output", "output_desc");
 
+REGISTER_OP(TEST_OP_REDUCE_MASSIVE_CNT, "0.0.1", "test_desc")
+    .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .InputList("input", MASSIVE_NODE_CNT, "input_desc")
+    .Output("output", "output_desc");
+
+REGISTER_OP(TEST_OP_REDUCE_2, "0.0.1", "test_desc")
+    .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .InputList("input", 2, "input_desc")
+    .Output("output", "output_desc");
+REGISTER_OP(TEST_OP_REDUCE_COMPLEX_MASSIVE_CNT, "0.0.1", "test_desc")
+    .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .InputList("input", MASSIVE_NODE_CNT * 3 / 2, "input_desc")
+    .Output("output", "output_desc");
+
 }  // namespace op
 
-TEST_F(ExecutorTest, Works) {
+std::string MakeNodeDefJson(const std::string& name, const std::string& op_name,
+                            const std::vector<std::string>& parents = {}) {
+  std::string ret =
+      R"( { "name": ")" + name + R"(", "op": ")" + op_name + R"(", )";
+  if (!parents.empty()) {
+    ret += R"("parents": [ )";
+    for (const auto& p : parents) {
+      ret += '"' + p + '"' + ',';
+    }
+    ret.back() = ']';
+  }
+  ret += "}";
+  return ret;
+}
+
+TEST_F(ExecutorTest, MassiveWorks) {
+  std::vector<std::string> node_def_jsons;
+  std::string node_list_str;
+  node_def_jsons.emplace_back(
+      MakeNodeDefJson("node_a", "TEST_OP_ONE_EDGE_ADD_ONE"));
+  node_list_str += R"("node_a",)";
+
+  std::vector<std::string> last_level_parents;
+  for (auto i = 0; i != MASSIVE_NODE_CNT; ++i) {
+    std::string node_name = "node_b_" + std::to_string(i);
+    node_list_str += '"' + node_name + '"' + ',';
+
+    node_def_jsons.emplace_back(
+        MakeNodeDefJson(node_name, "TEST_OP_ONE_EDGE_ADD_ONE", {"node_a"}));
+    last_level_parents.emplace_back(std::move(node_name));
+  }
+  node_def_jsons.emplace_back(MakeNodeDefJson(
+      "node_c", "TEST_OP_REDUCE_MASSIVE_CNT", last_level_parents));
+  node_list_str += R"("node_c")";
+
+  std::string execution_def_json =
+      R"({"nodes": [)" + node_list_str +
+      R"(],"config": {"dispatch_type": "DP_ALL"} })";
+
+  // build node
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+  for (const auto& j : node_def_jsons) {
+    NodeDef node_def;
+    JsonToPb(j, &node_def);
+    auto node = std::make_shared<Node>(std::move(node_def));
+    nodes.emplace(node->GetName(), node);
+  }
+  // build edge
+  for (const auto& pair : nodes) {
+    const auto& input_nodes = pair.second->GetInputNodeNames();
+    for (size_t i = 0; i < input_nodes.size(); ++i) {
+      auto n_iter = nodes.find(input_nodes[i]);
+      SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
+      auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
+      n_iter->second->AddOutEdge(edge);
+      pair.second->AddInEdge(edge);
+    }
+  }
+
+  ExecutionDef executino_def;
+  JsonToPb(execution_def_json, &executino_def);
+
+  auto execution = std::make_shared<Execution>(0, std::move(executino_def),
+                                               std::move(nodes));
+  auto executor = std::make_shared<Executor>(execution);
+
+  auto inputs =
+      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  {
+    // mock input
+    auto input_schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    std::shared_ptr<arrow::Array> array_0;
+    arrow::DoubleBuilder double_builder;
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+    double_builder.Reset();
+    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
+
+    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
+    op_inputs_0->emplace_back(r_list_0);
+
+    inputs.emplace("node_a", op_inputs_0);
+  }
+  // run
+  auto output = executor->Run(inputs);
+
+  // build expect
+  auto expect_output_schema =
+      arrow::schema({arrow::field("test_field_0", arrow::float64())});
+  std::shared_ptr<arrow::Array> expect_array;
+  arrow::DoubleBuilder array_builder;
+  SERVING_CHECK_ARROW_STATUS(
+      array_builder.AppendValues({3 * MASSIVE_NODE_CNT, 4 * MASSIVE_NODE_CNT,
+                                  5 * MASSIVE_NODE_CNT, 6 * MASSIVE_NODE_CNT}));
+  SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&expect_array));
+
+  EXPECT_EQ(output->size(), 1);
+  EXPECT_EQ(output->at(0).node_name, "node_c");
+  EXPECT_EQ(output->at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output->at(0).table->schema()->Equals(expect_output_schema));
+
+  std::cout << output->at(0).table->column(0)->ToString() << std::endl;
+  std::cout << expect_array->ToString() << std::endl;
+
+  EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
+}
+
+TEST_F(ExecutorTest, ComplexMassiveWorks) {
+  std::vector<std::string> node_def_jsons;
+  std::string node_list_str;
+  node_def_jsons.emplace_back(
+      MakeNodeDefJson("node_a", "TEST_OP_ONE_EDGE_ADD_ONE"));
+  node_list_str += R"("node_a",)";
+
+  std::vector<std::string> last_level_parents;
+  for (auto i = 0; i != MASSIVE_NODE_CNT; ++i) {
+    std::string node_name = "node_b_" + std::to_string(i);
+    node_list_str += '"' + node_name + '"' + ',';
+
+    node_def_jsons.emplace_back(
+        MakeNodeDefJson(node_name, "TEST_OP_ONE_EDGE_ADD_ONE", {"node_a"}));
+    last_level_parents.emplace_back(std::move(node_name));
+  }
+
+  unsigned node_c_count = MASSIVE_NODE_CNT / 2;
+  for (unsigned i = 0; i != node_c_count; ++i) {
+    std::string node_name = "node_c_" + std::to_string(i);
+    node_list_str += '"' + node_name + '"' + ',';
+
+    node_def_jsons.emplace_back(
+        MakeNodeDefJson(node_name, "TEST_OP_REDUCE_2",
+                        {"node_b_" + std::to_string(i * 2),
+                         "node_b_" + std::to_string(i * 2 + 1)}));
+    last_level_parents.emplace_back(std::move(node_name));
+  }
+
+  node_def_jsons.emplace_back(MakeNodeDefJson(
+      "node_d", "TEST_OP_REDUCE_COMPLEX_MASSIVE_CNT", last_level_parents));
+  node_list_str += R"("node_d")";
+
+  std::string execution_def_json =
+      R"({"nodes": [)" + node_list_str +
+      R"(],"config": {"dispatch_type": "DP_ALL"} })";
+
+  // build node
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+  for (const auto& j : node_def_jsons) {
+    NodeDef node_def;
+    JsonToPb(j, &node_def);
+    auto node = std::make_shared<Node>(std::move(node_def));
+    nodes.emplace(node->GetName(), node);
+  }
+  // build edge
+  for (const auto& pair : nodes) {
+    const auto& input_nodes = pair.second->GetInputNodeNames();
+    for (size_t i = 0; i < input_nodes.size(); ++i) {
+      auto n_iter = nodes.find(input_nodes[i]);
+      SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
+      auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
+      n_iter->second->AddOutEdge(edge);
+      pair.second->AddInEdge(edge);
+    }
+  }
+
+  ExecutionDef executino_def;
+  JsonToPb(execution_def_json, &executino_def);
+
+  auto execution = std::make_shared<Execution>(0, std::move(executino_def),
+                                               std::move(nodes));
+  auto executor = std::make_shared<Executor>(execution);
+
+  auto inputs =
+      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  {
+    // mock input
+    auto input_schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    std::shared_ptr<arrow::Array> array_0;
+    arrow::DoubleBuilder double_builder;
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+    double_builder.Reset();
+    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
+
+    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
+    op_inputs_0->emplace_back(r_list_0);
+
+    inputs.emplace("node_a", op_inputs_0);
+  }
+  // run
+  auto output = executor->Run(inputs);
+
+  // build expect
+  auto expect_output_schema =
+      arrow::schema({arrow::field("test_field_0", arrow::float64())});
+  std::shared_ptr<arrow::Array> expect_array;
+  arrow::DoubleBuilder array_builder;
+  SERVING_CHECK_ARROW_STATUS(array_builder.AppendValues(
+      {3 * MASSIVE_NODE_CNT * 2, 4 * MASSIVE_NODE_CNT * 2,
+       5 * MASSIVE_NODE_CNT * 2, 6 * MASSIVE_NODE_CNT * 2}));
+  SERVING_CHECK_ARROW_STATUS(array_builder.Finish(&expect_array));
+
+  EXPECT_EQ(output->size(), 1);
+  EXPECT_EQ(output->at(0).node_name, "node_d");
+  EXPECT_EQ(output->at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output->at(0).table->schema()->Equals(expect_output_schema));
+
+  std::cout << output->at(0).table->column(0)->ToString() << std::endl;
+  std::cout << expect_array->ToString() << std::endl;
+
+  EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
+}
+
+TEST_F(ExecutorTest, BasicWorks) {
   std::vector<std::string> node_def_jsons = {
       R"JSON(
 {
   "name": "node_a",
-  "op": "TEST_OP_0",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
 }
 )JSON",
       R"JSON(
 {
   "name": "node_b",
-  "op": "TEST_OP_0",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
 }
 )JSON",
       R"JSON(
 {
   "name": "node_c",
-  "op": "TEST_OP_0",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
   "parents": [ "node_a" ],
 }
 )JSON",
       R"JSON(
 {
   "name": "node_d",
-  "op": "TEST_OP_1",
+  "op": "TEST_OP_TWO_EDGE_ADD_TO_STR",
   "parents": [ "node_b",  "node_c" ],
 }
 )JSON"};
@@ -168,7 +473,7 @@ TEST_F(ExecutorTest, Works) {
 )JSON";
 
   // build node
-  std::map<std::string, std::shared_ptr<Node>> nodes;
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
   for (const auto& j : node_def_jsons) {
     NodeDef node_def;
     JsonToPb(j, &node_def);
@@ -182,7 +487,7 @@ TEST_F(ExecutorTest, Works) {
       auto n_iter = nodes.find(input_nodes[i]);
       SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
       auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
-      n_iter->second->SetOutEdge(edge);
+      n_iter->second->AddOutEdge(edge);
       pair.second->AddInEdge(edge);
     }
   }
@@ -216,10 +521,10 @@ TEST_F(ExecutorTest, Works) {
   std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
   op_inputs_1->emplace_back(r_list_1);
 
-  auto inputs = std::make_shared<
-      std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>();
-  inputs->emplace("node_a", op_inputs_0);
-  inputs->emplace("node_b", op_inputs_1);
+  auto inputs =
+      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  inputs.emplace("node_a", op_inputs_0);
+  inputs.emplace("node_b", op_inputs_1);
 
   // run
   auto output = executor->Run(inputs);
@@ -244,6 +549,207 @@ TEST_F(ExecutorTest, Works) {
   EXPECT_TRUE(output->at(0).table->column(0)->Equals(expect_array));
 }
 
-// TODO: exception case
+TEST_F(ExecutorTest, ExceptionWorks) {
+  std::vector<std::string> node_def_jsons = {
+      R"JSON(
+{
+  "name": "node_a",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_b",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_c",
+  "op": "TEST_OP_ONE_EDGE_ADD_MAX",
+  "parents": [ "node_a" ],
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_d",
+  "op": "TEST_OP_TWO_EDGE_ADD_TO_STR",
+  "parents": [ "node_b",  "node_c" ],
+}
+)JSON"};
+
+  std::string execution_def_json = R"JSON(
+{
+  "nodes": [
+    "node_a", "node_b", "node_c", "node_d"
+  ],
+  "config": {
+    "dispatch_type": "DP_ALL"
+  }
+}
+)JSON";
+
+  // build node
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+  for (const auto& j : node_def_jsons) {
+    NodeDef node_def;
+    JsonToPb(j, &node_def);
+    auto node = std::make_shared<Node>(std::move(node_def));
+    nodes.emplace(node->GetName(), node);
+  }
+  // build edge
+  for (const auto& pair : nodes) {
+    const auto& input_nodes = pair.second->GetInputNodeNames();
+    for (size_t i = 0; i < input_nodes.size(); ++i) {
+      auto n_iter = nodes.find(input_nodes[i]);
+      SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
+      auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
+      n_iter->second->AddOutEdge(edge);
+      pair.second->AddInEdge(edge);
+    }
+  }
+
+  ExecutionDef executino_def;
+  JsonToPb(execution_def_json, &executino_def);
+
+  auto execution = std::make_shared<Execution>(0, std::move(executino_def),
+                                               std::move(nodes));
+  auto executor = std::make_shared<Executor>(execution);
+
+  // mock input
+  auto input_schema =
+      arrow::schema({arrow::field("test_field_0", arrow::float64())});
+  std::shared_ptr<arrow::Array> array_0;
+  std::shared_ptr<arrow::Array> array_1;
+  arrow::DoubleBuilder double_builder;
+  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+  double_builder.Reset();
+  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({11, 22, 33, 44}));
+  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_1));
+  double_builder.Reset();
+  auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
+  auto input_1 = MakeRecordBatch(input_schema, 4, {array_1});
+
+  auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
+  op_inputs_0->emplace_back(r_list_0);
+  auto op_inputs_1 = std::make_shared<op::OpComputeInputs>();
+  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
+  op_inputs_1->emplace_back(r_list_1);
+
+  auto inputs =
+      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  inputs.emplace("node_a", op_inputs_0);
+  inputs.emplace("node_b", op_inputs_1);
+
+  // run
+  EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
+
+  // expect
+  EXPECT_EQ(ThreadPool::GetInstance()->GetTaskSize(), 0);
+}
+
+TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
+  std::vector<std::string> node_def_jsons;
+  std::string node_list_str;
+  node_def_jsons.emplace_back(
+      MakeNodeDefJson("node_a", "TEST_OP_ONE_EDGE_ADD_ONE"));
+  node_list_str += R"("node_a",)";
+
+  std::vector<std::string> last_level_parents;
+  for (auto i = 0; i != MASSIVE_NODE_CNT - 1; ++i) {
+    std::string node_name = "node_b_" + std::to_string(i);
+    node_list_str += '"' + node_name + '"' + ',';
+
+    node_def_jsons.emplace_back(
+        MakeNodeDefJson(node_name, "TEST_OP_ONE_EDGE_ADD_ONE", {"node_a"}));
+    last_level_parents.emplace_back(std::move(node_name));
+  }
+
+  // exception node
+  std::string node_name = "node_b_" + std::to_string(MASSIVE_NODE_CNT - 1);
+  node_list_str += '"' + node_name + '"' + ',';
+  node_def_jsons.emplace_back(
+      MakeNodeDefJson(node_name, "TEST_OP_ONE_EDGE_ADD_MAX", {"node_a"}));
+  last_level_parents.emplace_back(std::move(node_name));
+
+  unsigned node_c_count = MASSIVE_NODE_CNT / 2;
+  for (unsigned i = 0; i != node_c_count; ++i) {
+    std::string node_name = "node_c_" + std::to_string(i);
+    node_list_str += '"' + node_name + '"' + ',';
+
+    node_def_jsons.emplace_back(
+        MakeNodeDefJson(node_name, "TEST_OP_REDUCE_2",
+                        {"node_b_" + std::to_string(i * 2),
+                         "node_b_" + std::to_string(i * 2 + 1)}));
+    last_level_parents.emplace_back(std::move(node_name));
+  }
+
+  node_def_jsons.emplace_back(MakeNodeDefJson(
+      "node_d", "TEST_OP_REDUCE_COMPLEX_MASSIVE_CNT", last_level_parents));
+  node_list_str += R"("node_d")";
+
+  std::string execution_def_json =
+      R"({"nodes": [)" + node_list_str +
+      R"(],"config": {"dispatch_type": "DP_ALL"} })";
+
+  // build node
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+  for (const auto& j : node_def_jsons) {
+    NodeDef node_def;
+    JsonToPb(j, &node_def);
+    auto node = std::make_shared<Node>(std::move(node_def));
+    nodes.emplace(node->GetName(), node);
+  }
+  // build edge
+  for (const auto& pair : nodes) {
+    const auto& input_nodes = pair.second->GetInputNodeNames();
+    for (size_t i = 0; i < input_nodes.size(); ++i) {
+      auto n_iter = nodes.find(input_nodes[i]);
+      SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
+      auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
+      n_iter->second->AddOutEdge(edge);
+      pair.second->AddInEdge(edge);
+    }
+  }
+
+  ExecutionDef executino_def;
+  JsonToPb(execution_def_json, &executino_def);
+
+  auto execution = std::make_shared<Execution>(0, std::move(executino_def),
+                                               std::move(nodes));
+  auto executor = std::make_shared<Executor>(execution);
+
+  auto inputs =
+      std::unordered_map<std::string, std::shared_ptr<op::OpComputeInputs>>();
+  {
+    // mock input
+    auto input_schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    std::shared_ptr<arrow::Array> array_0;
+    arrow::DoubleBuilder double_builder;
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+    double_builder.Reset();
+    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
+
+    auto op_inputs_0 = std::make_shared<op::OpComputeInputs>();
+    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
+    op_inputs_0->emplace_back(r_list_0);
+
+    inputs.emplace("node_a", op_inputs_0);
+  }
+
+  // run
+  EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
+
+  // wait for thread pool to pop remain tasks
+  executor.reset();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  // expect
+  EXPECT_EQ(ThreadPool::GetInstance()->GetTaskSize(), 0);
+}
 
 }  // namespace secretflow::serving

@@ -23,28 +23,20 @@
 namespace secretflow::serving {
 
 struct FrameState {
-  std::string node_name;
-
-  int pending_count;
-
-  std::string parent_name;
+  std::atomic<int> pending_count;
 
   op::ComputeContext compute_ctx;
 };
 
 class Propagator {
  public:
-  explicit Propagator();
-
-  FrameState* CreateFrame(const std::shared_ptr<Node>& node);
-
-  FrameState* FindOrCreateChildFrame(FrameState* frame,
-                                     const std::shared_ptr<Node>& child_node);
+  explicit Propagator(
+      const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes);
 
   FrameState* GetFrame(const std::string& node_name);
 
  private:
-  std::mutex mutex_;
-  std::map<std::string, std::unique_ptr<FrameState>> node_frame_map_;
+  std::unordered_map<std::string, FrameState*> node_frame_map_;
+  std::vector<FrameState> frame_pool_;
 };
 }  // namespace secretflow::serving

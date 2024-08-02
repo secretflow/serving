@@ -18,7 +18,7 @@ syntax = "proto3";
 package secretflow.serving.errors;
 
 enum ErrorCode {
-  // placeholder for proto3 default value, do not use it
+  // Placeholder for proto3 default value, do not use it
   UNKNOWN = 0;
 
   // 001-099 for general code
@@ -31,9 +31,10 @@ enum ErrorCode {
   NOT_FOUND = 5;
   NOT_IMPLEMENTED = 6;
   LOGIC_ERROR = 7;
-  SERIALIZE_FAILD = 8;
-  DESERIALIZE_FAILD = 9;
+  SERIALIZE_FAILED = 8;
+  DESERIALIZE_FAILED = 9;
   IO_ERROR = 10;
+  NOT_READY = 11;
 
   // 100-199 for mapping feature service code, see
   // `secretflow_serving/spis/error_code.proto`

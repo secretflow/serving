@@ -21,12 +21,19 @@
 
 namespace secretflow::serving {
 
-PredictionServiceImpl::PredictionServiceImpl(
-    const std::shared_ptr<PredictionCore>& prediction_core)
-    : prediction_core_(prediction_core),
-      stats_({{"handler", "PredictionService"},
-              {"service_id", prediction_core->GetServiceID()},
-              {"party_id", prediction_core->GetPartyID()}}) {}
+PredictionServiceImpl::PredictionServiceImpl(const std::string& party_id)
+    : party_id_(party_id),
+      stats_({{"handler", "PredictionService"}, {"party_id", party_id_}}),
+      init_flag_(false) {}
+
+void PredictionServiceImpl::Init(
+    const std::shared_ptr<PredictionCore>& prediction_core) {
+  SERVING_ENFORCE(prediction_core, errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(!init_flag_, errors::ErrorCode::LOGIC_ERROR);
+
+  prediction_core_ = prediction_core;
+  init_flag_ = true;
+}
 
 void PredictionServiceImpl::Predict(
     ::google::protobuf::RpcController* controller,
@@ -38,25 +45,38 @@ void PredictionServiceImpl::Predict(
 
   SPDLOG_DEBUG("predict begin, request: {}", request->ShortDebugString());
   yacl::ElapsedTimer timer;
-  prediction_core_->Predict(request, response);
+
+  if (!init_flag_) {
+    response->mutable_service_spec()->CopyFrom(request->service_spec());
+    response->mutable_status()->set_code(errors::ErrorCode::NOT_READY);
+    response->mutable_status()->set_msg(
+        "prediction service is not ready to serve, please retry later.");
+  } else {
+    prediction_core_->Predict(request, response);
+  }
+
   timer.Pause();
   SPDLOG_DEBUG("predict end, time: {}", timer.CountMs());
 
-  RecordMetrics(*request, *response, timer.CountMs());
+  RecordMetrics(*request, *response, timer.CountMs(), "Predict");
 }
 
 void PredictionServiceImpl::RecordMetrics(const apis::PredictRequest& request,
                                           const apis::PredictResponse& response,
-                                          const double duration_ms) {
-  stats_.api_request_duration_summary.Observe(duration_ms);
+                                          double duration_ms,
+                                          const std::string& action) {
+  stats_.api_request_duration_summary_family
+      .Add(::prometheus::Labels({{"action", action},
+                                 {"service_id", request.service_spec().id()}}),
+           ::prometheus::Summary::Quantiles(
+               {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))
+      .Observe(duration_ms);
   stats_.api_request_counter_family
       .Add(::prometheus::Labels(
-          {{"code", std::to_string(response.status().code())}}))
+          {{"action", action},
+           {"service_id", request.service_spec().id()},
+           {"code", std::to_string(response.status().code())}}))
       .Increment();
-  stats_.api_request_total_duration_family
-      .Add(::prometheus::Labels(
-          {{"code", std::to_string(response.status().code())}}))
-      .Increment(duration_ms);
   stats_.predict_counter.Increment(response.results().size());
 }
 
@@ -70,27 +90,17 @@ PredictionServiceImpl::Stats::Stats(
                     "this server.")
               .Labels(labels)
               .Register(*registry)),
-      api_request_total_duration_family(
-          ::prometheus::BuildCounter()
-              .Name("prediction_request_total_duration")
-              .Help("total time to process the request in milliseconds")
-              .Labels(labels)
-              .Register(*registry)),
       api_request_duration_summary_family(
           ::prometheus::BuildSummary()
-              .Name("prediction_request_duration_seconds")
+              .Name("prediction_request_duration_milliseconds")
               .Help("prediction service api request duration in milliseconds.")
               .Labels(labels)
               .Register(*registry)),
-      api_request_duration_summary(api_request_duration_summary_family.Add(
-          ::prometheus::Labels{},
-          ::prometheus::Summary::Quantiles(
-              {{0.5, 0.05}, {0.9, 0.01}, {0.99, 0.001}}))),
       predict_counter_family(
           ::prometheus::BuildCounter()
-              .Name("prediction_count")
+              .Name("prediction_sample_count")
               .Help("How many prediction samples are processed by "
-                    "this server.")
+                    "this services.")
               .Labels(labels)
               .Register(*registry)),
       predict_counter(predict_counter_family.Add(::prometheus::Labels{})) {}

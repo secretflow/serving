@@ -16,13 +16,15 @@
 
 #include "secretflow_serving/ops/op_kernel.h"
 
+#include "secretflow_serving/protos/link_function.pb.h"
+
 namespace secretflow::serving::op {
 
 class MergeY : public OpKernel {
  public:
   explicit MergeY(OpKernelOptions opts);
 
-  void Compute(ComputeContext* ctx) override;
+  void DoCompute(ComputeContext* ctx) override;
 
  protected:
   void BuildInputSchema() override;
@@ -32,7 +34,7 @@ class MergeY : public OpKernel {
  private:
   double yhat_scale_ = 1.0;
 
-  std::string link_function_;
+  LinkFunctionType link_function_;
   std::string input_col_name_;
   std::string output_col_name_;
 };

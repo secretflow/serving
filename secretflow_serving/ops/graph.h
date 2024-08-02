@@ -14,21 +14,24 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "arrow/api.h"
 
 #include "secretflow_serving/ops/node.h"
 
+#include "secretflow_serving/protos/graph.pb.h"
+
 namespace secretflow::serving {
 
 class Execution final {
  public:
-  explicit Execution(size_t id, ExecutionDef execution_def,
-                     std::map<std::string, std::shared_ptr<Node>> nodes);
+  explicit Execution(
+      size_t id, ExecutionDef execution_def,
+      std::unordered_map<std::string, std::shared_ptr<Node>> nodes);
   ~Execution() = default;
 
   size_t id() const { return id_; }
@@ -41,6 +44,10 @@ class Execution final {
 
   DispatchType GetDispatchType() const;
 
+  bool SpecificToThis() const {
+    return execution_def_.config().specific_flag();
+  }
+
   size_t GetEntryNodeNum() const;
 
   size_t GetExitNodeNum() const;
@@ -51,11 +58,13 @@ class Execution final {
     return entry_nodes_;
   }
 
-  const std::map<std::string, std::shared_ptr<Node>>& nodes() const {
+  const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes() const {
     return nodes_;
   }
 
   const std::shared_ptr<Node>& GetNode(const std::string& name) const;
+
+  bool TryGetNode(const std::string& name, std::shared_ptr<Node>* node) const;
 
  protected:
   void CheckNodesReachability();
@@ -63,13 +72,13 @@ class Execution final {
  private:
   const size_t id_;
   const ExecutionDef execution_def_;
-  const std::map<std::string, std::shared_ptr<Node>> nodes_;
+  const std::unordered_map<std::string, std::shared_ptr<Node>> nodes_;
 
   bool is_entry_;
   bool is_exit_;
 
   std::vector<std::shared_ptr<Node>> entry_nodes_;
-  std::set<std::string> exit_node_names_;
+  std::unordered_set<std::string> exit_node_names_;
 };
 
 class Graph final {
@@ -79,9 +88,13 @@ class Graph final {
 
   const GraphDef& def() { return def_; }
 
+  GraphView GetView() { return graph_view_; }
+
   const std::vector<std::shared_ptr<Execution>>& GetExecutions() const {
     return executions_;
   }
+
+  const std::shared_ptr<Node>& GetNode(const std::string& name) const;
 
  protected:
   void CheckNodesReachability();
@@ -95,7 +108,9 @@ class Graph final {
  private:
   const GraphDef def_;
 
-  std::map<std::string, std::shared_ptr<Node>> nodes_;
+  GraphView graph_view_;
+
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes_;
   std::vector<std::shared_ptr<Edge>> edges_;
   std::vector<std::shared_ptr<Execution>> executions_;
 

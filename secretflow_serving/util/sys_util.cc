@@ -22,7 +22,8 @@
 #include <sstream>
 
 #include "absl/strings/escaping.h"
-#include "openssl/md5.h"
+#include "openssl/evp.h"
+#include "openssl/sha.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
@@ -70,14 +71,12 @@ int cmd_through_popen(std::ostream& os, const char* cmd) {
 
 namespace {
 
-std::string MD5String(const std::string& str) {
-  unsigned char results[MD5_DIGEST_LENGTH];
-  MD5_CTX ctx;
-  MD5_Init(&ctx);
-  MD5_Update(&ctx, str.data(), str.length());
-  MD5_Final(results, &ctx);
+std::string SHA256String(const std::string& str) {
+  unsigned char results[SHA256_DIGEST_LENGTH];
+  EVP_Digest(str.data(), str.length(), results, nullptr, EVP_sha256(), nullptr);
+
   return absl::BytesToHexString(absl::string_view(
-      reinterpret_cast<const char*>(results), MD5_DIGEST_LENGTH));
+      reinterpret_cast<const char*>(results), SHA256_DIGEST_LENGTH));
 }
 
 }  // namespace
@@ -92,9 +91,10 @@ void SysUtil::System(const std::string& cmd, std::string* command_output) {
     if (content.length() > 2048) {
       content.resize(2048);
     }
-    YACL_THROW("execute cmd={} return error code={}: {}", cmd, ret, content);
+    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                  "execute cmd={} return error code={}: {}", cmd, ret, content);
   }
-  if (command_output) {
+  if (command_output != nullptr) {
     *command_output = cmd_output.str();
   }
 }
@@ -103,25 +103,26 @@ void SysUtil::ExtractGzippedArchive(const std::string& package_path,
                                     const std::string& target_dir) {
   if (!std::filesystem::exists(package_path) ||
       std::filesystem::file_size(package_path) == 0) {
-    YACL_THROW("file {} not exist or file size == 0. extract fail",
-               package_path);
+    SERVING_THROW(errors::ErrorCode::IO_ERROR,
+                  "file {} not exist or file size == 0. extract fail",
+                  package_path);
   }
 
   std::filesystem::create_directories(target_dir);
-  auto cmd =
-      fmt::format("tar zxf \"{0}\" -C \"{1}\"", package_path, target_dir);
+  auto cmd = fmt::format(R"(tar zxf "{0}" -C "{1}")", package_path, target_dir);
   SysUtil::System(cmd);
 }
 
-bool SysUtil::CheckMD5(const std::string& fname, const std::string& md5sum) {
+bool SysUtil::CheckSHA256(const std::string& fname,
+                          const std::string& expect_sha256) {
   std::ifstream file_is(fname);
   std::string content((std::istreambuf_iterator<char>(file_is)),
                       std::istreambuf_iterator<char>());
 
-  std::string md5_str = MD5String(content);
-  if (md5_str.compare(md5sum) != 0) {
-    SPDLOG_WARN("file({}) md5 check failed, expect:{}, get:{}", fname, md5sum,
-                md5_str);
+  std::string sha256_str = SHA256String(content);
+  if (sha256_str != expect_sha256) {
+    SPDLOG_WARN("file({}) sha256 check failed, expect:{}, get:{}", fname,
+                expect_sha256, sha256_str);
     return false;
   }
   return true;

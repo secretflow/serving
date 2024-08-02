@@ -20,20 +20,10 @@ namespace secretflow::serving {
 
 class ModelLoader : public Loader {
  public:
-  ModelLoader(const Options& opts, std::shared_ptr<PartyChannelMap> channels);
-  virtual ~ModelLoader() = default;
+  ModelLoader() = default;
+  ~ModelLoader() override = default;
 
   void Load(const std::string& file_path) override;
-
-  std::shared_ptr<Executable> GetExecutable() override { return executable_; }
-
-  std::shared_ptr<Predictor> GetPredictor() override { return predictor_; }
-
- private:
-  std::shared_ptr<PartyChannelMap> channels_;
-
-  std::shared_ptr<Executable> executable_;
-  std::shared_ptr<Predictor> predictor_;
 };
 
 }  // namespace secretflow::serving

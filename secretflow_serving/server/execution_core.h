@@ -37,6 +37,8 @@ class ExecutionCore {
     std::optional<FeatureSourceConfig> feature_source_config;
 
     std::shared_ptr<Executable> executable;
+
+    uint32_t op_exec_workers_num{std::thread::hardware_concurrency()};
   };
 
  public:
@@ -53,36 +55,36 @@ class ExecutionCore {
   std::shared_ptr<arrow::RecordBatch> BatchFetchFeatures(
       const apis::ExecuteRequest* request,
       apis::ExecuteResponse* response) const;
-  void RecordMetrics(const apis::ExecuteRequest& request,
-                     const apis::ExecuteResponse& response, double duration_ms);
-  void RecordBatchFeatureMetrics(const std::string& requester_id, int code,
-                                 double duration_ms) const;
 
   std::shared_ptr<arrow::RecordBatch> ApplyFeatureMappingRule(
       const std::shared_ptr<arrow::RecordBatch>& features);
+
+  void RecordMetrics(const apis::ExecuteRequest& request,
+                     const apis::ExecuteResponse& response, double duration_ms,
+                     const std::string& action);
+
+  void RecordBatchFeatureMetrics(const std::string& service_id,
+                                 const std::string& requester_id, int code,
+                                 double duration_ms) const;
 
  private:
   const Options opts_;
 
   bool valid_feature_mapping_flag_;
 
-  std::unique_ptr<feature::FeatureAdapter> feature_adapater_;
+  std::shared_ptr<const arrow::Schema> source_schema_;
+
+  std::unique_ptr<feature::FeatureAdapter> feature_adapter_;
 
   struct Stats {
     // for service interface
     ::prometheus::Family<::prometheus::Counter>& execute_request_counter_family;
-    ::prometheus::Family<::prometheus::Counter>&
-        execute_request_totol_duration_family;
     ::prometheus::Family<::prometheus::Summary>&
         execute_request_duration_summary_family;
-    ::prometheus::Summary& execute_request_duration_summary;
 
     ::prometheus::Family<::prometheus::Counter>& fetch_feature_counter_family;
-    ::prometheus::Family<::prometheus::Counter>&
-        fetch_feature_total_duration_family;
     ::prometheus::Family<::prometheus::Summary>&
         fetch_feature_duration_summary_family;
-    ::prometheus::Summary& fetch_feature_duration_summary;
 
     Stats(std::map<std::string, std::string> labels,
           const std::shared_ptr<::prometheus::Registry>& registry =

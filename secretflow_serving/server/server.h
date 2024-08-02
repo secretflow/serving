@@ -20,6 +20,8 @@
 
 #include "brpc/server.h"
 
+#include "secretflow_serving/server/model_service_impl.h"
+
 #include "secretflow_serving/config/cluster_config.pb.h"
 #include "secretflow_serving/config/feature_config.pb.h"
 #include "secretflow_serving/config/model_config.pb.h"
@@ -52,7 +54,10 @@ class Server {
   const Options opts_;
 
   brpc::Server service_server_;
+  brpc::Server communication_server_;
   brpc::Server metrics_server_;
+
+  std::unique_ptr<ModelServiceImpl> model_service_;
 };
 
 }  // namespace secretflow::serving

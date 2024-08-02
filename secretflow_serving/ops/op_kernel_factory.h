@@ -37,15 +37,14 @@ class OpKernelFactory final : public Singleton<OpKernelFactory> {
 
   std::shared_ptr<OpKernel> Create(OpKernelOptions opts) {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto creator = creators_[opts.node->node_def().op()];
+    auto creator = creators_[opts.op_def->name()];
     SERVING_ENFORCE(creator, errors::ErrorCode::UNEXPECTED_ERROR,
-                    "no op kernel registered for {}",
-                    opts.node->node_def().op());
+                    "no op kernel registered for {}", opts.op_def->name());
     return creator(std::move(opts));
   }
 
  private:
-  std::map<std::string, CreateKernelFunc> creators_;
+  std::unordered_map<std::string, CreateKernelFunc> creators_;
   std::mutex mutex_;
 };
 

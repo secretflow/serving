@@ -26,7 +26,8 @@ class SysUtil {
   static void ExtractGzippedArchive(const std::string& package_path,
                                     const std::string& target_dir);
 
-  static bool CheckMD5(const std::string& fname, const std::string& md5sum);
+  static bool CheckSHA256(const std::string& fname,
+                          const std::string& expect_sha256);
 };
 
 }  // namespace secretflow::serving

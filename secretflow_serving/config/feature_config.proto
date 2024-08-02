@@ -28,10 +28,22 @@ message FeatureSourceConfig {
   }
 }
 
+enum MockDataType {
+  // Placeholder for proto3 default value, do not use it.
+  INVALID_MOCK_DATA_TYPE = 0;
+
+  // random value for each feature
+  MDT_RANDOM = 1;
+  // fixed value for each feature
+  MDT_FIXED = 2;
+}
+
 // Options for a mock feature source.
-// Mock feature source will generates random values for the desired features。
+// Mock feature source will generates values(random or fixed, according to type)
+// for the desired features.
 message MockOptions {
-  // Empty by designed
+  // default MDT_FIXED
+  MockDataType type = 1;
 }
 
 // Options for a http feature source which should implement the feature service
@@ -41,6 +53,7 @@ message HttpOptions {
   string endpoint = 1;
 
   // Whether to enable round robin load balancer.
+  // Default: False
   bool enable_lb = 2;
 
   // Max duration for a connect. -1 means wait indefinitely.

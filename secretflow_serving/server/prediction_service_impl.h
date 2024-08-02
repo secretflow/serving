@@ -29,8 +29,9 @@ namespace secretflow::serving {
 // 预测 - 服务入口
 class PredictionServiceImpl : public apis::PredictionService {
  public:
-  explicit PredictionServiceImpl(
-      const std::shared_ptr<PredictionCore>& prediction_core);
+  explicit PredictionServiceImpl(const std::string& party_id);
+
+  void Init(const std::shared_ptr<PredictionCore>& prediction_core);
 
   void Predict(::google::protobuf::RpcController* controller,
                const apis::PredictRequest* request,
@@ -41,11 +42,8 @@ class PredictionServiceImpl : public apis::PredictionService {
   struct Stats {
     // for request api
     ::prometheus::Family<::prometheus::Counter>& api_request_counter_family;
-    ::prometheus::Family<::prometheus::Counter>&
-        api_request_total_duration_family;
     ::prometheus::Family<::prometheus::Summary>&
         api_request_duration_summary_family;
-    ::prometheus::Summary& api_request_duration_summary;
     // for predict sample
     ::prometheus::Family<::prometheus::Counter>& predict_counter_family;
     ::prometheus::Counter& predict_counter;
@@ -56,12 +54,17 @@ class PredictionServiceImpl : public apis::PredictionService {
   };
 
   void RecordMetrics(const apis::PredictRequest& request,
-                     const apis::PredictResponse& response,
-                     const double duration_ms);
+                     const apis::PredictResponse& response, double duration_ms,
+                     const std::string& action);
 
  private:
-  std::shared_ptr<PredictionCore> prediction_core_;
+  const std::string& party_id_;
+
   Stats stats_;
+
+  std::shared_ptr<PredictionCore> prediction_core_;
+
+  std::atomic<bool> init_flag_;
 };
 
 }  // namespace secretflow::serving

@@ -1,0 +1,220 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-04 16:56+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../source/topics/graph/intro_to_graph.rst:4
+msgid "Introduction to Graph"
+msgstr "模型图的介绍"
+
+#: ../../source/topics/graph/intro_to_graph.rst:6
+msgid ""
+"Secretflow-Serving has defined a protocol for describing prediction "
+"computations, which mainly includes descriptions of operators, "
+"attributes, nodes, graphs, and executions."
+msgstr "Secretflow-Serving 定义了一个协议来描述模型预测，其主要包含了关于算子、属性、节点、模型图以及执行体的描述。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:-1
+msgid "graph structure"
+msgstr "模型图结构"
+
+#: ../../source/topics/graph/intro_to_graph.rst:12
+msgid "Operators"
+msgstr "算子"
+
+#: ../../source/topics/graph/intro_to_graph.rst:13
+msgid ""
+"Operators describe specific computations. By combining operators, "
+"different model computations can be achieved. Plain operators perform "
+"computations using local data only, while secure computation operators "
+"collaborate with peer operators from other participants for secure "
+"computations."
+msgstr "算子描述了特定的计算函数。通过组合多个算子，可以实现对不同模型计算的支持。其中，明文计算算子在计算过程中只会使用本方的特征数据，密文算子则会利用安全协议在参与方之间进行密态计算。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:16
+msgid "OpDef"
+msgstr "OpDef"
+
+#: ../../source/topics/graph/intro_to_graph.rst:18
+msgid "name: Unique name of the operator."
+msgstr "name: 算子的唯一名称。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:19
+msgid "desc: Description of the operator."
+msgstr "desc: 算子的描述信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:20
+msgid "version: The version of the operator."
+msgstr "version: 算子的版本号信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:21
+msgid "tag: Some properties of the operator."
+msgstr "tag: 算子的特定属性描述。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:22
+msgid "attributes: Please check `Attributes` part below."
+msgstr "attributes: 请参考下面 `属性` 的内容"
+
+#: ../../source/topics/graph/intro_to_graph.rst:23
+msgid "inputs and output: The info of the inputs or output of the operator."
+msgstr "inputs and output: 算子的输入以及输出的描述信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:26
+msgid "Attributes"
+msgstr "属性"
+
+#: ../../source/topics/graph/intro_to_graph.rst:27
+msgid ""
+"Operators have various attributes determined by their definitions. These "
+"attributes and their data support the operators in completing "
+"computations."
+msgstr "算子的定义中包含多种不同的属性。属性以及属性的值会被算子在计算过程中使用。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:30
+msgid "AttrDef"
+msgstr "AttrDef"
+
+#: ../../source/topics/graph/intro_to_graph.rst:32
+msgid "name: Must be unique among all attrs of the operator."
+msgstr "name: 属性的名称需要在算子定义下唯一。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:33
+msgid "desc: Description of the attribute."
+msgstr "desc: 属性的描述信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:34
+msgid "type: Please check :ref:`AttrType <AttrType>`."
+msgstr "type: 请参考 :doc:`AttrType </reference/model>` 获取详细信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:35
+msgid ""
+"is_optional: If True, when AttrValue is not provided, `default_value` "
+"would be used. Else, AttrValue must be provided."
+msgstr ""
+"is_optional: 为 True 时，如果对应的 AttrValue 没有设置，`default_value` 的值将会被使用。否则，对应的"
+" AttrValue 必需提供。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:36
+msgid "default_value: Please check :ref:`AttrValue  <AttrValue>`."
+msgstr "default_value: 请参考 :doc:`AttrValue  </reference/model>` 获取详细信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:39
+msgid "Nodes"
+msgstr "节点"
+
+#: ../../source/topics/graph/intro_to_graph.rst:40
+msgid ""
+"Nodes are instances of operators. They store the attribute values "
+"(`AttrValue`) of the operators."
+msgstr "节点是算子的实例。节点内包含算子的属性对应的属性值（`AttrValue`）"
+
+#: ../../source/topics/graph/intro_to_graph.rst:43
+msgid "NodeDef"
+msgstr "NodeDef"
+
+#: ../../source/topics/graph/intro_to_graph.rst:45
+msgid "name: Must be unique among all nodes of the graph."
+msgstr "name: 节点的名称需要在模型图内唯一。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:46
+msgid "op: The operator name."
+msgstr "op: 节点对应的算子名称。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:47
+msgid ""
+"parents: The parent node names of the node. The order of the parent nodes"
+" should match the order of the inputs of the node."
+msgstr "parents: 本节点的父母节点名称列表。其顺序应保持和该节点对应算子的输入元素顺序一致。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:48
+msgid ""
+"attr_values: The attribute values config in the node. Note that this "
+"should include all attrs defined in the corresponding OpDef"
+msgstr "attr_values: 本节点拥有的属性值。注意节点的属性值应该包含其对应的算子的所有属性。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:49
+msgid "op_version: The operator version."
+msgstr "op_version: 节点对应的算子的版本信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:52
+msgid "Graphs"
+msgstr "模型图"
+
+#: ../../source/topics/graph/intro_to_graph.rst:53
+msgid ""
+"Graphs can consist of one or multiple nodes. They form a directed acyclic"
+" graph, where the direction represents the flow of data computation. A "
+"graph can represent a complete prediction computation process, including "
+"preprocessing, model prediction, and post-processing."
+msgstr "模型图可以包含一个或多个节点。这些节点组成了一个有向无环图，图的方向表示了节点间数据的计算传播方向。一个图能够表示一个完整的，包含预处理、模型预测、结果后处理的预测计算过程。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:55
+msgid ""
+"Each participant will have a graph with the same structure but different "
+"data。"
+msgstr "每个参与方都拥有着一个有着相同结构但是不同数据的模型图。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:58
+msgid "GraphDef"
+msgstr "GraphDef"
+
+#: ../../source/topics/graph/intro_to_graph.rst:60
+msgid "version: Version of the graph."
+msgstr "version: 图的版本信息。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:61
+msgid "node_list: The node list of the graph."
+msgstr "node_list: 图拥有的节点列表。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:62
+msgid "execution_list: Please check `Executions` part below."
+msgstr "execution_list: 请参考下面 `执行体` 的部分。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:65
+msgid "Executions"
+msgstr "执行体"
+
+#: ../../source/topics/graph/intro_to_graph.rst:66
+msgid ""
+"Execution contain a subset of nodes from the main graph and form a "
+"subgraph. They represent the model computation scheduling patterns. A "
+"graph can have multiple executions."
+msgstr "执行体包含了一组节点，它们是图的节点的子集并且能够组成一个子图。执行体描述了模型计算的调度模式，一个图中会包含复数个执行体"
+
+#: ../../source/topics/graph/intro_to_graph.rst:-1
+msgid "execution"
+msgstr "execution"
+
+#: ../../source/topics/graph/intro_to_graph.rst:72
+msgid "ExecutionDef"
+msgstr "ExecutionDef"
+
+#: ../../source/topics/graph/intro_to_graph.rst:74
+msgid ""
+"nodes: Represents the nodes contained in this execution. Note that these "
+"node names should be findable and unique within the node definitions. One"
+" node can only exist in one execution and must exist in one."
+msgstr "nodes: 执行体中包含的节点列表。注意，这些节点应该是包含在模型图中的节点，且每个节点只能属于某一个执行体。"
+
+#: ../../source/topics/graph/intro_to_graph.rst:75
+msgid ""
+"config: The runtime config of the execution. It describes the scheduling "
+"logic and session-related states of this execution unit. for more "
+"details, please check :ref:`RuntimeConfig  <RuntimeConfig>`."
+msgstr ""
+"config: 执行体的运行配置。其描述执行体的调度逻辑以及会话状态。请查看 :ref:`RuntimeConfig  <RuntimeConfig>` "
+"获取更多信息。"

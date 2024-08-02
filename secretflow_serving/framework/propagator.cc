@@ -16,51 +16,25 @@
 
 namespace secretflow::serving {
 
-Propagator::Propagator() {}
+Propagator::Propagator(
+    const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes) {
+  frame_pool_ = std::vector<FrameState>(nodes.size());
+  size_t idx = 0;
+  for (auto& [node_name, node] : nodes) {
+    auto frame = &frame_pool_[idx++];
+    frame->pending_count = node->GetInputNum();
+    frame->compute_ctx.inputs.resize(frame->pending_count);
 
-FrameState* Propagator::CreateFrame(const std::shared_ptr<Node>& node) {
-  auto frame = std::make_unique<FrameState>();
-  frame->node_name = node->node_def().name();
-  frame->pending_count = node->GetInputNum();
-  frame->compute_ctx.inputs =
-      std::make_shared<op::OpComputeInputs>(frame->pending_count);
-
-  auto result = frame.get();
-  std::lock_guard<std::mutex> lock(mutex_);
-  SERVING_ENFORCE(
-      node_frame_map_.emplace(node->node_def().name(), std::move(frame)).second,
-      errors::ErrorCode::LOGIC_ERROR);
-
-  return result;
-}
-
-FrameState* Propagator::FindOrCreateChildFrame(
-    FrameState* frame, const std::shared_ptr<Node>& child_node) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto iter = node_frame_map_.find(child_node->node_def().name());
-  if (iter != node_frame_map_.end()) {
-    return iter->second.get();
-  } else {
-    auto child_frame = std::make_unique<FrameState>();
-    child_frame->node_name = child_node->node_def().name();
-    child_frame->parent_name = frame->node_name;
-    child_frame->pending_count = child_node->GetInputNum();
-    child_frame->compute_ctx.inputs =
-        std::make_shared<op::OpComputeInputs>(child_node->GetInputNum());
-
-    auto result = child_frame.get();
-    node_frame_map_.emplace(child_node->node_def().name(),
-                            std::move(child_frame));
-    return result;
+    SERVING_ENFORCE(node_frame_map_.emplace(node_name, std::move(frame)).second,
+                    errors::ErrorCode::LOGIC_ERROR);
   }
 }
 
 FrameState* Propagator::GetFrame(const std::string& node_name) {
-  std::lock_guard<std::mutex> lock(mutex_);
   auto iter = node_frame_map_.find(node_name);
   SERVING_ENFORCE(iter != node_frame_map_.end(), errors::ErrorCode::LOGIC_ERROR,
                   "can not found frame for node: {}", node_name);
-  return iter->second.get();
+  return iter->second;
 }
 
 }  // namespace secretflow::serving
