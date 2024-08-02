@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
 #include <vector>
 
@@ -46,11 +45,13 @@ class Node final {
     return in_edges_;
   }
 
-  const std::shared_ptr<Edge>& out_edge() const { return out_edge_; }
+  const std::vector<std::shared_ptr<Edge>>& out_edges() const {
+    return out_edges_;
+  }
 
   void AddInEdge(const std::shared_ptr<Edge>& in_edge);
 
-  void SetOutEdge(const std::shared_ptr<Edge>& out_edge);
+  void AddOutEdge(const std::shared_ptr<Edge>& out_edge);
 
  private:
   const NodeDef node_def_;
@@ -58,7 +59,7 @@ class Node final {
   std::vector<std::string> input_nodes_;
 
   std::vector<std::shared_ptr<Edge>> in_edges_;
-  std::shared_ptr<Edge> out_edge_;
+  std::vector<std::shared_ptr<Edge>> out_edges_;
 };
 
 class Edge final {

@@ -32,6 +32,9 @@
 namespace secretflow::serving::ops::sql {
 namespace {
 
+/*
+    填充数据结果
+*/
 void FillRowResult(
     sqlite3_stmt* stmt, bool first_row,
     std::unordered_map<std::string, std::shared_ptr<arrow::Array>>*
@@ -90,9 +93,11 @@ void FillRowResult(
 
 SqlProcessor::SqlProcessor() {
   auto db_ptr = db_.get();
+// 打开数据库连接
   int rc = sqlite3_open_v2(
       NULL, &db_ptr,
       SQLITE_OPEN_CREATE | SQLITE_OPEN_URI | SQLITE_OPEN_READWRITE, NULL);
+// 数据库连接结果检查
   SERVING_ENFORCE(
       rc == SQLITE_OK, errors::ErrorCode::UNEXPECTED_ERROR,
       "Failed to create sqlite db, error code: {}, error message: {}", rc,
@@ -100,6 +105,7 @@ SqlProcessor::SqlProcessor() {
   db_.reset(db_ptr);
 }
 
+// 执行sql并获取结果
 std::unordered_map<std::string, std::shared_ptr<arrow::Array>>
 SqlProcessor::GetSqlResult(const std::string& sql,
                            const std::string& table_name,
@@ -107,8 +113,11 @@ SqlProcessor::GetSqlResult(const std::string& sql,
                            const std::vector<std::string>& feature_types,
                            const arrow::RecordBatch& batch) const {
   std::unordered_map<std::string, std::shared_ptr<arrow::Array>> result_map;
+//   创建数据表
   CreateTable(table_name, feature_names, feature_types);
+//   数据表加载数据
   LoadTableData(table_name, feature_names, feature_types, batch);
+//   执行sql并输出结果数据
   RunSql(sql, &result_map);
   return result_map;
 }
@@ -117,6 +126,7 @@ void SqlProcessor::CreateTable(
     const std::string& table_name,
     const std::vector<std::string>& feature_names,
     const std::vector<std::string>& feature_types) const {
+// 输入参数检查,特征列于特征类型应当匹配
   SERVING_ENFORCE(
       feature_names.size() == feature_types.size(),
       errors::ErrorCode::INVALID_ARGUMENT,
@@ -124,12 +134,12 @@ void SqlProcessor::CreateTable(
                   feature_names.size(), feature_types.size()));
 
   size_t feature_num = feature_names.size();
-  // Generate create table sql
   std::vector<std::string> column_schemas;
   for (size_t i = 0; i < feature_num; i++) {
     SERVING_ENFORCE(!feature_names[i].empty(),
                     errors::ErrorCode::INVALID_ARGUMENT,
                     "Column name should not be empty");
+    // 分类型解析各特征数据
     if (feature_types[i] == "double") {
       column_schemas.emplace_back(
           fmt::format("{} {}", feature_names[i], "real"));
@@ -141,11 +151,12 @@ void SqlProcessor::CreateTable(
                     "unknow feature type {}", feature_types[i]);
     }
   }
+//   构造创建数据表sql
   std::string sql_stmt =
       fmt::format("CREATE TABLE IF NOT EXISTS {} ( {} );", table_name,
                   fmt::join(column_schemas, ", "));
 
-  // Run create table sql
+// 执行创建数据表
   char* sqlite_errmsg = 0;
   ON_SCOPE_EXIT([&] { sqlite3_free(sqlite_errmsg); });
   int rc = sqlite3_exec(db_.get(), sql_stmt.c_str(), NULL, 0, &sqlite_errmsg);
@@ -158,7 +169,7 @@ void SqlProcessor::LoadTableData(const std::string& table_name,
                                  const std::vector<std::string>& feature_names,
                                  const std::vector<std::string>& feature_types,
                                  const arrow::RecordBatch& batch) const {
-  // Generate insert sql queries
+  // 构造插入数据sql
   std::ostringstream batch_insert_sql;
   // Start transaction
   batch_insert_sql << "BEGIN TRANSACTION;";
@@ -192,13 +203,12 @@ void SqlProcessor::LoadTableData(const std::string& table_name,
     }
     batch_values.emplace_back(fmt::format("({})", fmt::join(values, ", ")));
   }
-  // insert one batch at a time to increase speed
   const std::string insert_sql = fmt::format(
       "INSERT INTO {} VALUES {};", table_name, fmt::join(batch_values, ", "));
   batch_insert_sql << insert_sql;
   // End transaction
   batch_insert_sql << "END TRANSACTION;";
-  // Run insert sql
+  // 执行数据插入sql
   char* sqlite_errmsg = 0;
   ON_SCOPE_EXIT([&] { sqlite3_free(sqlite_errmsg); });
   int rc = sqlite3_exec(db_.get(), batch_insert_sql.str().c_str(), NULL, 0,
@@ -225,7 +235,7 @@ void SqlProcessor::RunSql(
     ori_sql += ";";
   }
 
-  // Process sql
+  // 预编译sql
   rc = sqlite3_prepare_v2(db_.get(), ori_sql.c_str(), strlen(ori_sql.c_str()),
                           &stmt, nullptr);
   ON_SCOPE_EXIT([&] { sqlite3_finalize(stmt); });
@@ -233,11 +243,12 @@ void SqlProcessor::RunSql(
   SERVING_ENFORCE(rc == SQLITE_OK, errors::ErrorCode::UNKNOWN,
                   "SQLite error code={}, error message={}, sql={}", rc,
                   sqlite3_errmsg(db_.get()), sql);
+  // 执行预编译的sql
   rc = sqlite3_step(stmt);
   bool first_row = true;
   // SQLITE_ROW means current sql query has data to return
   while (rc == SQLITE_ROW) {
-    // Fill query result of each row
+    // 填充结果数据
     FillRowResult(stmt, first_row, result_map);
     first_row = false;
     rc = sqlite3_step(stmt);

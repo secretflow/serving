@@ -45,6 +45,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/apis:prediction_service_cc_proto",
         "//secretflow_serving/framework:predictor",
+        "//secretflow_serving/util:utils",
     ],
 )
 
@@ -71,6 +72,19 @@ serving_cc_library(
 )
 
 serving_cc_library(
+    name = "model_service_impl",
+    srcs = ["model_service_impl.cc"],
+    hdrs = ["model_service_impl.h"],
+    deps = [
+        "//secretflow_serving/apis:model_service_cc_proto",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/server/metrics:default_metrics_registry",
+        "@com_github_brpc_brpc//:brpc",
+        "@yacl//yacl/utils:elapsed_timer",
+    ],
+)
+
+serving_cc_library(
     name = "server",
     srcs = ["server.cc"],
     hdrs = [
@@ -82,7 +96,9 @@ serving_cc_library(
         ":health",
         ":prediction_service_impl",
         "//secretflow_serving/config:serving_config_cc_proto",
+        "//secretflow_serving/framework:model_info_collector",
         "//secretflow_serving/framework:model_loader",
+        "//secretflow_serving/server:model_service_impl",
         "//secretflow_serving/server/kuscia:config_parser",
         "//secretflow_serving/server/metrics:default_metrics_registry",
         "//secretflow_serving/server/metrics:metrics_service",

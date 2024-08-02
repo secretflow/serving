@@ -67,17 +67,19 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     opts.timeout_ms = rpc_timeout_ms;
   }
   if (connect_timeout_ms > 0) {
-    opts.timeout_ms = connect_timeout_ms;
+    opts.connect_timeout_ms = connect_timeout_ms;
   }
   if (tls_config != nullptr) {
     opts.mutable_ssl_options()->client_cert.certificate =
         tls_config->certificate_path();
     opts.mutable_ssl_options()->client_cert.private_key =
         tls_config->private_key_path();
-    opts.mutable_ssl_options()->verify.ca_file_path =
-        tls_config->ca_file_path();
-    // use default verify depth
-    opts.mutable_ssl_options()->verify.verify_depth = 1;
+    if (!tls_config->ca_file_path().empty()) {
+      opts.mutable_ssl_options()->verify.ca_file_path =
+          tls_config->ca_file_path();
+      // use default verify depth
+      opts.mutable_ssl_options()->verify.verify_depth = 1;
+    }
   }
 
   return CreateBrpcChannel(endpoint, enable_lb, opts);

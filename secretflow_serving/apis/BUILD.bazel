@@ -57,12 +57,30 @@ proto_library(
         ":common_proto",
         ":status_proto",
         "//secretflow_serving/protos:feature_proto",
+        "//secretflow_serving/protos:graph_proto",
     ],
 )
 
 cc_proto_library(
     name = "prediction_service_cc_proto",
     deps = [":prediction_service_proto"],
+)
+
+proto_library(
+    name = "model_service_proto",
+    srcs = [
+        "model_service.proto",
+    ],
+    deps = [
+        ":common_proto",
+        ":status_proto",
+        "//secretflow_serving/protos:bundle_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "model_service_cc_proto",
+    deps = [":model_service_proto"],
 )
 
 proto_library(

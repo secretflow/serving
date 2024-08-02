@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
+load("//bazel:serving.bzl", "serving_cc_binary", "serving_cc_library", "serving_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
 serving_cc_library(
     name = "ops",
     deps = [
+        "tree_ensemble_predict",
+        "tree_merge",
+        "tree_select",
+        ":arrow_processing",
         ":dot_product",
         ":merge_y",
-        ":onehot_operator",
         ":sql_operator",
     ],
 )
@@ -33,6 +36,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:graph_cc_proto",
+        "//secretflow_serving/protos:op_cc_proto",
     ],
 )
 
@@ -86,7 +90,7 @@ serving_cc_library(
         ":node",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:op_cc_proto",
-        "@org_apache_arrow//:arrow",
+        "//secretflow_serving/util:arrow_helper",
     ],
 )
 
@@ -136,7 +140,6 @@ serving_cc_library(
         ":op_factory",
         ":op_kernel_factory",
         "//secretflow_serving/core:types",
-        "//secretflow_serving/util:arrow_helper",
         "//secretflow_serving/util:utils",
     ],
     alwayslink = True,
@@ -147,6 +150,16 @@ serving_cc_test(
     srcs = ["dot_product_test.cc"],
     deps = [
         ":dot_product",
+        "//secretflow_serving/util:test_utils",
+    ],
+)
+
+serving_cc_binary(
+    name = "dot_product_benchmark",
+    srcs = ["dot_product_benchmark.cc"],
+    deps = [
+        ":dot_product",
+        "@com_github_google_benchmark//:benchmark_main",
     ],
 )
 
@@ -159,7 +172,6 @@ serving_cc_library(
         ":op_factory",
         ":op_kernel_factory",
         "//secretflow_serving/core:link_func",
-        "//secretflow_serving/util:arrow_helper",
     ],
     alwayslink = True,
 )
@@ -173,26 +185,115 @@ serving_cc_test(
     ],
 )
 
+serving_cc_binary(
+    name = "merge_y_benchmark",
+    srcs = ["merge_y_benchmark.cc"],
+    deps = [
+        ":merge_y",
+        "//secretflow_serving/util:utils",
+        "@com_github_google_benchmark//:benchmark_main",
+    ],
+)
+
 serving_cc_library(
-    name = "onehot_operator",
-    srcs = ["onehot_operator.cc"],
-    hdrs = ["onehot_operator.h"],
+    name = "arrow_processing",
+    srcs = ["arrow_processing.cc"],
+    hdrs = ["arrow_processing.h"],
     deps = [
         ":node_def_util",
         ":op_factory",
         ":op_kernel_factory",
-        "//secretflow_serving/core:types",
-        "//secretflow_serving/ops/onehot:onehot_substitution",
-        "//secretflow_serving/util:arrow_helper",
+        "//secretflow_serving/protos:compute_trace_cc_proto",
     ],
     alwayslink = True,
 )
 
 serving_cc_test(
-    name = "onehot_operator_test",
-    srcs = ["onehot_operator_test.cc"],
+    name = "arrow_processing_test",
+    srcs = ["arrow_processing_test.cc"],
     deps = [
-        ":onehot_operator",
+        ":arrow_processing",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "graph_version",
+    hdrs = ["graph_version.h"],
+)
+
+serving_cc_library(
+    name = "tree_utils",
+    hdrs = ["tree_utils.h"],
+)
+
+serving_cc_library(
+    name = "tree_select",
+    srcs = ["tree_select.cc"],
+    hdrs = ["tree_select.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        ":tree_utils",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_select_test",
+    srcs = ["tree_select_test.cc"],
+    deps = [
+        ":tree_select",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "tree_merge",
+    srcs = ["tree_merge.cc"],
+    hdrs = ["tree_merge.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        ":tree_utils",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_merge_test",
+    srcs = ["tree_merge_test.cc"],
+    deps = [
+        ":tree_merge",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "tree_ensemble_predict",
+    srcs = ["tree_ensemble_predict.cc"],
+    hdrs = ["tree_ensemble_predict.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:link_func",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "tree_ensemble_predict_test",
+    srcs = ["tree_ensemble_predict_test.cc"],
+    deps = [
+        ":tree_ensemble_predict",
+        "//secretflow_serving/util:test_utils",
+        "//secretflow_serving/util:utils",
     ],
 )
 

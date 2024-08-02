@@ -25,6 +25,6 @@ message TlsConfig {
   string private_key_path = 2;
 
   // The trusted CA file to verify the peer's certificate
-  // If empty, use the system default CA files
+  // If empty, turn off the verification
   string ca_file_path = 3;
 }

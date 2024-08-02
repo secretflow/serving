@@ -22,16 +22,16 @@
 namespace secretflow::serving {
 
 struct OssOptions {
-  bool virtual_hosted;
   std::string endpoint;
   std::string access_key_id;
   std::string secret_key;
   std::string bucket;
+  bool virtual_hosted = false;
 
-  int connectTimeoutMs = 300000;
-  int requestTimeoutMs = 300000;
+  int connect_timeout_ms = 300000;
+  int request_timeout_ms = 300000;
 
-  OssOptions() {}
+  OssOptions() = default;
   // Required by std::map as keys
   bool operator<(const OssOptions& other) const {
     return endpoint < other.endpoint || access_key_id < other.access_key_id ||

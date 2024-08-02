@@ -2,7 +2,7 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/secretflow/serving/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/secretflow/serving/tree/main)
 
-SecretFlow-Serving is a serving system for  privacy-preserving machine learning models.
+SecretFlow-Serving is a serving system for privacy-preserving machine learning models.
 
 ## Serve a model
 
@@ -11,17 +11,9 @@ SecretFlow-Serving is a serving system for  privacy-preserving machine learning 
 docker pull secretflow/serving-anolis8:latest
 
 # Start Secretflow Serving container and open the REST API port
-# run alice
-docker run -t --rm --name serving-example-alice --network=host \
-    --entrypoint "/root/sf_serving/secretflow_serving" \
-    secretflow/serving-anolis8:latest \
-    "--serving_config_file=/root/sf_serving/examples/alice/serving.config" &
+cd examples
 
-# run bob
-docker run -t --rm --name serving-example-bob --network=host \
-    --entrypoint "/root/sf_serving/secretflow_serving" \
-    secretflow/serving-anolis8:latest \
-    "--serving_config_file=/root/sf_serving/examples/bob/serving.config" &
+docker-compose up -d
 
 # Query the model using the predict API
 curl --location 'http://127.0.0.1:9010/PredictionService/Predict' \

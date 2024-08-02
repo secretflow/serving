@@ -27,6 +27,7 @@ class SqlOperatorTest : public ::testing::Test {
   void TearDown() override {}
 };
 
+// 用例一
 TEST_F(SqlOperatorTest, Works1) {
   AttrValue tbl_name;
   tbl_name.set_s("test_sql");
@@ -60,6 +61,7 @@ TEST_F(SqlOperatorTest, Works1) {
   AttrValue sql;
   sql.set_s("SELECT x1 as a1, x2 as a2 FROM test_sql");
 
+// 构建节点数据
   NodeDef node_def;
   node_def.set_name("test_node");
   node_def.set_op("SQL_OPERATOR");
@@ -75,11 +77,12 @@ TEST_F(SqlOperatorTest, Works1) {
   node_def.mutable_attr_values()->insert({"sql", sql});
   auto mock_node = std::make_shared<Node>(std::move(node_def));
 
-  OpKernelOptions opts{mock_node};
+// 根据节点数据初始化算子
+  OpKernelOptions opts{mock_node->node_def(), mock_node->GetOpDef()};
   auto kernel = OpKernelFactory::GetInstance()->Create(std::move(opts));
-  // compute
   ComputeContext compute_ctx;
-  compute_ctx.inputs = std::make_shared<OpComputeInputs>();
+  compute_ctx.inputs = OpComputeInputs();
+  // 构造测试数据
   {
     std::vector<std::shared_ptr<arrow::Array>> arrays;
     std::shared_ptr<arrow::Array> array1, array2;
@@ -96,12 +99,13 @@ TEST_F(SqlOperatorTest, Works1) {
     auto features =
         MakeRecordBatch(input_schema_list.front(), 2, std::move(arrays));
 
-    compute_ctx.inputs->emplace_back(
+    compute_ctx.inputs.emplace_back(
         std::vector<std::shared_ptr<arrow::RecordBatch>>{features});
   }
+  // 算子执行
   kernel->Compute(&compute_ctx);
 
-  // check output
+  // 检查执行结果
   ASSERT_TRUE(compute_ctx.output);
   auto output_schema = kernel->GetOutputSchema();
   ASSERT_TRUE(compute_ctx.output->schema()->Equals(output_schema));
@@ -139,6 +143,7 @@ TEST_F(SqlOperatorTest, Works1) {
   ASSERT_TRUE(compute_ctx.output->Equals(*test_batch));
 }
 
+// 用例二 sql为空则数据原封不动输出
 TEST_F(SqlOperatorTest, Works2) {
   AttrValue tbl_name;
   tbl_name.set_s("test_sql");
@@ -187,11 +192,12 @@ TEST_F(SqlOperatorTest, Works2) {
   node_def.mutable_attr_values()->insert({"sql", sql});
   auto mock_node = std::make_shared<Node>(std::move(node_def));
 
-  OpKernelOptions opts{mock_node};
+// 根据节点数据初始化算子
+  OpKernelOptions opts{mock_node->node_def(), mock_node->GetOpDef()};
   auto kernel = OpKernelFactory::GetInstance()->Create(std::move(opts));
   // compute
   ComputeContext compute_ctx;
-  compute_ctx.inputs = std::make_shared<OpComputeInputs>();
+  compute_ctx.inputs = OpComputeInputs();
   {
     std::vector<std::shared_ptr<arrow::Array>> arrays;
     std::shared_ptr<arrow::Array> array1, array2;
@@ -208,7 +214,7 @@ TEST_F(SqlOperatorTest, Works2) {
     auto features =
         MakeRecordBatch(input_schema_list.front(), 2, std::move(arrays));
 
-    compute_ctx.inputs->emplace_back(
+    compute_ctx.inputs.emplace_back(
         std::vector<std::shared_ptr<arrow::RecordBatch>>{features});
   }
   kernel->Compute(&compute_ctx);
