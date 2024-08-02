@@ -1,0 +1,108 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-13 19:29+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/index.rst:7
+msgid "Welcome to SecretFlow-Serving's documentation!"
+msgstr "欢迎来到SecretFlow-Serving文档页面！"
+
+#: ../../source/index.rst:9
+msgid ""
+"SecretFlow-Serving is a serving system for privacy-preserving machine "
+"learning models."
+msgstr "SecretFlow-Serving 是一个加载隐私保护机器学习模型的在线服务系统。"
+
+#: ../../source/index.rst:13
+msgid "Getting started"
+msgstr "开始"
+
+#: ../../source/index.rst:15
+msgid ""
+"Follow the :doc:`tutorial </intro/tutorial>` and try out SecretFlow-"
+"Serving on your machine!"
+msgstr "按照 :doc:`快速教程 </intro/tutorial>` 在本地尝试SecretFlow-Serving"
+
+#: ../../source/index.rst:19
+msgid "SecretFlow-Serving Systems"
+msgstr "SecretFlow-Serving 系统"
+
+#: ../../source/index.rst:21
+msgid ""
+"**Overview**: :doc:`System overview and architecture "
+"</topics/system/intro>`"
+msgstr "**概述**：:doc:`系统简介及架构设计 </topics/system/intro>`"
+
+#: ../../source/index.rst:24
+msgid "**Observability**: :doc:`Logs and Metrics </topics/system/observability>`"
+msgstr "**可观测性**：:doc:`日志和Metrics </topics/system/observability>`"
+
+#: ../../source/index.rst:27
+msgid "**FeatureSource**: :doc:`Feature Service </topics/system/feature_service>`"
+msgstr "**特征数据源**：:doc:`特征服务 </topics/system/feature_service>`"
+
+#: ../../source/index.rst:31
+msgid "Deployment"
+msgstr "部署"
+
+#: ../../source/index.rst:33
+msgid ""
+"**Guides**: :doc:`How to deploy an SecretFlow-Serving "
+"cluster</topics/deployment/deployment>` | :doc:`Serving on "
+"Kuscia</topics/deployment/serving_on_kuscia>`"
+msgstr ""
+"**指南**：:doc:`如何部署 SecretFlow-Serving 集群</topics/deployment/deployment>` |"
+" :doc:`使用 Kuscia 部署 Serving </topics/deployment/serving_on_kuscia>`"
+
+#: ../../source/index.rst:37
+msgid ""
+"**Reference**: :doc:`SecretFlow-Serving service API </reference/api>` | "
+":doc:`SecretFlow-Serving system config </reference/config>` | :doc"
+":`SecretFlow-Serving feature service spi </reference/spi>`"
+msgstr ""
+"**参考**：:doc:`SecretFlow-Serving 服务 API </reference/api>` | :doc"
+":`SecretFlow-Serving 系统配置 </reference/config>` | :doc:`SecretFlow-Serving"
+" 特征服务 SPI </reference/spi>`"
+
+#: ../../source/index.rst:44
+msgid "Graph"
+msgstr "模型图"
+
+#: ../../source/index.rst:46
+msgid ""
+"**Overview**: :doc:`Introduction to graphs "
+"</topics/graph/intro_to_graph>` | :doc:`Operators "
+"</topics/graph/operator_list>`"
+msgstr ""
+"**概述**：:doc:`模型图的介绍 </topics/graph/intro_to_graph>` | :doc:`算子 "
+"</topics/graph/operator_list>`"
+
+#: ../../source/index.rst:50
+msgid "**Reference**: :doc:`SecretFlow-Serving model </reference/model>`"
+msgstr "**参考**：:doc:`SecretFlow-Serving 模型 </reference/model>`"
+
+#: ../../source/index.rst:54
+msgid "Prediction Algorithms"
+msgstr "预测算法"
+
+#: ../../source/index.rst:56
+msgid ""
+"**Introduction**: :doc:`Introduction to prediction algorithms "
+"</topics/algorithm/intro>`"
+msgstr ""
+"**介绍**: :doc:`预测算法 "
+"</topics/algorithm/intro>`"

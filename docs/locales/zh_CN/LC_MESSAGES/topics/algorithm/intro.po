@@ -1,0 +1,236 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-14 11:15+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/topics/algorithm/intro.rst:2
+msgid "Introduction To Prediction Algorithms"
+msgstr "预测算法介绍"
+
+#: ../../source/topics/algorithm/intro.rst:4
+msgid ""
+"We will introduce two common vertical prediction models. Vertical means "
+"that the participating parties each hold different feature values of the "
+"same entity. For example, one party has height data and the other party "
+"has weight data for the same person. The two parties will use PSI or "
+"other methods to align their datas. The data they have is aligned and "
+"jointly predicted through the ID shared by both parties. This article "
+"assumes that we already have a model and does not introduce the origin of"
+" the model. If you are interested in the generation of the model, that "
+"is, the training process, you can refer to the relevant documents of "
+"`Secretflow <https://www.secretflow.org.cn/>`_ . The principle is that "
+"during the training and prediction process, both parties are invisible to"
+" each other's data, they cannot send raw data to each other."
+msgstr "我们将介绍两种常见的垂直预测模型，垂直的意思是参与的各方各持有同一实体的不同特征值，比如一方有身高数据，一方有体重数据，两方通过PSI等一些方式会将各自拥有的数据对齐，通过双方共有的id来联合预测。本文假设我们已经有了模型，并没有介绍模型由来。如果对模型的产生，即训练的过程感兴趣，可以参考Secretflow的相关文档。原则是在训练和预测的过程中，双方对彼此的数据是不可见的，也就是不能发送原始数据给对方。"
+
+#: ../../source/topics/algorithm/intro.rst:7
+msgid "Vertical Linear Prediction"
+msgstr "垂直线性预测"
+
+#: ../../source/topics/algorithm/intro.rst:10
+msgid "Linear Models"
+msgstr "线性模型介绍"
+
+#: ../../source/topics/algorithm/intro.rst:12
+msgid "The formula for the linear model is:"
+msgstr "线性模型的公式为："
+
+#: ../../source/topics/algorithm/intro.rst:14
+msgid ""
+"y = bias + w_1 x_1 + w_2 x_2+\\dots+ w_p x_p = bias + W^TX\n"
+"\n"
+msgstr ""
+
+#: ../../source/topics/algorithm/intro.rst:17
+msgid ":math:`x_i (i=1 - p)` represents the value of each feature."
+msgstr ":math:`x_i (i=1 - p)` 表示各个特征值。"
+
+#: ../../source/topics/algorithm/intro.rst:18
+msgid ":math:`w_i (i = 1 - p)` represents the coefficient of each feature value."
+msgstr ":math:`w_i (i = 1 - p)` 表示各个特征值的系数。"
+
+#: ../../source/topics/algorithm/intro.rst:19
+msgid ":math:`bias` is the bias value of the model."
+msgstr ":math:`bias` 是模型的偏置值。"
+
+#: ../../source/topics/algorithm/intro.rst:20
+msgid ":math:`y` is the predicted value of the model."
+msgstr ":math:`y` 为模型预测值。"
+
+#: ../../source/topics/algorithm/intro.rst:21
+msgid ":math:`W^T` is the transpose of the column vector of feature coefficients."
+msgstr ":math:`W^T` 为特征系数的列向量的转置。"
+
+#: ../../source/topics/algorithm/intro.rst:22
+msgid ":math:`X` is the column vector of feature values."
+msgstr ":math:`X` 为特征值的列向量。"
+
+#: ../../source/topics/algorithm/intro.rst:24
+msgid ""
+"That is, the predicted value of the model can be simply expressed as the "
+"dot product of the feature value and the coefficient plus the bias. If it"
+" is a classification problem, the formula becomes:"
+msgstr "即模型的预测值可以简单表示为特征值和系数的点乘再加上偏置。"
+
+#: ../../source/topics/algorithm/intro.rst:27
+msgid ""
+"y = 1 / (1 + e^{-(bias + W^TX)})\n"
+"\n"
+msgstr ""
+
+#: ../../source/topics/algorithm/intro.rst:30
+msgid "Usually we use approximate functions to describe the above functions."
+msgstr "通常我们会用近似的函数去描述上述函数。"
+
+#: ../../source/topics/algorithm/intro.rst:33
+msgid "Vertical Linear Model Calculation"
+msgstr "垂直线性模型计算"
+
+#: ../../source/topics/algorithm/intro.rst:35
+msgid ""
+"Vertical means that multiple parties participating in the prediction hold"
+" part of the feature value. For example, assuming that the parties "
+"include Alice and Bob, predicting housing prices, Alice owns the area of "
+"the house, and Bob owns the which floor where the house is located. Then "
+"when the model is trained, Alice You will get the model coefficient of "
+"the area, Bob will get the coefficient of floor number, and the bias "
+"value will be saved in either side."
+msgstr "垂直意味着参与预测的多方持有一部分的特征值，比如假设参与方有alice，bob，预测房价，alice拥有房子位置的面积，bob拥有房子所在的楼层数，那么模型在训练的时候就，alice就会得到面积的模型系数，bob就会得到楼层数的系数，偏置值会保存在任意一方。"
+
+#: ../../source/topics/algorithm/intro.rst:37
+msgid ""
+"When calculating, as shown in the figure below, each party will use their"
+" own coefficients to do dot multiplication calculation (DotProduct "
+"operator), and then send it to one party for merging (MergeY operator), "
+"and finally get the result:"
+msgstr "计算的时候如下图，各方会用各自的系数做点乘计算(DotProduct算子），之后发给一方做合并（MergeY算子），最后得到结果："
+
+#: ../../source/topics/algorithm/intro.rst:-1
+msgid "Vertical Linear Model"
+msgstr "垂直线性模型"
+
+#: ../../source/topics/algorithm/intro.rst:42
+msgid ""
+"Here, for the simplicity of the illustration, the area number and floor "
+"number are sent to Alice. This is not allowed because Alice shall not "
+"know Bob's feature data. When predicting, all Alice sends to Bob is the "
+"query data, and Bob will use the query data to know what data should be "
+"used for joint calculation."
+msgstr "这里为了图示的简单把面积数和楼层数发送给了alice，这样是不允许的，因为alice知道了bob的特征数据。预测的时候，alice发送给bob的只有特征查询参数，bob会通过特征查询参数知道应该用什么数据联合计算。"
+
+#: ../../source/topics/algorithm/intro.rst:45
+msgid "Vertical Tree Model Prediction"
+msgstr "垂直树模型预测"
+
+#: ../../source/topics/algorithm/intro.rst:-1
+#: ../../source/topics/algorithm/intro.rst:48
+msgid "Tree Model"
+msgstr "树模型介绍"
+
+#: ../../source/topics/algorithm/intro.rst:50
+msgid ""
+"Still using the above example of house price prediction, a simple tree "
+"model can be represented by the following figure. Non-leaf nodes contain "
+"a feature value, and leaf nodes contain predicted values. When "
+"predicting, starting from root node, if the current feature value is "
+"greater than the feature value of the node, the right node of the current"
+" node is used for calculation, otherwise the left node is used. If a leaf"
+" node is reached, the value of the current leaf node is used as the "
+"predicted value. As shown in the tree below, if we predict the house "
+"price with an area of 110 and a floor of 8, the yellow node in the "
+"picture below will be used, and the final predicted value is 2:"
+msgstr "依然用上面房价预测的例子，简单的树模型可以用下图表示，非叶子节点含有一个特征值，叶子节点含有预测值。预测的时候如果当前要预测的特征值比节点的特征值大，则使用当前节点的右节点计算，反之则使用左节点，如果到达了叶子节点，则使用当前叶子节点的值作为预测值。如下图的树，如果我们预测面积110，楼层为8的房价，则会使用到下图中黄色的节点，最终的预测值为2："
+
+#: ../../source/topics/algorithm/intro.rst:55
+msgid ""
+"As can be seen from the above figure, a simple tree model is relatively "
+"rough, so there is a method of using multiple trees to calculate "
+"predicted values, and XGB is one of the better models."
+msgstr "由上图可以看出简单的一棵树的模型是比较粗略的，于是有了用多棵树来算预测值的方法，XGB就是其中的比较优秀的模型。"
+
+#: ../../source/topics/algorithm/intro.rst:58
+msgid "Vertical Tree Model"
+msgstr "垂直树模型"
+
+#: ../../source/topics/algorithm/intro.rst:60
+msgid ""
+"The XGB method uses multiple trees to make predictions, and the final "
+"prediction value is the sum of the values predicted by each tree (the "
+"resulting leaf node values). During XGB training, a greedy method is used"
+" to reduce the calculation amount of selecting the feature value of each "
+"node, and when training each tree, the previously trained tree will be "
+"used, that is, the residual is used for fitting. For prediction, we just "
+"need to use these already trained trees."
+msgstr "XGB的方法是使用多棵树来做预测，最终的预测值是每棵树预测的值（所得的叶子节点的值）的和。XGB训练的时候使用贪心的方法让每个节点的特征值的选择的计算量减小，而且训练每棵树的时候会用到前面已经训练好的树，即是用残差去拟合。对于预测而言，我们只需要使用已经训练好的这些树即可。"
+
+#: ../../source/topics/algorithm/intro.rst:62
+msgid ""
+"SGB is XGB in a vertical scenario, that is, multiple parties hold "
+"different features and jointly participate in the calculation, and during"
+" the training and prediction process, the data of each party will not be "
+"leaked."
+msgstr "SGB是垂直场景下的XGB，即多方持有不同的feature，共同参与计算，且在训练和预测的过程中，各方的数据不会泄露。"
+
+#: ../../source/topics/algorithm/intro.rst:65
+msgid "Vertical Tree Model Prediction Calculation"
+msgstr "垂直树模型预测"
+
+#: ../../source/topics/algorithm/intro.rst:67
+msgid ""
+"For simplicity, assume that the model is just one tree, because the "
+"process for prediction is the same for each tree. The participants are "
+"Alice and Bob. Alice holds the area data and Bob holds the floor data. "
+"During training, the party holding the training data housing prices will "
+"hold the weights of all leaf nodes. That is, each holds a part of the "
+"tree, as shown below:"
+msgstr "简单起见，假设模型就一棵树，因为对预测而言，每棵树的流程都是一样的。参与方有Alice和Bob，Alice持有面积数据，Bob持有楼层数据，训练的时候持有训练数据房价的一方将持有所有叶节点的权重。也就是各自保存着树的一部分，如下图："
+
+#: ../../source/topics/algorithm/intro.rst:-1
+msgid "Vertical Trees"
+msgstr "垂直树模型"
+
+#: ../../source/topics/algorithm/intro.rst:72
+msgid ""
+"When predicting, there will be three operators involved. The first "
+"operator TREE_SELECT and TREE_SELECT need to be executed by all parties. "
+"The result of the execution is the label array of the leaf node. For each"
+" sample, start from the root node of the sub-model and look downwards for"
+" the leaf nodes. The search method is: if the feature value of the "
+"current node belongs to the participant himself, then select its left "
+"child node or right child node according to the the feature value; if the"
+" feature value of the current node does not belong to itself, then its "
+"left child node and the right child node will be selected, and finally a "
+"selection list of all leaf nodes will be obtained. The value of the "
+"selected leaf node is 1, otherwise it is 0. The TREE_MERGE operator is "
+"executed on the party with the weight of the leaf node. Each party sends "
+"the selection list obtained by its TREE_SELECT to this party. It will "
+"perform an AND operation on all the selection lists. The leaf node with "
+"the result of 1 is unique, then the leaf node's weight is the result of "
+"the operator. Each tree corresponds to a TREE_SELECT operator and a "
+"TREE_MERGE operator. The aggregation of multiple trees is completed by "
+"TREE_ENSEMBLE_PREDICT, and like the linear model, the results can also be"
+" calculated by sigmoid. The calculation method of sigmoid here is "
+"consistent with the approximation method used during training. The result"
+" of TREE_ENSEMBLE_PREDICT is the prediction result."
+msgstr ""
+"当预测的时候会有3个算子参与，第一个算子TREE_SELECT，TREE_SELECT各方都需要执行，执行得到的结果是叶节点的标记数组。对于每个样本，从子模型的根节点开始向下寻找叶子结点。寻找方式为：若当前节点的特征值属于参与方自己，则根据特征值的大小选择它的左子结点或右子结点；若当前节点的特征值不属于自己,"
+" "
+"则它的左子结点和右子结点都会被选择，最终得到所有叶子节点的一个选择列表，选择的叶子节点值为1，反之为0。TREE_MERGE算子在拥有叶子节点权重的一方执行，各方把自己TREE_SELECT得到的选择列表发给这方，他会对所有的选择列表做与操作，结果为1的叶子节点唯一，则该叶子节点的权重即为算子的结果。每棵树对应一个TREE_SELECT算子和一个TREE_MERGE算子。多棵树的聚合由TREE_ENSEMBLE_PREDICT完成，并且和线性模型一样，结果还可以再做sigmoid计算，此处sigmoid的计算方式和训练时使用的近似方式保持一致。TREE_ENSEMBLE_PREDICT的结果即为预测结果。"
+
+#: ../../source/topics/algorithm/intro.rst:-1
+msgid "Vertical Tree Model Calculation"
+msgstr "垂直线性模型计算"
