@@ -16,7 +16,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 
-
+def sf_serving_deps():
     _bazel_platform()
     _bazel_rules_pkg()
     _rules_proto_grpc()
