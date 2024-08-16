@@ -20,6 +20,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/utils.h"
@@ -35,6 +36,8 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
   std::ifstream file_is(config_file);
   std::string raw_config_str((std::istreambuf_iterator<char>(file_is)),
                              std::istreambuf_iterator<char>());
+
+  SPDLOG_INFO("raw kuscia serving config content: {}", raw_config_str);
 
   rapidjson::Document doc;
   SERVING_ENFORCE(!doc.Parse(raw_config_str.c_str()).HasParseError(),
@@ -65,19 +68,25 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
     for (int i = 0; i < cluster_def.parties_size(); ++i) {
       const auto& p = cluster_def.parties(i);
-      if (i == cluster_def.self_party_idx()) {
+      if (i == self_party_idx) {
         cluster_config_.set_self_id(p.name());
         self_party_id = p.name();
       }
-      auto party = cluster_config_.add_parties();
+      auto* party = cluster_config_.add_parties();
       party->set_id(p.name());
       for (const auto& s : p.services()) {
-        if (s.port_name() == "service") {
+        if (s.port_name() == "communication") {
           // add "http://" to force brpc to set the correct Host
           party->set_address(fmt::format("http://{}", s.endpoints(0)));
         }
       }
+      SERVING_ENFORCE(!party->address().empty(),
+                      errors::ErrorCode::INVALID_ARGUMENT,
+                      "party {} communication endpoint is empty.", party->id());
     }
+
+    SERVING_ENFORCE_GT(cluster_config_.parties_size(), 1,
+                       "too few cluster party config to run serving.");
   }
 
   {
@@ -111,10 +120,13 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
     kusica_proto::AllocatedPorts allocated_ports;
     JsonToPb(allocated_ports_str, &allocated_ports);
+    server_config_.set_host("0.0.0.0");
     for (const auto& p : allocated_ports.ports()) {
       if (p.name() == "service") {
-        cluster_config_.mutable_parties(self_party_idx)
-            ->set_listen_address(fmt::format("0.0.0.0:{}", p.port()));
+        server_config_.set_service_port(p.port());
+      }
+      if (p.name() == "communication") {
+        server_config_.set_communication_port(p.port());
       }
       if (p.name() == "brpc-builtin") {
         server_config_.set_brpc_builtin_service_port(p.port());
@@ -123,6 +135,11 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
         server_config_.set_metrics_exposer_port(p.port());
       }
     }
+
+    SERVING_ENFORCE_NE(server_config_.communication_port(), 0,
+                       "get empty communication port.");
+    SERVING_ENFORCE_NE(server_config_.service_port(), 0,
+                       "get empty service port.");
   }
 
   // load oss config
@@ -131,8 +148,33 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
                     errors::ErrorCode::INVALID_ARGUMENT);
     std::string oss_meta_str = {doc["oss_meta"].GetString(),
                                 doc["oss_meta"].GetStringLength()};
-    OSSSourceMeta oss_meta;
-    JsonToPb(oss_meta_str, model_config_.mutable_oss_source_meta());
+    if (!oss_meta_str.empty()) {
+      OSSSourceMeta oss_meta;
+      JsonToPb(oss_meta_str, model_config_.mutable_oss_source_meta());
+    } else {
+      SPDLOG_WARN("oss meta is null");
+    }
+  }
+
+  // fill spi tls config
+  if (feature_config_.has_value() && feature_config_->has_http_opts()) {
+    auto* http_opts = feature_config_->mutable_http_opts();
+    const char* KSpiTlsConfigKey = "spi_tls_config";
+    if (doc.HasMember(KSpiTlsConfigKey)) {
+      SERVING_ENFORCE(doc[KSpiTlsConfigKey].IsString(),
+                      errors::ErrorCode::INVALID_ARGUMENT);
+      std::string spi_tls_config_str = {
+          doc[KSpiTlsConfigKey].GetString(),
+          doc[KSpiTlsConfigKey].GetStringLength()};
+      if (!spi_tls_config_str.empty()) {
+        SPDLOG_INFO("spi tls config: {}", spi_tls_config_str);
+        TlsConfig spi_tls_config;
+        JsonToPb(spi_tls_config_str, &spi_tls_config);
+        http_opts->mutable_tls_config()->CopyFrom(spi_tls_config);
+      } else {
+        SPDLOG_WARN("spi tls config is empty");
+      }
+    }
   }
 }
 

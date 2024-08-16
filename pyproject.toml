@@ -1,0 +1,28 @@
+[tool.black]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+
+[tool.rstcheck]
+report_level = "ERROR"
+ignore_directives = [
+    "include",
+    "mermaid",
+    "autoclass",
+    "autofunction",
+]
+ignore_languages = [
+    "cpp"
+]
+
+[tool.pyright]
+include = [
+    "secretflow_serving_lib",
+]
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.10"
+pythonPlatform = "Linux"

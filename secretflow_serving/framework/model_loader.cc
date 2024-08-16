@@ -14,29 +14,24 @@
 
 #include "secretflow_serving/framework/model_loader.h"
 
+#include <chrono>
 #include <filesystem>
 #include <memory>
+#include <utility>
 
 #include "spdlog/spdlog.h"
 
-#include "secretflow_serving/framework/executable_impl.h"
-#include "secretflow_serving/framework/executor.h"
-#include "secretflow_serving/framework/predictor_impl.h"
-#include "secretflow_serving/ops/graph.h"
+#include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/sys_util.h"
 #include "secretflow_serving/util/utils.h"
-
-#include "secretflow_serving/protos/bundle.pb.h"
 
 namespace secretflow::serving {
 
 namespace {
-const std::string kManifestFileName = "MANIFEST";
-}
 
-ModelLoader::ModelLoader(const Options& opts,
-                         std::shared_ptr<PartyChannelMap> channels)
-    : Loader(opts), channels_(channels) {}
+const std::string kManifestFileName = "MANIFEST";
+
+}  // namespace
 
 void ModelLoader::Load(const std::string& file_path) {
   SPDLOG_INFO("begin load file: {}", file_path);
@@ -72,34 +67,21 @@ void ModelLoader::Load(const std::string& file_path) {
 
   auto model_file_path = model_dir.append(manifest.bundle_path());
 
-  ModelBundle model_pb;
+  auto model_bundle = std::make_shared<ModelBundle>();
   if (manifest.bundle_format() == FileFormatType::FF_PB) {
-    LoadPbFromBinaryFile(model_file_path.string(), &model_pb);
+    LoadPbFromBinaryFile(model_file_path.string(), model_bundle.get());
   } else if (manifest.bundle_format() == FileFormatType::FF_JSON) {
-    LoadPbFromJsonFile(model_file_path.string(), &model_pb);
+    LoadPbFromJsonFile(model_file_path.string(), model_bundle.get());
   } else {
     SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "found unkonwn bundle_format:{}",
+                  "found unknown bundle_format:{}",
                   FileFormatType_Name(manifest.bundle_format()));
   }
+  model_bundle_ = std::move(model_bundle);
 
-  SPDLOG_INFO("load model bundle:{} desc:{} graph version:{}", model_pb.name(),
-              model_pb.desc(), model_pb.graph().version());
-
-  auto graph = std::make_unique<Graph>(model_pb.graph());
-  const auto& executions = graph->GetExecutions();
-
-  std::vector<std::shared_ptr<Executor>> executors;
-  for (const auto& e : executions) {
-    executors.emplace_back(std::make_shared<Executor>(e));
-  }
-  executable_ = std::make_shared<ExecutableImpl>(std::move(executors));
-
-  Predictor::Options predictor_opts;
-  predictor_opts.party_id = opts_.party_id;
-  predictor_opts.channels = channels_;
-  predictor_opts.executions = executions;
-  predictor_ = std::make_shared<PredictorImpl>(std::move(predictor_opts));
+  SPDLOG_INFO("end load model bundle, name: {}, desc: {}, graph version: {}",
+              model_bundle_->name(), model_bundle_->desc(),
+              model_bundle_->graph().version());
 }
 
 }  // namespace secretflow::serving

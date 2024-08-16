@@ -42,10 +42,10 @@ std::string Source::PullModel() {
   }
 
   auto dst_file_path = dst_dir.append(kModelFileName);
-  const auto& source_md5 = config_.source_md5();
+  const auto& source_sha256 = config_.source_sha256();
   if (std::filesystem::exists(dst_file_path)) {
-    if (!source_md5.empty()) {
-      if (SysUtil::CheckMD5(dst_file_path.string(), source_md5)) {
+    if (!source_sha256.empty()) {
+      if (SysUtil::CheckSHA256(dst_file_path.string(), source_sha256)) {
         return dst_file_path;
       }
     }
@@ -54,10 +54,10 @@ std::string Source::PullModel() {
   }
 
   OnPullModel(dst_file_path);
-  if (!source_md5.empty()) {
-    SERVING_ENFORCE(SysUtil::CheckMD5(dst_file_path.string(), source_md5),
-                    errors::ErrorCode::IO_ERROR, "model({}) md5 check failed",
-                    config_.source_path());
+  if (!source_sha256.empty()) {
+    SERVING_ENFORCE(SysUtil::CheckSHA256(dst_file_path.string(), source_sha256),
+                    errors::ErrorCode::IO_ERROR,
+                    "model({}) sha256 check failed", config_.source_path());
   }
 
   return dst_file_path;

@@ -17,18 +17,21 @@ syntax = "proto3";
 
 package secretflow.serving;
 
-enum LinkFucntionType {
+// Type of link function.
+enum LinkFunctionType {
+  // Placeholder for proto3 default value, do not use it.
   UNKNOWN_LF_TYPE = 0;
 
-  LF_LOG = 1;
-  LF_LOGIT = 2;
-  LF_INVERSE = 3;
-  LF_LOGIT_V2 = 4;
+  // LOG
+  LF_EXP = 1;
+  // RECIPROCAL
   LF_RECIPROCAL = 5;
-  LF_INDENTITY = 6;
+  // IDENTITY
+  LF_IDENTITY = 6;
 
+  // Sigmoid
   LF_SIGMOID_RAW = 11;
-  // Taylor Maclaurin 1 order.
+  // MinMax approximation 1 order.
   LF_SIGMOID_MM1 = 12;
   // MinMax approximation 3 order.
   LF_SIGMOID_MM3 = 13;

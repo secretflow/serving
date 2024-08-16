@@ -174,7 +174,7 @@ TEST_F(OpFactoryTest, Works) {
     JsonToPb(attr_json_map[actual_attr_def.name()], &expect_attr_def);
     EXPECT_FALSE(expect_attr_def.name().empty());
     EXPECT_FALSE(expect_attr_def.desc().empty());
-    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYEP);
+    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYPE);
 
     EXPECT_EQ(expect_attr_def.name(), actual_attr_def.name());
     EXPECT_EQ(expect_attr_def.desc(), actual_attr_def.desc());
@@ -338,17 +338,17 @@ TEST_F(OpFactoryTest, WorksDefaultValue) {
       .BoolAttr("attr_bs", "attr_bs_desc", true, true,
                 std::vector<bool>{true, false})
       .DoubleAttr("attr_ds", "attr_ds_desc", true, true,
-                  std::vector<double>{1.0d, 2.0d})
+                  std::vector<double>{1.0, 2.0})
       .FloatAttr("attr_fs", "attr_fs_desc", true, true,
-                 std::vector<float>{1.1f, 2.2f})
+                 std::vector<float>{1.1F, 2.2F})
       .Int64Attr("attr_i64s", "attr_i64s_desc", true, true,
                  std::vector<int64_t>{3, 4})
       .Int32Attr("attr_i32s", "attr_i32s_desc", true, true,
                  std::vector<int32_t>{1, 2})
       .StringAttr("attr_s", "attr_s_desc", false, true, "s")
       .BoolAttr("attr_b", "attr_b_desc", false, true, true)
-      .DoubleAttr("attr_d", "attr_d_desc", false, true, 0.13d)
-      .FloatAttr("attr_f", "attr_f_desc", false, true, 0.12f)
+      .DoubleAttr("attr_d", "attr_d_desc", false, true, 0.13)
+      .FloatAttr("attr_f", "attr_f_desc", false, true, 0.12F)
       .Int64Attr("attr_i64", "attr_i64_desc", false, true, 1234)
       .Int32Attr("attr_i32", "attr_i32_desc", false, true, 123)
       .Input("input_1", "input_1_desc")
@@ -385,7 +385,7 @@ TEST_F(OpFactoryTest, WorksDefaultValue) {
     JsonToPb(attr_json_map[actual_attr_def.name()], &expect_attr_def);
     EXPECT_FALSE(expect_attr_def.name().empty());
     EXPECT_FALSE(expect_attr_def.desc().empty());
-    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYEP);
+    EXPECT_FALSE(expect_attr_def.type() == AttrType::UNKNOWN_AT_TYPE);
 
     std::cout << "expect " << expect_attr_def.ShortDebugString() << std::endl;
 

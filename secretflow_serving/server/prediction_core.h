@@ -26,7 +26,9 @@ class PredictionCore {
   struct Options {
     std::string service_id;
     std::string party_id;
+
     std::vector<std::string> cluster_ids;
+
     std::shared_ptr<Predictor> predictor;
   };
 
@@ -38,6 +40,7 @@ class PredictionCore {
                apis::PredictResponse* response) noexcept;
 
   const std::string& GetServiceID() const { return opts_.service_id; }
+
   const std::string& GetPartyID() const { return opts_.party_id; }
 
  protected:

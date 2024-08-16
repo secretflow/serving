@@ -13,24 +13,23 @@
 # limitations under the License.
 
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_proto_grpc//python:defs.bzl", "python_proto_compile")
 
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
-    name = "field_proto",
-    srcs = ["field.proto"],
+    name = "data_type_proto",
+    srcs = ["data_type.proto"],
 )
 
 cc_proto_library(
-    name = "field_cc_proto",
-    deps = [":field_proto"],
+    name = "data_type_cc_proto",
+    deps = [":data_type_proto"],
 )
 
 proto_library(
     name = "feature_proto",
     srcs = ["feature.proto"],
-    deps = [":field_proto"],
 )
 
 cc_proto_library(
@@ -94,11 +93,67 @@ cc_proto_library(
 )
 
 proto_library(
-    name = "onehot_substitution_spec_proto",
-    srcs = ["onehot_substitution_spec.proto"],
+    name = "compute_trace_proto",
+    srcs = ["compute_trace.proto"],
 )
 
 cc_proto_library(
-    name = "onehot_substitution_spec_cc_proto",
-    deps = [":onehot_substitution_spec_proto"],
+    name = "compute_trace_cc_proto",
+    deps = [":compute_trace_proto"],
+)
+
+python_proto_compile(
+    name = "graph_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":graph_proto"],
+)
+
+python_proto_compile(
+    name = "bundle_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":bundle_proto"],
+)
+
+python_proto_compile(
+    name = "op_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":op_proto"],
+)
+
+python_proto_compile(
+    name = "attr_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":attr_proto"],
+)
+
+python_proto_compile(
+    name = "data_type_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":data_type_proto"],
+)
+
+python_proto_compile(
+    name = "compute_trace_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":compute_trace_proto"],
+)
+
+python_proto_compile(
+    name = "link_function_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":link_function_proto"],
+)
+
+python_proto_compile(
+    name = "feature_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [":feature_proto"],
 )

@@ -21,13 +21,15 @@ package secretflow.serving;
 
 // Supported dispatch type
 enum DispatchType {
+  // Placeholder for proto3 default value, do not use it.
   UNKNOWN_DP_TYPE = 0;
 
-  // Dispath all participants.
+  // Dispatch all participants.
   DP_ALL = 1;
-  // Dispath any participant.
+  // Dispatch any participant.
   DP_ANYONE = 2;
-  // DP_SPECIFIED = 3;
+  // Dispatch specified participant.
+  DP_SPECIFIED = 3;
 }
 
 // The runtime config of the execution.
@@ -38,6 +40,9 @@ message RuntimeConfig {
   // The execution need run in session(stateful)
   // TODO: not support yet.
   bool session_run = 2;
+
+  // if dispatch_type is DP_SPECIFIED, only one party should be true
+  bool specific_flag = 3;
 }
 
 // The definition of a execution. A execution represents a subgraph within a
@@ -58,7 +63,7 @@ message NodeDef {
   // Must be unique among all nodes of the graph.
   string name = 1;
 
-  // The operation name.
+  // The operator name.
   string op = 2;
 
   // The parent node names of the node. The order of the parent nodes should
@@ -68,14 +73,45 @@ message NodeDef {
   // The attribute values configed in the node. Note that this should include
   // all attrs defined in the corresponding OpDef.
   map<string, op.AttrValue> attr_values = 4;
+
+  // The operator version.
+  string op_version = 5;
 }
 
-// Represents the graph of operations
+// The view of a node, which could be public to other parties
+message NodeView {
+  // Must be unique among all nodes of the graph.
+  string name = 1;
+
+  // The operator name.
+  string op = 2;
+
+  // The parent node names of the node. The order of the parent nodes should
+  // match the order of the inputs of the node.
+  repeated string parents = 3;
+
+  // The operator version.
+  string op_version = 5;
+}
+
+// The definition of a Graph. A graph consists of a set of nodes carrying data
+// and a set of executions that describes the scheduling of the graph.
 message GraphDef {
   // Version of the graph
   string version = 1;
 
   repeated NodeDef node_list = 2;
+
+  repeated ExecutionDef execution_list = 3;
+}
+
+// The view of a graph is used to display the structure of the graph, containing
+// only structural information and excluding the data components.
+message GraphView {
+  // Version of the graph
+  string version = 1;
+
+  repeated NodeView node_list = 2;
 
   repeated ExecutionDef execution_list = 3;
 }
