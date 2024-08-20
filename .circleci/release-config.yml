@@ -30,12 +30,12 @@ parameters:
 executors:
   linux_x64_executor: # declares a reusable executor
     docker:
-      - image: secretflow/release-ci:latest
+      - image: secretflow/release-ci:20240619
     resource_class: 2xlarge+
     shell: /bin/bash --login -eo pipefail
   linux_aarch64_executor:
     docker:
-      - image: secretflow/release-ci-aarch64:latest
+      - image: secretflow/release-ci-aarch64:20240619
     resource_class: arm.2xlarge
     shell: /bin/bash --login -eo pipefail
   macos_arm64_executor:
