@@ -23,11 +23,7 @@
 namespace secretflow::serving {
 
 inline bool CheckStatusOk(const apis::Status& st) {
-  if (st.code() == errors::ErrorCode::OK) {
-    return true;
-  } else {
-    return false;
-  }
+  return st.code() == errors::ErrorCode::OK;
 }
 
 std::string ReadFileContent(const std::string& file);
@@ -77,5 +73,8 @@ void FeatureVisit(Func&& visitor, const Feature& f) {
                     FieldType_Name(f.field().type()));
   }
 }
+
+size_t CountSampleNum(
+    const ::google::protobuf::RepeatedPtrField<Feature>& features);
 
 }  // namespace secretflow::serving

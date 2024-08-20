@@ -55,13 +55,12 @@ class AddEleOpKernel : public OpKernel {
 
   // array += 1;
   void DoCompute(ComputeContext* ctx) override {
-    for (size_t i = 0; i < ctx->inputs.size(); ++i) {
-      for (size_t j = 0; j < ctx->inputs[i].size(); ++j) {
-        for (int col_index = 0; col_index < ctx->inputs[i][j]->num_columns();
-             ++col_index) {
+    for (auto& input : ctx->inputs) {
+      for (auto& j : input) {
+        for (int col_index = 0; col_index < j->num_columns(); ++col_index) {
           // add index num to every item.
-          auto field = ctx->inputs[i][j]->schema()->field(col_index);
-          auto array = ctx->inputs[i][j]->column(col_index);
+          auto field = j->schema()->field(col_index);
+          auto array = j->column(col_index);
           SERVING_ENFORCE(ADD_DATUM != std::numeric_limits<unsigned>::max(),
                           serving::errors::INVALID_ARGUMENT,
                           "add datum: {} is too large", ADD_DATUM);
@@ -69,9 +68,9 @@ class AddEleOpKernel : public OpKernel {
           SERVING_GET_ARROW_RESULT(
               arrow::compute::Add(incremented_datum, array), incremented_datum);
           SERVING_GET_ARROW_RESULT(
-              ctx->inputs[i][j]->SetColumn(
-                  col_index, field, std::move(incremented_datum).make_array()),
-              ctx->inputs[i][j]);
+              j->SetColumn(col_index, field,
+                           std::move(incremented_datum).make_array()),
+              j);
         }
       }
     }
@@ -100,7 +99,6 @@ class EdgeReduceOpKernel : public OpKernel {
       for (size_t j = 0; j < ctx->inputs[i].size(); ++j) {
         for (int col_index = 0; col_index < ctx->inputs[i][j]->num_columns();
              ++col_index) {
-          // add index num to every item.
           auto field = ctx->inputs[i][j]->schema()->field(col_index);
           auto array = ctx->inputs[i][j]->column(col_index);
           arrow::Datum incremented_datum;
@@ -279,12 +277,12 @@ TEST_F(ExecutorTest, MassiveWorks) {
   JsonToPb(execution_def_json, &executino_def);
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
-                                               std::move(nodes));
+                                               std::move(nodes), true, true);
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  // mock input
+  std::shared_ptr<arrow::RecordBatch> inputs;
   {
-    // mock input
     auto input_schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64())});
     std::shared_ptr<arrow::Array> array_0;
@@ -292,13 +290,7 @@ TEST_F(ExecutorTest, MassiveWorks) {
     SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
     SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
     double_builder.Reset();
-    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
-
-    op::OpComputeInputs op_inputs_0;
-    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0.emplace_back(std::move(r_list_0));
-
-    inputs.emplace("node_a", std::move(op_inputs_0));
+    inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
   // run
   auto output = executor->Run(inputs);
@@ -385,12 +377,12 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
   JsonToPb(execution_def_json, &executino_def);
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
-                                               std::move(nodes));
+                                               std::move(nodes), true, true);
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  // mock input
+  std::shared_ptr<arrow::RecordBatch> inputs;
   {
-    // mock input
     auto input_schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64())});
     std::shared_ptr<arrow::Array> array_0;
@@ -398,14 +390,9 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
     SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
     SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
     double_builder.Reset();
-    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
-
-    op::OpComputeInputs op_inputs_0;
-    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0.emplace_back(std::move(r_list_0));
-
-    inputs.emplace("node_a", std::move(op_inputs_0));
+    inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
+
   // run
   auto output = executor->Run(inputs);
 
@@ -430,7 +417,7 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
   EXPECT_TRUE(output.at(0).table->column(0)->Equals(expect_array));
 }
 
-TEST_F(ExecutorTest, BasicWorks) {
+TEST_F(ExecutorTest, FeatureInput) {
   std::vector<std::string> node_def_jsons = {
       R"JSON(
 {
@@ -494,35 +481,21 @@ TEST_F(ExecutorTest, BasicWorks) {
   JsonToPb(execution_def_json, &executino_def);
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
-                                               std::move(nodes));
+                                               std::move(nodes), true, true);
   auto executor = std::make_shared<Executor>(execution);
 
   // mock input
-  auto input_schema =
-      arrow::schema({arrow::field("test_field_0", arrow::float64())});
-  std::shared_ptr<arrow::Array> array_0;
-  std::shared_ptr<arrow::Array> array_1;
-  arrow::DoubleBuilder double_builder;
-  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
-  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
-  double_builder.Reset();
-  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({11, 22, 33, 44}));
-  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_1));
-  double_builder.Reset();
-  auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
-  auto input_1 = MakeRecordBatch(input_schema, 4, {array_1});
-
-  op::OpComputeInputs op_inputs_0;
-  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-  op_inputs_0.emplace_back(std::move(r_list_0));
-  op::OpComputeInputs op_inputs_1;
-  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
-  op_inputs_1.emplace_back(std::move(r_list_1));
-
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
-  inputs.emplace("node_a", std::move(op_inputs_0));
-  inputs.emplace("node_b", std::move(op_inputs_1));
-
+  std::shared_ptr<arrow::RecordBatch> inputs;
+  {
+    auto input_schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    std::shared_ptr<arrow::Array> array_0;
+    arrow::DoubleBuilder double_builder;
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+    double_builder.Reset();
+    inputs = MakeRecordBatch(input_schema, 4, {array_0});
+  }
   // run
   auto output = executor->Run(inputs);
 
@@ -531,8 +504,7 @@ TEST_F(ExecutorTest, BasicWorks) {
       arrow::schema({arrow::field("test_field_a", arrow::utf8())});
   std::shared_ptr<arrow::Array> expect_array;
   arrow::StringBuilder str_builder;
-  SERVING_CHECK_ARROW_STATUS(
-      str_builder.AppendValues({"15", "27", "39", "51"}));
+  SERVING_CHECK_ARROW_STATUS(str_builder.AppendValues({"5", "7", "9", "11"}));
   SERVING_CHECK_ARROW_STATUS(str_builder.Finish(&expect_array));
 
   EXPECT_EQ(output.size(), 1);
@@ -610,35 +582,21 @@ TEST_F(ExecutorTest, ExceptionWorks) {
   JsonToPb(execution_def_json, &executino_def);
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
-                                               std::move(nodes));
+                                               std::move(nodes), true, true);
   auto executor = std::make_shared<Executor>(execution);
 
   // mock input
-  auto input_schema =
-      arrow::schema({arrow::field("test_field_0", arrow::float64())});
-  std::shared_ptr<arrow::Array> array_0;
-  std::shared_ptr<arrow::Array> array_1;
-  arrow::DoubleBuilder double_builder;
-  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
-  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
-  double_builder.Reset();
-  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({11, 22, 33, 44}));
-  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_1));
-  double_builder.Reset();
-  auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
-  auto input_1 = MakeRecordBatch(input_schema, 4, {array_1});
-
-  op::OpComputeInputs op_inputs_0;
-  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-  op_inputs_0.emplace_back(std::move(r_list_0));
-  op::OpComputeInputs op_inputs_1;
-  std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_1 = {input_1};
-  op_inputs_1.emplace_back(std::move(r_list_1));
-
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
-  inputs.emplace("node_a", std::move(op_inputs_0));
-  inputs.emplace("node_b", std::move(op_inputs_1));
-
+  std::shared_ptr<arrow::RecordBatch> inputs;
+  {
+    auto input_schema =
+        arrow::schema({arrow::field("test_field_0", arrow::float64())});
+    std::shared_ptr<arrow::Array> array_0;
+    arrow::DoubleBuilder double_builder;
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({11, 22, 33, 44}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+    double_builder.Reset();
+    inputs = MakeRecordBatch(input_schema, 4, {array_0});
+  }
   // run
   EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
 
@@ -714,28 +672,21 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
   JsonToPb(execution_def_json, &executino_def);
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
-                                               std::move(nodes));
+                                               std::move(nodes), true, true);
   auto executor = std::make_shared<Executor>(execution);
 
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  // mock input
+  std::shared_ptr<arrow::RecordBatch> inputs;
   {
-    // mock input
     auto input_schema =
         arrow::schema({arrow::field("test_field_0", arrow::float64())});
     std::shared_ptr<arrow::Array> array_0;
     arrow::DoubleBuilder double_builder;
-    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({1, 2, 3, 4}));
+    SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({11, 22, 33, 44}));
     SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
     double_builder.Reset();
-    auto input_0 = MakeRecordBatch(input_schema, 4, {array_0});
-
-    op::OpComputeInputs op_inputs_0;
-    std::vector<std::shared_ptr<arrow::RecordBatch>> r_list_0 = {input_0};
-    op_inputs_0.emplace_back(std::move(r_list_0));
-
-    inputs.emplace("node_a", std::move(op_inputs_0));
+    inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
-
   // run
   EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
 
@@ -745,6 +696,121 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
 
   // expect
   EXPECT_EQ(ThreadPool::GetInstance()->GetTaskSize(), 0);
+}
+
+TEST_F(ExecutorTest, PrevNodeDataInput) {
+  std::vector<std::string> node_def_jsons = {
+      R"JSON(
+{
+  "name": "node_a",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_b",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_c",
+  "op": "TEST_OP_ONE_EDGE_ADD_ONE",
+  "parents": [ "node_a" ],
+}
+)JSON",
+      R"JSON(
+{
+  "name": "node_d",
+  "op": "TEST_OP_TWO_EDGE_ADD_TO_STR",
+  "parents": [ "node_b",  "node_c" ],
+}
+)JSON"};
+
+  std::string execution_def_json = R"JSON(
+{
+  "nodes": [
+    "node_c", "node_d"
+  ],
+  "config": {
+    "dispatch_type": "DP_ANYONE"
+  }
+}
+)JSON";
+
+  // build node
+  std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+  for (const auto& j : node_def_jsons) {
+    NodeDef node_def;
+    JsonToPb(j, &node_def);
+    auto node = std::make_shared<Node>(std::move(node_def));
+    nodes.emplace(node->GetName(), node);
+  }
+  // build edge
+  for (const auto& pair : nodes) {
+    const auto& input_nodes = pair.second->GetInputNodeNames();
+    for (size_t i = 0; i < input_nodes.size(); ++i) {
+      auto n_iter = nodes.find(input_nodes[i]);
+      SERVING_ENFORCE(n_iter != nodes.end(), errors::ErrorCode::LOGIC_ERROR);
+      auto edge = std::make_shared<Edge>(n_iter->first, pair.first, i);
+      n_iter->second->AddOutEdge(edge);
+      pair.second->AddInEdge(edge);
+    }
+  }
+
+  ExecutionDef executino_def;
+  JsonToPb(execution_def_json, &executino_def);
+
+  auto execution = std::make_shared<Execution>(
+      1, std::move(executino_def),
+      std::unordered_map<std::string, std::shared_ptr<Node>>{
+          {"node_c", nodes["node_c"]}, {"node_d", nodes["node_d"]}},
+      false, true);
+  auto executor = std::make_shared<Executor>(execution);
+
+  // mock input
+  auto input_schema =
+      arrow::schema({arrow::field("test_field_0", arrow::float64())});
+  std::shared_ptr<arrow::Array> array_0;
+  std::shared_ptr<arrow::Array> array_1;
+  arrow::DoubleBuilder double_builder;
+  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({2, 3, 4, 5}));
+  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_0));
+  double_builder.Reset();
+  SERVING_CHECK_ARROW_STATUS(double_builder.AppendValues({12, 23, 34, 45}));
+  SERVING_CHECK_ARROW_STATUS(double_builder.Finish(&array_1));
+  double_builder.Reset();
+  auto output_a = MakeRecordBatch(input_schema, 4, {array_0});
+  auto output_b = MakeRecordBatch(input_schema, 4, {array_1});
+  auto prev_node_io =
+      std::unordered_map<std::string,
+                         std::vector<std::shared_ptr<arrow::RecordBatch>>>();
+  prev_node_io.emplace(
+      "node_a", std::vector<std::shared_ptr<arrow::RecordBatch>>{output_a});
+  prev_node_io.emplace(
+      "node_b", std::vector<std::shared_ptr<arrow::RecordBatch>>{output_b});
+
+  // run
+  auto output = executor->Run(prev_node_io);
+
+  // build expect
+  auto expect_output_schema =
+      arrow::schema({arrow::field("test_field_a", arrow::utf8())});
+  std::shared_ptr<arrow::Array> expect_array;
+  arrow::StringBuilder str_builder;
+  SERVING_CHECK_ARROW_STATUS(
+      str_builder.AppendValues({"15", "27", "39", "51"}));
+  SERVING_CHECK_ARROW_STATUS(str_builder.Finish(&expect_array));
+
+  EXPECT_EQ(output.size(), 1);
+  EXPECT_EQ(output.at(0).node_name, "node_d");
+  EXPECT_EQ(output.at(0).table->num_columns(), 1);
+  EXPECT_TRUE(output.at(0).table->schema()->Equals(expect_output_schema));
+
+  std::cout << output.at(0).table->column(0)->ToString() << std::endl;
+  std::cout << expect_array->ToString() << std::endl;
+
+  EXPECT_TRUE(output.at(0).table->column(0)->Equals(expect_array));
 }
 
 }  // namespace secretflow::serving

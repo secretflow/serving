@@ -16,6 +16,7 @@
 syntax = "proto3";
 
 import "secretflow_serving/config/tls_config.proto";
+import "secretflow_serving/config/retry_policy_config.proto";
 
 package secretflow.serving;
 
@@ -66,6 +67,9 @@ message HttpOptions {
 
   // TLS related config.
   TlsConfig tls_config = 5;
+
+  // Retry policy config.
+  RetryPolicyConfig retry_policy_config = 6;
 }
 
 // Options of a csv feature source.

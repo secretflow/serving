@@ -58,18 +58,20 @@ class OpKernel {
   }
   virtual ~OpKernel() = default;
 
-  size_t GetInputsNum() const { return num_inputs_; }
+  [[nodiscard]] size_t GetInputsNum() const { return num_inputs_; }
 
-  const std::shared_ptr<arrow::Schema>& GetInputSchema(size_t index) const {
+  [[nodiscard]] const std::shared_ptr<arrow::Schema>& GetInputSchema(
+      size_t index) const {
     SERVING_ENFORCE_LT(index, input_schema_list_.size());
     return input_schema_list_[index];
   }
 
-  const std::vector<std::shared_ptr<arrow::Schema>>& GetAllInputSchema() const {
+  [[nodiscard]] const std::vector<std::shared_ptr<arrow::Schema>>&
+  GetAllInputSchema() const {
     return input_schema_list_;
   }
 
-  const std::shared_ptr<arrow::Schema>& GetOutputSchema() const {
+  [[nodiscard]] const std::shared_ptr<arrow::Schema>& GetOutputSchema() const {
     return output_schema_;
   }
 
@@ -82,9 +84,7 @@ class OpKernel {
     for (size_t edge_index = 0; edge_index != ctx->inputs.size();
          ++edge_index) {
       auto& edge_inputs = ctx->inputs[edge_index];
-      for (size_t party_index = 0; party_index != edge_inputs.size();
-           ++party_index) {
-        auto& input_table = edge_inputs[party_index];
+      for (auto& input_table : edge_inputs) {
         SERVING_ENFORCE_EQ(rows, input_table->num_rows(),
                            "node: {} rows of all inputs tables should be equal",
                            opts_.node_def.name());
@@ -100,8 +100,8 @@ class OpKernel {
             SERVING_ENFORCE_GE(array_index, 0);
             sorted_arrays.emplace_back(input_table->column(array_index));
           }
-          edge_inputs[party_index] = MakeRecordBatch(
-              input_schema_list_[edge_index], rows, sorted_arrays);
+          input_table = MakeRecordBatch(input_schema_list_[edge_index], rows,
+                                        sorted_arrays);
         }
       }
     }

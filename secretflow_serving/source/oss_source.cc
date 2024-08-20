@@ -24,16 +24,17 @@ OssSource::OssSource(const ModelConfig& config, const std::string& service_id)
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "failed to find oss source meta");
 
-  OssOptions oss_opts;
-  oss_opts.virtual_hosted = config.oss_source_meta().virtual_hosted();
-  oss_opts.access_key_id = config.oss_source_meta().access_key();
-  oss_opts.secret_key = config.oss_source_meta().secret_key();
-  oss_opts.endpoint = config.oss_source_meta().endpoint();
-  oss_opts.bucket = config.oss_source_meta().bucket();
-  oss_client_ = std::make_unique<OssClient>(oss_opts);
+  oss_opts_.virtual_hosted = config.oss_source_meta().virtual_hosted();
+  oss_opts_.access_key_id = config.oss_source_meta().access_key();
+  oss_opts_.secret_key = config.oss_source_meta().secret_key();
+  oss_opts_.endpoint = config.oss_source_meta().endpoint();
+  oss_opts_.bucket = config.oss_source_meta().bucket();
 }
 
 void OssSource::OnPullModel(const std::string& dst_path) {
+  if (!oss_client_) {
+    oss_client_ = std::make_unique<OssClient>(oss_opts_);
+  }
   oss_client_->GetFile(config_.source_path(), dst_path);
 }
 

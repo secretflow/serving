@@ -21,13 +21,16 @@
 
 #include "secretflow_serving/core/exception.h"
 
+#include "secretflow_serving/config/retry_policy_config.pb.h"
 #include "secretflow_serving/config/tls_config.pb.h"
 
 namespace secretflow::serving {
 
 std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
-    const std::string& endpoint, bool enable_lb,
-    const brpc::ChannelOptions& opts);
+    const std::string& name, const std::string& endpoint,
+    const std::string& protocol, bool enable_lb, int32_t rpc_timeout_ms,
+    int32_t connect_timeout_ms, const TlsConfig* tls_config,
+    const RetryPolicyConfig* retry_policy_config = nullptr);
 
 std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, const std::string& protocol, bool enable_lb,

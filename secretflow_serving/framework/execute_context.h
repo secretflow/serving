@@ -25,120 +25,55 @@
 
 namespace secretflow::serving {
 
-void ExeResponseToIoMap(
-    apis::ExecuteResponse& exec_res,
-    std::unordered_map<std::string, apis::NodeIo>* node_io_map);
+inline void MergeResponseHeader(const apis::ExecuteResponse& exec_res,
+                                apis::PredictResponse* pred_res) {
+  pred_res->mutable_header()->mutable_data()->insert(
+      exec_res.header().data().begin(), exec_res.header().data().end());
+}
 
-class ExecuteContext {
- public:
-  ExecuteContext(const apis::PredictRequest* request,
-                 apis::PredictResponse* response,
-                 const std::shared_ptr<Execution>& execution,
-                 std::string target_id, std::string local_id);
+struct ExecuteContext {
+  const apis::PredictRequest* pred_req;
+  apis::PredictResponse* pred_res;
 
-  template <
-      typename T,
-      typename = std::enable_if_t<std::is_same_v<
-          std::decay_t<T>, std::unordered_map<std::string, apis::NodeIo>>>>
-  void SetEntryNodesInputs(T&& node_io_map) {
-    if (node_io_map.empty()) {
-      return;
-    }
-    auto* task = exec_req_.mutable_task();
-    task->set_execution_id(execution_->id());
-    auto entry_nodes = execution_->GetEntryNodes();
-    for (const auto& n : entry_nodes) {
-      auto* entry_node_io = task->add_nodes();
-      entry_node_io->set_name(n->GetName());
-      for (const auto& e : n->in_edges()) {
-        auto iter = node_io_map.find(e->src_node());
-        SERVING_ENFORCE(iter != node_io_map.end(),
-                        errors::ErrorCode::LOGIC_ERROR,
-                        "Input of {} cannot be found in ctx(size:{})",
-                        e->src_node(), node_io_map.size());
-        for (auto& io : *(iter->second.mutable_ios())) {
-          if constexpr (std::is_lvalue_reference_v<T&&>) {
-            *(entry_node_io->mutable_ios()->Add()) = io;
-          } else {
-            entry_node_io->mutable_ios()->Add(std::move(io));
-          }
-        }
-      }
-    }
-  }
+  std::shared_ptr<Execution> execution;
+  std::string local_id;
 
-  void Execute(::google::protobuf::RpcChannel* channel, brpc::Controller* cntl);
-  void Execute(std::shared_ptr<ExecutionCore>& execution_core);
+  apis::ExecuteRequest exec_req;
+  apis::ExecuteResponse exec_res;
 
-  void GetResultNodeIo(
-      std::unordered_map<std::string, apis::NodeIo>* node_io_map);
+  ExecuteContext(
+      const apis::PredictRequest* request, apis::PredictResponse* response,
+      const std::shared_ptr<Execution>& execution, const std::string& local_id,
+      const std::unordered_map<std::string, apis::NodeIo>& node_io_map);
 
-  void CheckAndUpdateResponse(const apis::ExecuteResponse& exec_res);
-  void CheckAndUpdateResponse();
-
-  const apis::Status& ResponseStatus() const { return exec_res_.status(); }
-
-  void MergeResonseHeader(const apis::ExecuteResponse& exec_res);
-  void MergeResonseHeader();
-
-  const std::string& LocalId() const { return local_id_; }
-  const std::string& TargetId() const { return target_id_; }
-  const std::string& ServiceId() const { return request_->service_spec().id(); }
-  apis::ExecuteRequest& ExecReq() { return exec_req_; }
-  const apis::ExecuteRequest& ExecReq() const { return exec_req_; }
-
- private:
-  void SetFeatureSource();
-
- protected:
-  const apis::PredictRequest* request_;
-  apis::PredictResponse* response_;
-
-  std::string local_id_;
-  std::string target_id_;
-  std::shared_ptr<Execution> execution_;
-
-  std::string session_id_;
-
-  apis::ExecuteRequest exec_req_;
-  apis::ExecuteResponse exec_res_;
+  void SetFeatureSource(const std::string& target_id);
 };
 
 class ExecuteBase {
  public:
-  ExecuteBase(const apis::PredictRequest* request,
-              apis::PredictResponse* response,
-              const std::shared_ptr<Execution>& execution,
-              std::string target_id, std::string local_id)
-      : exec_ctx_{request, response, execution, std::move(target_id),
-                  std::move(local_id)} {}
+  explicit ExecuteBase(ExecuteContext ctx) : ctx_(std::move(ctx)) {}
   virtual ~ExecuteBase() = default;
 
-  void SetInputs(std::unordered_map<std::string, apis::NodeIo>& node_io_map) {
-    exec_ctx_.SetEntryNodesInputs(node_io_map);
-  }
-  void SetInputs(std::unordered_map<std::string, apis::NodeIo>&& node_io_map) {
-    exec_ctx_.SetEntryNodesInputs(std::move(node_io_map));
-  }
   virtual void GetOutputs(
-      std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
-    exec_ctx_.GetResultNodeIo(node_io_map);
-  }
+      std::unordered_map<std::string, apis::NodeIo>* node_io_map);
 
   virtual void Run() = 0;
 
  protected:
-  ExecuteContext exec_ctx_;
+  void SetTarget(const std::string& target_id) {
+    target_id_ = target_id;
+    ctx_.SetFeatureSource(target_id_);
+  }
+
+ protected:
+  ExecuteContext ctx_;
+  std::string target_id_;
 };
 
 class RemoteExecute : public ExecuteBase {
  public:
-  RemoteExecute(const apis::PredictRequest* request,
-                apis::PredictResponse* response,
-                const std::shared_ptr<Execution>& execution,
-                std::string target_id, std::string local_id,
+  RemoteExecute(ExecuteContext ctx, const std::string& target_id,
                 ::google::protobuf::RpcChannel* channel);
-
   virtual ~RemoteExecute();
 
   void Run() override;
@@ -151,27 +86,18 @@ class RemoteExecute : public ExecuteBase {
   ::google::protobuf::RpcChannel* channel_;
   brpc::Controller cntl_;
 
-  bool executing_{false};
+  std::atomic<bool> executing_{false};
 
   opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span_;
-  SpanAttrOption span_option;
+  SpanAttrOption span_option_;
 };
 
 class LocalExecute : public ExecuteBase {
  public:
-  LocalExecute(const apis::PredictRequest* request,
-               apis::PredictResponse* response,
-               const std::shared_ptr<Execution>& execution,
-               std::string target_id, std::string local_id,
-               std::shared_ptr<ExecutionCore> execution_core)
-      : ExecuteBase{request, response, execution, std::move(target_id),
-                    std::move(local_id)},
-        execution_core_(std::move(execution_core)) {}
+  LocalExecute(ExecuteContext ctx,
+               std::shared_ptr<ExecutionCore> execution_core);
 
-  void Run() override {
-    exec_ctx_.Execute(execution_core_);
-    exec_ctx_.CheckAndUpdateResponse();
-  }
+  void Run() override;
 
  protected:
   std::shared_ptr<ExecutionCore> execution_core_;

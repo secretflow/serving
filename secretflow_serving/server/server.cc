@@ -28,6 +28,7 @@
 #include "secretflow_serving/server/version.h"
 #include "secretflow_serving/source/factory.h"
 #include "secretflow_serving/util/network.h"
+#include "secretflow_serving/util/retry_policy.h"
 
 #include "secretflow_serving/apis/execution_service.pb.h"
 #include "secretflow_serving/apis/metrics.pb.h"
@@ -93,19 +94,21 @@ void Server::Start() {
     if (party.id() == self_party_id) {
       continue;
     }
+    const auto& channel_desc = opts_.cluster_config.channel_desc();
     channels->emplace(
         party.id(),
         CreateBrpcChannel(
-            party.address(), opts_.cluster_config.channel_desc().protocol(),
+            party.id(), party.address(), channel_desc.protocol(),
             FLAGS_enable_peers_load_balancer,
-            opts_.cluster_config.channel_desc().rpc_timeout_ms() > 0
-                ? opts_.cluster_config.channel_desc().rpc_timeout_ms()
-                : kPeerRpcTimeoutMs,
-            opts_.cluster_config.channel_desc().connect_timeout_ms() > 0
-                ? opts_.cluster_config.channel_desc().connect_timeout_ms()
+            channel_desc.rpc_timeout_ms() > 0 ? channel_desc.rpc_timeout_ms()
+                                              : kPeerRpcTimeoutMs,
+            channel_desc.connect_timeout_ms() > 0
+                ? channel_desc.connect_timeout_ms()
                 : kPeerConnectTimeoutMs,
-            opts_.cluster_config.channel_desc().has_tls_config()
-                ? &opts_.cluster_config.channel_desc().tls_config()
+            channel_desc.has_tls_config() ? &channel_desc.tls_config()
+                                          : nullptr,
+            channel_desc.has_retry_policy_config()
+                ? &channel_desc.retry_policy_config()
                 : nullptr));
   }
 

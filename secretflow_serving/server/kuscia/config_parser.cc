@@ -156,6 +156,37 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
     }
   }
 
+  // kuscia data proxy source
+  // First get from the env, if no configuration is used
+  if (model_config_.source_type() == SourceType::ST_DP) {
+    // try to get tls config from kuscia envs
+    DPSourceMeta* dp_meta = model_config_.mutable_dp_source_meta();
+    if (char* env_p = std::getenv("CLIENT_CERT_FILE")) {
+      if (strlen(env_p) != 0) {
+        dp_meta->mutable_tls_config()->set_certificate_path(env_p);
+      }
+    }
+    if (char* env_p = std::getenv("CLIENT_PRIVATE_KEY_FILE")) {
+      if (strlen(env_p) != 0) {
+        dp_meta->mutable_tls_config()->set_private_key_path(env_p);
+      }
+    }
+    if (char* env_p = std::getenv("TRUSTED_CA_FILE")) {
+      if (strlen(env_p) != 0) {
+        dp_meta->mutable_tls_config()->set_ca_file_path(env_p);
+      }
+    }
+    if (char* dm_addr = std::getenv("KUSCIA_DATA_MESH_ADDR")) {
+      if (strlen(dm_addr) != 0) {
+        dp_meta->set_dm_host(dm_addr);
+      }
+    }
+    if (dp_meta->dm_host().empty()) {
+      SPDLOG_WARN("use default datamesh address: datamesh:8071");
+      dp_meta->set_dm_host("datamesh:8071");
+    }
+  }
+
   // fill spi tls config
   if (feature_config_.has_value() && feature_config_->has_http_opts()) {
     auto* http_opts = feature_config_->mutable_http_opts();

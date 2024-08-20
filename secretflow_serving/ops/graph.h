@@ -31,40 +31,43 @@ class Execution final {
  public:
   explicit Execution(
       size_t id, ExecutionDef execution_def,
-      std::unordered_map<std::string, std::shared_ptr<Node>> nodes);
+      std::unordered_map<std::string, std::shared_ptr<Node>> nodes,
+      bool is_entry, bool is_exit);
   ~Execution() = default;
 
   size_t id() const { return id_; }
 
   const ExecutionDef& execution_def() const { return execution_def_; }
 
-  bool IsEntry() const { return is_entry_; }
+  bool IsGraphEntry() const { return is_entry_; }
 
-  bool IsExit() const { return is_exit_; }
+  bool IsGraphExit() const { return is_exit_; }
 
   DispatchType GetDispatchType() const;
 
-  bool SpecificToThis() const {
-    return execution_def_.config().specific_flag();
-  }
+  bool SpecificFlag() const { return execution_def_.config().specific_flag(); }
 
-  size_t GetEntryNodeNum() const;
+  size_t GetInputNodeNum() const;
 
-  size_t GetExitNodeNum() const;
+  size_t GetOutputNodeNum() const;
 
-  bool IsExitNode(const std::string& node_name) const;
+  bool IsOutputNode(const std::string& node_name) const;
+
+  const std::shared_ptr<Node>& GetNode(const std::string& name) const;
+
+  bool TryGetNode(const std::string& name, std::shared_ptr<Node>* node) const;
 
   const std::vector<std::shared_ptr<Node>>& GetEntryNodes() const {
     return entry_nodes_;
   }
 
+  const std::vector<std::shared_ptr<Node>>& GetExitNodes() const {
+    return exit_nodes_;
+  }
+
   const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes() const {
     return nodes_;
   }
-
-  const std::shared_ptr<Node>& GetNode(const std::string& name) const;
-
-  bool TryGetNode(const std::string& name, std::shared_ptr<Node>* node) const;
 
  protected:
   void CheckNodesReachability();
@@ -79,6 +82,7 @@ class Execution final {
 
   std::vector<std::shared_ptr<Node>> entry_nodes_;
   std::unordered_set<std::string> exit_node_names_;
+  std::vector<std::shared_ptr<Node>> exit_nodes_;
 };
 
 class Graph final {

@@ -23,6 +23,7 @@ Node::Node(NodeDef node_def)
     : node_def_(std::move(node_def)),
       op_def_(op::OpFactory::GetInstance()->Get(node_def_.op())) {
   if (node_def_.parents_size() > 0) {
+    // TODO: support node have one const feature input case
     if (node_def_.parents_size() != op_def_->inputs_size()) {
       // check op input is variable
       if (!op_def_->tag().variable_inputs()) {

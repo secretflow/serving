@@ -39,19 +39,15 @@ To deploy SecretFlow-Serving in Kusica, you first need to register the template 
           name: secretflow
           ports:
           - name: service
-            port: 53508
             protocol: HTTP
             scope: Domain
           - name: communication
-            port: 53509
             protocol: HTTP
             scope: Cluster
           - name: internal
-            port: 53510
             protocol: HTTP
             scope: Domain
           - name: brpc-builtin
-            port: 53511
             protocol: HTTP
             scope: Domain
           readinessProbe:
@@ -174,6 +170,11 @@ The launch and management of SecretFlow-Serving can be performed using the `Kusc
 | PartyConfig.modelConfig.source_sha256                     | str                   | The expected SHA256 hash of the model package. When provided, the fetched model package will be verified against it.                            | No                                                                     |
 +-----------------------------------------------------------+-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
 | PartyConfig.modelConfig.sourceType                        | str                   | Model data source type, options include: ST_FILE: In this case, the sourcePath should be a file path accessible to Serving.                     | Yes                                                                    |
+|                                                           |                       | ST_DP: In this case, the sourcePath should be DomainData ID in DataMesh from Kuscia. and dpSourceMeta needs to be configured.                   |                                                                        |
++-----------------------------------------------------------+-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| PartyConfig.modelConfig.dpSourceMeta                      | Object                | :ref:`DPSourceMeta <DPSourceMeta>`                                                                                                              | No(If `sourceType`  is `DT_DP`, `dpSourceMeta` needs to be configured) |
++-----------------------------------------------------------+-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| PartyConfig.modelConfig.dpSourceMeta.dmHost               | str                   | The address of DataMesh in Kuscia. Default: datamesh:8071                                                                                       | No                                                                     |
 +-----------------------------------------------------------+-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+
 | PartyConfig.featureSourceConfig                           | Object                | :ref:`FeatureSourceConfig <FeatureSourceConfig>`                                                                                                | Yes                                                                    |
 +-----------------------------------------------------------+-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+

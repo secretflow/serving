@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/base-ci:latest AS builder
-
-RUN yum install -y \
-    wget autoconf bison flex git protobuf-devel libnl3-devel \
-    libtool make pkg-config protobuf-compiler && yum clean all
-
 FROM openanolis/anolisos:8.8
 
 ARG TARGETPLATFORM

@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -77,26 +76,35 @@ bool GetBytesDefaultAttr(const OpDef& op_def, const std::string& attr_name,
 bool GetBytesDefaultAttr(const OpDef& op_def, const std::string& attr_name,
                          std::vector<std::string>* value);
 
-inline std::string GetNodeBytesAttr(const NodeDef& node_def,
-                                    const std::string& attr_name) {
-  std::string value;
+template <typename T, typename Enable = void>
+struct string_type_check : std::false_type {};
+
+template <>
+struct string_type_check<std::string> : std::true_type {};
+
+template <>
+struct string_type_check<std::vector<std::string>> : std::true_type {};
+
+template <typename T, std::enable_if_t<string_type_check<T>::value, int> = 0>
+T GetNodeBytesAttr(const NodeDef& node_def, const std::string& attr_name) {
+  T value;
   if (!GetNodeBytesAttr(node_def, attr_name, &value)) {
     SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "can not get attr:{} from node:{}, op:{}", attr_name,
+                  "can not get bytes attr:{} from node:{}, op:{}", attr_name,
                   node_def.name(), node_def.op());
   }
   return value;
 }
 
-inline std::string GetNodeBytesAttr(const NodeDef& node_def,
-                                    const OpDef& op_def,
-                                    const std::string& attr_name) {
-  std::string value;
+template <typename T, std::enable_if_t<string_type_check<T>::value, int> = 0>
+T GetNodeBytesAttr(const NodeDef& node_def, const OpDef& op_def,
+                   const std::string& attr_name) {
+  T value;
   if (!GetNodeBytesAttr(node_def, attr_name, &value)) {
     if (!GetBytesDefaultAttr(op_def, attr_name, &value)) {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                    "can not get attr:{} from node:{}, op:{}", attr_name,
-                    node_def.name(), node_def.op());
+                    "can not get default attr:{} from op:{}", attr_name,
+                    node_def.op());
     }
   }
   return value;

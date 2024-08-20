@@ -58,6 +58,7 @@ Prediction Algorithms
   :doc:`Introduction to prediction algorithms </topics/algorithm/intro>`
 
 .. toctree::
+    :hidden:
 
     intro/index
     topics/index

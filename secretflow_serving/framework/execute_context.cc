@@ -15,14 +15,74 @@
 #include "secretflow_serving/framework/execute_context.h"
 
 #include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/util/retry_policy.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving {
 
-void ExeResponseToIoMap(
-    apis::ExecuteResponse& exec_res,
+ExecuteContext::ExecuteContext(
+    const apis::PredictRequest* request, apis::PredictResponse* response,
+    const std::shared_ptr<Execution>& execution, const std::string& local_id,
+    const std::unordered_map<std::string, apis::NodeIo>& node_io_map)
+    : pred_req(request),
+      pred_res(response),
+      execution(execution),
+      local_id(local_id) {
+  exec_req.mutable_header()->CopyFrom(pred_req->header());
+  exec_req.set_requester_id(local_id);
+  exec_req.mutable_service_spec()->CopyFrom(pred_req->service_spec());
+
+  if (node_io_map.empty()) {
+    return;
+  }
+  auto* task = exec_req.mutable_task();
+  task->set_execution_id(execution->id());
+  auto entry_nodes = execution->GetEntryNodes();
+  std::unordered_set<std::string> node_list;
+  for (const auto& n : entry_nodes) {
+    for (const auto& e : n->in_edges()) {
+      node_list.emplace(e->src_node());
+    }
+  }
+  for (const auto& n_name : node_list) {
+    auto iter = node_io_map.find(n_name);
+    SERVING_ENFORCE(iter != node_io_map.end(), errors::ErrorCode::LOGIC_ERROR,
+                    "node:{} cannot be found in ctx(size:{})", n_name,
+                    node_io_map.size());
+    auto* node_io = task->add_nodes();
+    // Do not `std::move` the node_io,
+    // because other execution may also use it as an input.
+    // TODO: Depending on the usage, let it can be moved by `std::move`.
+    *node_io = iter->second;
+  }
+}
+
+void ExecuteContext::SetFeatureSource(const std::string& target_id) {
+  auto* feature_source = exec_req.mutable_feature_source();
+  if (execution->IsGraphEntry()) {
+    // entry execution need features
+    // get target_id's feature param
+    if (target_id == local_id && pred_req->predefined_features_size() != 0) {
+      // only loacl execute will use `predefined_features`
+      feature_source->set_type(apis::FeatureSourceType::FS_PREDEFINED);
+      feature_source->mutable_predefineds()->CopyFrom(
+          pred_req->predefined_features());
+    } else {
+      feature_source->set_type(apis::FeatureSourceType::FS_SERVICE);
+      auto iter = pred_req->fs_params().find(target_id);
+      SERVING_ENFORCE(iter != pred_req->fs_params().end(),
+                      serving::errors::LOGIC_ERROR,
+                      "missing {}'s feature params", target_id);
+      feature_source->mutable_fs_param()->CopyFrom(iter->second);
+    }
+  } else {
+    feature_source->set_type(apis::FeatureSourceType::FS_NONE);
+  }
+}
+
+void ExecuteBase::GetOutputs(
     std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
-  auto* result = exec_res.mutable_result();
+  auto* result = ctx_.exec_res.mutable_result();
   for (int i = 0; i < result->nodes_size(); ++i) {
     auto* result_node_io = result->mutable_nodes(i);
     auto prev_insert_iter = node_io_map->find(result_node_io->name());
@@ -45,93 +105,16 @@ void ExeResponseToIoMap(
   }
 }
 
-void ExecuteContext::CheckAndUpdateResponse() {
-  CheckAndUpdateResponse(exec_res_);
-}
-
-void ExecuteContext::CheckAndUpdateResponse(
-    const apis::ExecuteResponse& exec_res) {
-  if (!CheckStatusOk(exec_res.status())) {
-    SERVING_THROW(exec_res.status().code(), "{} exec failed: code({}), {}",
-                  target_id_, exec_res.status().code(),
-                  exec_res.status().msg());
-  }
-  MergeResonseHeader(exec_res);
-}
-
-void ExecuteContext::MergeResonseHeader() { MergeResonseHeader(exec_res_); }
-
-void ExecuteContext::MergeResonseHeader(const apis::ExecuteResponse& exec_res) {
-  response_->mutable_header()->mutable_data()->insert(
-      exec_res.header().data().begin(), exec_res.header().data().end());
-}
-
-void ExecuteContext::GetResultNodeIo(
-    std::unordered_map<std::string, apis::NodeIo>* node_io_map) {
-  ExeResponseToIoMap(exec_res_, node_io_map);
-}
-
-void ExecuteContext::SetFeatureSource() {
-  auto* feature_source = exec_req_.mutable_feature_source();
-  if (execution_->IsEntry()) {
-    // entry execution need features
-    // get target_id's feature param
-    if (target_id_ == local_id_ && request_->predefined_features_size() != 0) {
-      // only loacl execute will use `predefined_features`
-      feature_source->set_type(apis::FeatureSourceType::FS_PREDEFINED);
-      feature_source->mutable_predefineds()->CopyFrom(
-          request_->predefined_features());
-    } else {
-      feature_source->set_type(apis::FeatureSourceType::FS_SERVICE);
-      auto iter = request_->fs_params().find(target_id_);
-      SERVING_ENFORCE(iter != request_->fs_params().end(),
-                      serving::errors::LOGIC_ERROR,
-                      "missing {}'s feature params", target_id_);
-      feature_source->mutable_fs_param()->CopyFrom(iter->second);
-    }
-  } else {
-    feature_source->set_type(apis::FeatureSourceType::FS_NONE);
-  }
-}
-
-ExecuteContext::ExecuteContext(const apis::PredictRequest* request,
-                               apis::PredictResponse* response,
-                               const std::shared_ptr<Execution>& execution,
-                               std::string target_id, std::string local_id)
-    : request_(request),
-      response_(response),
-      local_id_(std::move(local_id)),
-      target_id_(std::move(target_id)),
-      execution_(execution) {
-  exec_req_.mutable_header()->CopyFrom(request_->header());
-  exec_req_.set_requester_id(local_id_);
-  exec_req_.mutable_service_spec()->CopyFrom(request_->service_spec());
-
-  SetFeatureSource();
-}
-
-void ExecuteContext::Execute(::google::protobuf::RpcChannel* channel,
-                             brpc::Controller* cntl) {
-  apis::ExecutionService_Stub stub(channel);
-  stub.Execute(cntl, &exec_req_, &exec_res_, brpc::DoNothing());
-}
-
-void ExecuteContext::Execute(std::shared_ptr<ExecutionCore>& execution_core) {
-  execution_core->Execute(&exec_req_, &exec_res_);
-}
-
-RemoteExecute::RemoteExecute(const apis::PredictRequest* request,
-                             apis::PredictResponse* response,
-                             const std::shared_ptr<Execution>& execution,
-                             std::string target_id, std::string local_id,
+RemoteExecute::RemoteExecute(ExecuteContext ctx, const std::string& target_id,
                              ::google::protobuf::RpcChannel* channel)
-    : ExecuteBase{request, response, execution, std::move(target_id),
-                  std::move(local_id)},
-      channel_(channel) {
-  span_option.cntl = &cntl_;
-  span_option.is_client = true;
-  span_option.party_id = local_id;
-  span_option.service_id = exec_ctx_.ServiceId();
+    : ExecuteBase{std::move(ctx)}, channel_(channel) {
+  SetTarget(target_id);
+  cntl_.set_max_retry(
+      RetryPolicyFactory::GetInstance()->GetMaxRetryCount(target_id));
+  span_option_.cntl = &cntl_;
+  span_option_.is_client = true;
+  span_option_.party_id = ctx.local_id;
+  span_option_.service_id = ctx_.pred_req->service_spec().id();
 }
 
 RemoteExecute::~RemoteExecute() {
@@ -141,19 +124,15 @@ RemoteExecute::~RemoteExecute() {
 }
 
 void RemoteExecute::Run() {
-  if (executing_) {
-    SPDLOG_ERROR("Run should only be called once.");
-    return;
-  }
+  SERVING_ENFORCE(!executing_, errors::ErrorCode::LOGIC_ERROR);
 
   std::string service_info =
-      fmt::format("ExecutionService/Execute: {}-{}", exec_ctx_.LocalId(),
-                  exec_ctx_.TargetId());
-  span_ = CreateClientSpan(&cntl_, service_info,
-                           exec_ctx_.ExecReq().mutable_header());
-
+      fmt::format("ExecutionService/Execute: {}-{}", ctx_.local_id, target_id_);
+  span_ =
+      CreateClientSpan(&cntl_, service_info, ctx_.exec_req.mutable_header());
   // semisynchronous call
-  exec_ctx_.Execute(channel_, &cntl_);
+  apis::ExecutionService_Stub stub(channel_);
+  stub.Execute(&cntl_, &ctx_.exec_req, &ctx_.exec_res, brpc::DoNothing());
 
   executing_ = true;
 }
@@ -163,12 +142,13 @@ void RemoteExecute::Cancel() {
     return;
   }
 
-  executing_ = false;
   brpc::StartCancel(cntl_.call_id());
 
-  span_option.code = errors::ErrorCode::UNEXPECTED_ERROR;
-  span_option.msg = "remote execute task is canceled.";
-  SetSpanAttrs(span_, span_option);
+  executing_ = false;
+
+  span_option_.code = errors::ErrorCode::UNEXPECTED_ERROR;
+  span_option_.msg = "remote execute task is canceled.";
+  SetSpanAttrs(span_, span_option_);
   span_->End();
 }
 
@@ -177,35 +157,50 @@ void RemoteExecute::WaitToFinish() {
     return;
   }
 
-  span_option.code = errors::ErrorCode::OK;
-  span_option.msg = fmt::format("call ({}) from ({}) execute seccessfully",
-                                exec_ctx_.TargetId(), exec_ctx_.LocalId());
+  span_option_.code = errors::ErrorCode::OK;
+  span_option_.msg = fmt::format("call ({}) from ({}) execute seccessfully",
+                                 target_id_, ctx_.local_id);
 
   brpc::Join(cntl_.call_id());
 
   executing_ = false;
 
   if (cntl_.Failed()) {
-    span_option.msg = fmt::format("call ({}) from ({}) network error, msg:{}",
-                                  exec_ctx_.TargetId(), exec_ctx_.LocalId(),
-                                  cntl_.ErrorText());
-    span_option.code = errors::ErrorCode::NETWORK_ERROR;
-  } else if (exec_ctx_.ResponseStatus().code() != errors::ErrorCode::OK) {
-    span_option.msg = fmt::format(fmt::format(
-        "call ({}) from ({}) execute failed: code({}), {}",
-        exec_ctx_.TargetId(), exec_ctx_.LocalId(),
-        exec_ctx_.ResponseStatus().code(), exec_ctx_.ResponseStatus().msg()));
-    span_option.code = errors::ErrorCode::NETWORK_ERROR;
+    span_option_.msg =
+        fmt::format("call ({}) from ({}) network error, msg:{}", target_id_,
+                    ctx_.local_id, cntl_.ErrorText());
+    span_option_.code = errors::ErrorCode::NETWORK_ERROR;
+  } else if (!CheckStatusOk(ctx_.exec_res.status())) {
+    span_option_.msg = fmt::format(
+        fmt::format("call ({}) from ({}) execute failed: code({}), {}",
+                    target_id_, ctx_.local_id, ctx_.exec_res.status().code(),
+                    ctx_.exec_res.status().msg()));
+    span_option_.code = errors::ErrorCode::NETWORK_ERROR;
   }
-
-  SetSpanAttrs(span_, span_option);
+  SetSpanAttrs(span_, span_option_);
   span_->End();
 
-  if (span_option.code == errors::ErrorCode::OK) {
-    exec_ctx_.MergeResonseHeader();
+  if (span_option_.code == errors::ErrorCode::OK) {
+    MergeResponseHeader(ctx_.exec_res, ctx_.pred_res);
   } else {
-    SERVING_THROW(span_option.code, "{}", span_option.msg);
+    SERVING_THROW(span_option_.code, "{}", span_option_.msg);
   }
+}
+
+LocalExecute::LocalExecute(ExecuteContext ctx,
+                           std::shared_ptr<ExecutionCore> execution_core)
+    : ExecuteBase{std::move(ctx)}, execution_core_(std::move(execution_core)) {
+  SetTarget(ctx_.local_id);
+}
+
+void LocalExecute::Run() {
+  execution_core_->Execute(&ctx_.exec_req, &ctx_.exec_res);
+  if (!CheckStatusOk(ctx_.exec_res.status())) {
+    SERVING_THROW(ctx_.exec_res.status().code(), "{} exec failed: code({}), {}",
+                  target_id_, ctx_.exec_res.status().code(),
+                  ctx_.exec_res.status().msg());
+  }
+  MergeResponseHeader(ctx_.exec_res, ctx_.pred_res);
 }
 
 }  // namespace secretflow::serving

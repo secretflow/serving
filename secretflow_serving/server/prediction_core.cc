@@ -20,20 +20,6 @@
 
 namespace secretflow::serving {
 
-namespace {
-
-struct FeatureLengthVisitor {
-  template <typename Vec>
-  void operator()(const FeatureField& field, const Vec& values) {
-    len = values.size();
-    field_name = field.name();
-  }
-  int len = 0;
-  std::string field_name;
-};
-
-}  // namespace
-
 PredictionCore::PredictionCore(Options opts) : opts_(std::move(opts)) {
   SERVING_ENFORCE(!opts_.service_id.empty(),
                   errors::ErrorCode::INVALID_ARGUMENT);
@@ -73,23 +59,7 @@ void PredictionCore::CheckArgument(const apis::PredictRequest* request) {
   std::unordered_map<std::string, size_t> party_row_num;
   for (const auto& party_id : opts_.cluster_ids) {
     if (party_id == opts_.party_id && !request->predefined_features().empty()) {
-      int predefined_row_num = -1;
-      for (const auto& feature : request->predefined_features()) {
-        FeatureLengthVisitor len_visitor;
-        FeatureVisit(len_visitor, feature);
-
-        if (predefined_row_num == -1) {
-          predefined_row_num = len_visitor.len;
-        } else {
-          SERVING_ENFORCE(predefined_row_num == len_visitor.len,
-                          errors::ErrorCode::INVALID_ARGUMENT,
-                          "predifined_features should have same length, {} : "
-                          "{}, previous is {}",
-                          len_visitor.field_name, len_visitor.len,
-                          predefined_row_num);
-        }
-      }
-      party_row_num[party_id] = predefined_row_num;
+      party_row_num[party_id] = CountSampleNum(request->predefined_features());
       continue;
     }
 

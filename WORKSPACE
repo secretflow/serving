@@ -22,6 +22,10 @@ load("@yacl//bazel:repositories.bzl", "yacl_deps")
 
 yacl_deps()
 
+load("@dataproxy//dataproxy_sdk/bazel:repositories.bzl", "dataproxy_deps")
+
+dataproxy_deps()
+
 load(
     "@rules_foreign_cc//foreign_cc:repositories.bzl",
     "rules_foreign_cc_dependencies",

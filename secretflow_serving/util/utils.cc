@@ -23,6 +23,20 @@
 
 namespace secretflow::serving {
 
+namespace {
+
+struct FeatureLengthVisitor {
+  template <typename Vec>
+  void operator()(const FeatureField& field, const Vec& values) {
+    len = values.size();
+    field_name = field.name();
+  }
+  int len = 0;
+  std::string field_name;
+};
+
+}  // namespace
+
 std::string ReadFileContent(const std::string& file) {
   if (!std::filesystem::exists(file)) {
     SERVING_THROW(errors::ErrorCode::IO_ERROR, "can not find file: {}", file);
@@ -74,6 +88,28 @@ std::string PbToJsonNoExcept(
   } catch (...) {
     return "ill_format_message";
   }
+}
+
+size_t CountSampleNum(
+    const ::google::protobuf::RepeatedPtrField<Feature>& features) {
+  int predefined_row_num = -1;
+  for (const auto& feature : features) {
+    FeatureLengthVisitor len_visitor;
+    FeatureVisit(len_visitor, feature);
+
+    if (predefined_row_num == -1) {
+      predefined_row_num = len_visitor.len;
+    } else {
+      SERVING_ENFORCE(predefined_row_num == len_visitor.len,
+                      errors::ErrorCode::INVALID_ARGUMENT,
+                      "predifined_features should have same length, {} : "
+                      "{}, previous is {}",
+                      len_visitor.field_name, len_visitor.len,
+                      predefined_row_num);
+    }
+  }
+
+  return predefined_row_num;
 }
 
 }  // namespace secretflow::serving

@@ -59,12 +59,11 @@ REGISTER_OP(TEST_OP_1, "0.0.1", "test_desc")
 
 }  // namespace op
 
-class MockExecuteContext : public ExecuteContext {
+class MockExecute : public ExecuteBase {
  public:
-  using ExecuteContext::ExecuteContext;
-  const apis::ExecuteRequest& ExeRequest() const { return exec_req_; }
-  apis::ExecuteResponse& ExeResponse() { return exec_res_; }
-  const apis::ExecuteResponse& ExeResponse() const { return exec_res_; }
+  explicit MockExecute(ExecuteContext ctx) : ExecuteBase{std::move(ctx)} {}
+
+  MOCK_METHOD0(Run, void());
 };
 
 class ExecuteContextTest : public ::testing::Test {
@@ -138,7 +137,8 @@ class ExecuteContextTest : public ::testing::Test {
       }
 
       executions.emplace_back(std::make_shared<Execution>(
-          i, std::move(executino_def), std::move(e_nodes)));
+          i, std::move(executino_def), std::move(e_nodes), i == 0,
+          i == (execution_def_jsons.size() - 1)));
     }
 
     local_id_ = "alice";
@@ -167,114 +167,108 @@ TEST_F(ExecuteContextTest, BuildExecCtx) {
   for (int i = 0; i < params_num; ++i) {
     request.mutable_fs_params()->at("bob").add_query_datas("bob_test_params");
   }
-  auto feature_1 = request.add_predefined_features();
+  auto* feature_1 = request.add_predefined_features();
   feature_1->mutable_field()->set_name("feature_1");
   feature_1->mutable_field()->set_type(FieldType::FIELD_STRING);
   std::vector<std::string> ss = {"true", "false", "true"};
   feature_1->mutable_value()->mutable_ss()->Assign(ss.begin(), ss.end());
-  auto feature_2 = request.add_predefined_features();
+  auto* feature_2 = request.add_predefined_features();
   feature_2->mutable_field()->set_name("feature_2");
   feature_2->mutable_field()->set_type(FieldType::FIELD_DOUBLE);
   std::vector<double> ds = {1.1, 2.2, 3.3};
   feature_2->mutable_value()->mutable_ds()->Assign(ds.begin(), ds.end());
 
   // build bob ctx
-  auto ctx_bob = std::make_shared<MockExecuteContext>(
-      &request, &response, executions_[0], remote_id_, local_id_);
+  ExecuteContext ctx_bob(&request, &response, executions_[0], local_id_,
+                         std::unordered_map<std::string, apis::NodeIo>{});
+  ctx_bob.SetFeatureSource(remote_id_);
   ASSERT_EQ(request.header().data().at("test-k"),
-            ctx_bob->ExeRequest().header().data().at("test-k"));
-  ASSERT_EQ(ctx_bob->ExeRequest().service_spec().id(),
-            request.service_spec().id());
-  ASSERT_EQ(ctx_bob->ExeRequest().requester_id(), local_id_);
-  ASSERT_TRUE(ctx_bob->ExeRequest().feature_source().type() ==
+            ctx_bob.exec_req.header().data().at("test-k"));
+  ASSERT_EQ(ctx_bob.exec_req.service_spec().id(), request.service_spec().id());
+  ASSERT_EQ(ctx_bob.exec_req.requester_id(), local_id_);
+  ASSERT_TRUE(ctx_bob.exec_req.feature_source().type() ==
               apis::FeatureSourceType::FS_SERVICE);
   ASSERT_TRUE(std::equal(
-      ctx_bob->ExeRequest().feature_source().fs_param().query_datas().begin(),
-      ctx_bob->ExeRequest().feature_source().fs_param().query_datas().end(),
-      request.fs_params().at(ctx_bob->TargetId()).query_datas().begin()));
-  ASSERT_EQ(ctx_bob->ExeRequest().feature_source().fs_param().query_context(),
-            request.fs_params().at(ctx_bob->TargetId()).query_context());
-  ASSERT_TRUE(ctx_bob->ExeRequest().feature_source().predefineds().empty());
-  ASSERT_EQ(ctx_bob->ExeRequest().task().execution_id(), 0);
-  ASSERT_TRUE(ctx_bob->ExeRequest().task().nodes().empty());
+      ctx_bob.exec_req.feature_source().fs_param().query_datas().begin(),
+      ctx_bob.exec_req.feature_source().fs_param().query_datas().end(),
+      request.fs_params().at(remote_id_).query_datas().begin()));
+  ASSERT_EQ(ctx_bob.exec_req.feature_source().fs_param().query_context(),
+            request.fs_params().at(remote_id_).query_context());
+  ASSERT_TRUE(ctx_bob.exec_req.feature_source().predefineds().empty());
+  ASSERT_EQ(ctx_bob.exec_req.task().execution_id(), 0);
+  ASSERT_TRUE(ctx_bob.exec_req.task().nodes().empty());
 
   // build alice ctx
-
-  auto ctx_alice = std::make_shared<MockExecuteContext>(
-      &request, &response, executions_[0], local_id_, local_id_);
+  ExecuteContext ctx_alice(&request, &response, executions_[0], local_id_,
+                           std::unordered_map<std::string, apis::NodeIo>{});
+  ctx_alice.SetFeatureSource(local_id_);
   ASSERT_EQ(request.header().data().at("test-k"),
-            ctx_alice->ExeRequest().header().data().at("test-k"));
-  ASSERT_EQ(ctx_alice->ExeRequest().service_spec().id(),
+            ctx_alice.exec_req.header().data().at("test-k"));
+  ASSERT_EQ(ctx_alice.exec_req.service_spec().id(),
             request.service_spec().id());
-  ASSERT_EQ(ctx_alice->ExeRequest().requester_id(), local_id_);
-  ASSERT_TRUE(ctx_alice->ExeRequest().feature_source().type() ==
+  ASSERT_EQ(ctx_alice.exec_req.requester_id(), local_id_);
+  ASSERT_TRUE(ctx_alice.exec_req.feature_source().type() ==
               apis::FeatureSourceType::FS_PREDEFINED);
-  ASSERT_TRUE(ctx_alice->ExeRequest()
-                  .feature_source()
-                  .fs_param()
-                  .query_datas()
-                  .empty());
-  ASSERT_TRUE(ctx_alice->ExeRequest()
-                  .feature_source()
-                  .fs_param()
-                  .query_context()
-                  .empty());
-  ASSERT_EQ(ctx_alice->ExeRequest().feature_source().predefineds_size(),
+  ASSERT_TRUE(
+      ctx_alice.exec_req.feature_source().fs_param().query_datas().empty());
+  ASSERT_TRUE(
+      ctx_alice.exec_req.feature_source().fs_param().query_context().empty());
+  ASSERT_EQ(ctx_alice.exec_req.feature_source().predefineds_size(),
             request.predefined_features_size());
-  auto f1 = ctx_alice->ExeRequest().feature_source().predefineds(0);
+  auto f1 = ctx_alice.exec_req.feature_source().predefineds(0);
   ASSERT_FALSE(f1.field().name().empty());
   ASSERT_EQ(f1.field().name(), feature_1->field().name());
   ASSERT_EQ(f1.field().type(), feature_1->field().type());
   ASSERT_FALSE(f1.value().ss().empty());
   ASSERT_TRUE(std::equal(f1.value().ss().begin(), f1.value().ss().end(),
                          feature_1->value().ss().begin()));
-  auto f2 = ctx_alice->ExeRequest().feature_source().predefineds(1);
+  auto f2 = ctx_alice.exec_req.feature_source().predefineds(1);
   ASSERT_FALSE(f2.field().name().empty());
   ASSERT_EQ(f2.field().name(), feature_2->field().name());
   ASSERT_EQ(f2.field().type(), feature_2->field().type());
   ASSERT_FALSE(f2.value().ds().empty());
   ASSERT_TRUE(std::equal(f2.value().ds().begin(), f2.value().ds().end(),
                          feature_2->value().ds().begin()));
-  ASSERT_EQ(ctx_alice->ExeRequest().task().execution_id(), 0);
-  ASSERT_TRUE(ctx_alice->ExeRequest().task().nodes().empty());
+  ASSERT_EQ(ctx_alice.exec_req.task().execution_id(), 0);
+  ASSERT_TRUE(ctx_alice.exec_req.task().nodes().empty());
 
   // mock alice & bob response
   {
-    auto& exec_response = ctx_bob->ExeResponse();
+    auto& exec_response = ctx_bob.exec_res;
     exec_response.mutable_result()->set_execution_id(0);
     auto* node = exec_response.mutable_result()->add_nodes();
     node->set_name("mock_node_1");
     auto* io = node->add_ios();
     io->add_datas("mock_bob_data");
   }
+  MockExecute bob_exec(std::move(ctx_bob));
   {
-    auto& exec_response = ctx_alice->ExeResponse();
+    auto& exec_response = ctx_alice.exec_res;
     exec_response.mutable_result()->set_execution_id(0);
     auto* node_1 = exec_response.mutable_result()->add_nodes();
     node_1->set_name("mock_node_1");
     node_1->add_ios()->add_datas("mock_alice_data");
   }
-
+  MockExecute alice_exec(std::move(ctx_alice));
   std::unordered_map<std::string, apis::NodeIo> node_io_map;
-  ctx_bob->GetResultNodeIo(&node_io_map);
-  ctx_alice->GetResultNodeIo(&node_io_map);
+  bob_exec.GetOutputs(&node_io_map);
+  alice_exec.GetOutputs(&node_io_map);
 
   // build ctx
-  auto ctx_final = std::make_shared<MockExecuteContext>(
-      &request, &response, executions_[1], local_id_, local_id_);
-  ctx_final->SetEntryNodesInputs(node_io_map);
-
+  ExecuteContext ctx_final(&request, &response, executions_[1], local_id_,
+                           node_io_map);
+  ctx_final.SetFeatureSource(local_id_);
   EXPECT_EQ(request.header().data().at("test-k"),
-            ctx_final->ExeRequest().header().data().at("test-k"));
-  EXPECT_EQ(ctx_final->ExeRequest().service_spec().id(),
+            ctx_final.exec_req.header().data().at("test-k"));
+  EXPECT_EQ(ctx_final.exec_req.service_spec().id(),
             request.service_spec().id());
-  EXPECT_EQ(ctx_final->ExeRequest().requester_id(), local_id_);
-  EXPECT_TRUE(ctx_final->ExeRequest().feature_source().type() ==
+  EXPECT_EQ(ctx_final.exec_req.requester_id(), local_id_);
+  EXPECT_TRUE(ctx_final.exec_req.feature_source().type() ==
               apis::FeatureSourceType::FS_NONE);
-  EXPECT_EQ(ctx_final->ExeRequest().task().execution_id(), 1);
-  EXPECT_EQ(ctx_final->ExeRequest().task().nodes_size(), 1);
-  auto node1 = ctx_final->ExeRequest().task().nodes(0);
-  EXPECT_EQ(node1.name(), "mock_node_2");
+  EXPECT_EQ(ctx_final.exec_req.task().execution_id(), 1);
+  EXPECT_EQ(ctx_final.exec_req.task().nodes_size(), 1);
+  auto node1 = ctx_final.exec_req.task().nodes(0);
+  EXPECT_EQ(node1.name(), "mock_node_1");
   EXPECT_EQ(node1.ios_size(), 1);
   EXPECT_EQ(node1.ios(0).datas_size(), 2);
   EXPECT_EQ(node1.ios(0).datas(0), "mock_bob_data");

@@ -34,7 +34,7 @@ void ExecutionServiceImpl::Execute(
     const apis::ExecuteRequest* request, apis::ExecuteResponse* response,
     ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
-  brpc::Controller* cntl = static_cast<brpc::Controller*>(controller);
+  auto* cntl = static_cast<brpc::Controller*>(controller);
   cntl->set_always_print_primitive_fields(true);
 
   auto span =

@@ -18,6 +18,7 @@ syntax = "proto3";
 package secretflow.serving;
 
 import "secretflow_serving/config/tls_config.proto";
+import "secretflow_serving/config/retry_policy_config.proto";
 
 // Description for channels between joined parties
 message ChannelDesc {
@@ -44,6 +45,9 @@ message ChannelDesc {
 
   // time between retries, default: 5000ms
   int32 handshake_retry_interval_ms = 6;
+
+  // retry policy config
+  RetryPolicyConfig retry_policy_config = 7;
 }
 
 // Description for a joined party

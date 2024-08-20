@@ -18,6 +18,16 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
+    name = "retry_policy_config_proto",
+    srcs = ["retry_policy_config.proto"],
+)
+
+cc_proto_library(
+    name = "retry_policy_cc_config",
+    deps = [":retry_policy_config_proto"],
+)
+
+proto_library(
     name = "tls_config_proto",
     srcs = ["tls_config.proto"],
 )
@@ -30,7 +40,10 @@ cc_proto_library(
 proto_library(
     name = "cluster_config_proto",
     srcs = ["cluster_config.proto"],
-    deps = [":tls_config_proto"],
+    deps = [
+        ":retry_policy_config_proto",
+        ":tls_config_proto",
+    ],
 )
 
 cc_proto_library(
@@ -41,12 +54,17 @@ cc_proto_library(
 proto_library(
     name = "feature_config_proto",
     srcs = ["feature_config.proto"],
-    deps = [":tls_config_proto"],
+    deps = [
+        ":retry_policy_config_proto",
+        ":tls_config_proto",
+    ],
 )
 
 cc_proto_library(
     name = "feature_config_cc_proto",
-    deps = [":feature_config_proto"],
+    deps = [
+        ":feature_config_proto",
+    ],
 )
 
 proto_library(
