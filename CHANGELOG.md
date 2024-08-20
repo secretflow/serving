@@ -11,6 +11,12 @@
 
 > please add your unreleased change here.
 
+## 20240820 - 0.6.0b0
+
+- [Feature] enhanced Retry Strategy
+- [Feature] support Kuscia Dataproxy model source
+- [Infra] refator the communication logic between parties.
+
 ## 20240716 - 0.5.0b0
 
 - [DOC] add docs for secretflow_serving_lib
