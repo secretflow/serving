@@ -17,7 +17,6 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 
 #include "google/protobuf/service.h"
 
@@ -58,19 +57,8 @@ class Predictor {
 
  protected:
   virtual std::unique_ptr<RemoteExecute> BuildRemoteExecute(
-      const apis::PredictRequest* request, apis::PredictResponse* response,
-      const std::shared_ptr<Execution>& execution, std::string target_id,
+      ExecuteContext ctx, const std::string& target_id,
       const std::unique_ptr<::google::protobuf::RpcChannel>& channel);
-
-  virtual std::unique_ptr<LocalExecute> BuildLocalExecute(
-      const apis::PredictRequest* request, apis::PredictResponse* response,
-      const std::shared_ptr<Execution>& execution);
-
-  void BuildExecCtx();
-
-  void DealFinalResult(
-      std::unordered_map<std::string, apis::NodeIo>& node_io_map,
-      apis::PredictResponse* response);
 
  protected:
   Options opts_;

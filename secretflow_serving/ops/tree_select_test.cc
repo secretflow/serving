@@ -20,7 +20,6 @@
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
-#include "secretflow_serving/util/test_utils.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving::op {
@@ -167,7 +166,7 @@ TEST_F(TreeSelectTest, Works) {
     auto features =
         MakeRecordBatch(arrow::schema(input_fields), 2,
                         {x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11});
-    auto shuffle_fs = test::ShuffleRecordBatch(features);
+    auto shuffle_fs = ShuffleRecordBatch(features);
     std::cout << shuffle_fs->ToString() << std::endl;
 
     compute_ctx.inputs.emplace_back(

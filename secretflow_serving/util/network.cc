@@ -16,6 +16,8 @@
 
 #include "absl/strings/match.h"
 
+#include "secretflow_serving/util/retry_policy.h"
+
 namespace secretflow::serving {
 
 namespace {
@@ -35,7 +37,6 @@ std::string FillHttpPrefix(const std::string& addr, bool ssl_enabled) {
     return kHttpPrefix + addr;
   }
 }
-}  // namespace
 
 std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, bool enable_lb,
@@ -60,8 +61,7 @@ std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
 std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, const std::string& protocol, bool enable_lb,
     int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
-    const TlsConfig* tls_config) {
-  brpc::ChannelOptions opts;
+    const TlsConfig* tls_config, brpc::ChannelOptions& opts) {
   opts.protocol = protocol.empty() ? "baidu_std" : protocol;
   if (rpc_timeout_ms > 0) {
     opts.timeout_ms = rpc_timeout_ms;
@@ -81,8 +81,32 @@ std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
       opts.mutable_ssl_options()->verify.verify_depth = 1;
     }
   }
-
   return CreateBrpcChannel(endpoint, enable_lb, opts);
+}
+
+}  // namespace
+
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+    const std::string& endpoint, const std::string& protocol, bool enable_lb,
+    int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
+    const TlsConfig* tls_config) {
+  brpc::ChannelOptions opts;
+  return CreateBrpcChannel(endpoint, protocol, enable_lb, rpc_timeout_ms,
+                           connect_timeout_ms, tls_config, opts);
+}
+
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+    const std::string& name, const std::string& endpoint,
+    const std::string& protocol, bool enable_lb, int32_t rpc_timeout_ms,
+    int32_t connect_timeout_ms, const TlsConfig* tls_config,
+    const RetryPolicyConfig* retry_policy_config) {
+  brpc::ChannelOptions opts;
+
+  RetryPolicyFactory::GetInstance()->SetConfig(name, retry_policy_config);
+  opts.retry_policy = RetryPolicyFactory::GetInstance()->GetRetryPolicy(name);
+
+  return CreateBrpcChannel(endpoint, protocol, enable_lb, rpc_timeout_ms,
+                           connect_timeout_ms, tls_config, opts);
 }
 
 }  // namespace secretflow::serving

@@ -21,7 +21,6 @@
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
-#include "secretflow_serving/util/test_utils.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving::op {
@@ -124,7 +123,7 @@ TEST_P(ArrowProcessingParamTest, Works) {
     output_schema_bytes.set_by(reinterpret_cast<const char*>(buf->data()),
                                buf->size());
     node_def.mutable_attr_values()->insert(
-        {"output_schema_bytes", std::move(output_schema_bytes)});
+        {"output_schema_bytes", output_schema_bytes});
   }
 
   auto mock_node = std::make_shared<Node>(std::move(node_def));

@@ -22,8 +22,8 @@ import "secretflow_serving/config/tls_config.proto";
 message ServerConfig {
   // Optional.
   // Feature name mapping rules.
-  // Key: source or predefined feature name
-  // Value: model feature name
+  // Key: source or predefined feature name.
+  // Value: model feature name.
   map<string, string> feature_mapping = 1;
 
   // Whether to enable tls for server
@@ -38,11 +38,11 @@ message ServerConfig {
   // The port used for communication between parties serving.
   int32 communication_port = 5;
 
-  // Brpc builtin service listen port
+  // Brpc builtin service listen port.
   // Default: disable service
   int32 brpc_builtin_service_port = 11;
 
-  // `/metrics` service listen port
+  // `/metrics` service listen port.
   // Default: disable service
   int32 metrics_exposer_port = 12;
 
@@ -51,7 +51,7 @@ message ServerConfig {
   // Default: #cpu-cores
   int32 worker_num = 13;
 
-  // Server-level max number of requests processed in parallel
+  // Server-level max number of requests processed in parallel.
   // Default: 0 (unlimited)
   int32 max_concurrency = 14;
 

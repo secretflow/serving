@@ -115,15 +115,13 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     task.id = request->task().execution_id();
     task.features = features;
     for (const auto& n : request->task().nodes()) {
-      op::OpComputeInputs compute_inputs;
-      for (const auto& io : n.ios()) {
-        std::vector<std::shared_ptr<arrow::RecordBatch>> inputs;
-        for (const auto& d : io.datas()) {
-          inputs.emplace_back(DeserializeRecordBatch(d));
-        }
-        compute_inputs.emplace_back(std::move(inputs));
+      SERVING_ENFORCE_EQ(n.ios_size(), 1,
+                         "Only one output is allowed for a node.");
+      std::vector<std::shared_ptr<arrow::RecordBatch>> node_outputs;
+      for (const auto& d : n.ios().begin()->datas()) {
+        node_outputs.emplace_back(DeserializeRecordBatch(d));
       }
-      task.node_inputs.emplace(n.name(), std::move(compute_inputs));
+      task.prev_node_outputs.emplace(n.name(), std::move(node_outputs));
     }
     opts_.executable->Run(task);
 

@@ -28,6 +28,9 @@
 
 
 
+
+
+
 - Messages
 
 
@@ -55,10 +58,20 @@
 
 
 
+    - [DPSourceMeta](#dpsourcemeta)
     - [FileSourceMeta](#filesourcemeta)
     - [HttpSourceMeta](#httpsourcemeta)
     - [ModelConfig](#modelconfig)
     - [OSSSourceMeta](#osssourcemeta)
+
+
+
+
+
+    - [ExponentialBackOffConfig](#exponentialbackoffconfig)
+    - [FixedBackOffConfig](#fixedbackoffconfig)
+    - [RandomBackOffConfig](#randombackoffconfig)
+    - [RetryPolicyConfig](#retrypolicyconfig)
 
 
 
@@ -114,6 +127,12 @@
 
 
 
+    - [RetryPolicyBackOffMode](#retrypolicybackoffmode)
+
+
+
+
+
 
 
 
@@ -126,6 +145,8 @@
 
 - [Scalar Value Types](#scalar-value-types)
 
+
+ <!-- end services -->
 
  <!-- end services -->
 
@@ -161,6 +182,7 @@ Description for channels between joined parties
 | tls_config | [ TlsConfig](#tlsconfig ) | TLS related config. |
 | handshake_max_retry_cnt | [ int32](#int32 ) | When the server starts, model information from all parties will be collected. At this time, the remote servers may not have started yet, and we need to retry. And if we connect gateway,the max waiting time for each operation will be rpc_timeout_ms + handshake_retry_interval_ms. Maximum number of retries, default: 60 |
 | handshake_retry_interval_ms | [ int32](#int32 ) | time between retries, default: 5000ms |
+| retry_policy_config | [ RetryPolicyConfig](#retrypolicyconfig ) | retry policy config |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -235,6 +257,7 @@ secretflow_serving/spis/batch_feature_service.proto
 | connect_timeout_ms | [ int32](#int32 ) | Max duration for a connect. -1 means wait indefinitely. Default: 500 (ms) |
 | timeout_ms | [ int32](#int32 ) | Max duration of http request. -1 means wait indefinitely. Default: 1000 (ms) |
 | tls_config | [ TlsConfig](#tlsconfig ) | TLS related config. |
+| retry_policy_config | [ RetryPolicyConfig](#retrypolicyconfig ) | Retry policy config. |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -273,6 +296,19 @@ Serving log config options
 
 
 
+### DPSourceMeta
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| dm_host | [ string](#string ) | datamesh host. |
+| tls_config | [ TlsConfig](#tlsconfig ) | TLS related config. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
 ### FileSourceMeta
 empty by design
 
@@ -308,6 +344,7 @@ Config for serving model
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.file_source_meta | [ FileSourceMeta](#filesourcemeta ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.oss_source_meta | [ OSSSourceMeta](#osssourcemeta ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.http_source_meta | [ HttpSourceMeta](#httpsourcemeta ) | none |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) kind.dp_source_meta | [ DPSourceMeta](#dpsourcemeta ) | none |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -332,21 +369,79 @@ S3 protocol.
 
 
 
+### ExponentialBackOffConfig
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| init_ms | [ int32](#int32 ) | The initial backoff time in milliseconds, default 10ms. |
+| factor | [ int32](#int32 ) | The backoff time increase factor, should be greater than 1, default 2. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### FixedBackOffConfig
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| interval_ms | [ int32](#int32 ) | The backoff time between each retry, in milliseconds, default 10ms. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### RandomBackOffConfig
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| min_ms | [ int32](#int32 ) | The minimum backoff time in milliseconds, default 10ms. |
+| max_ms | [ int32](#int32 ) | The maximum backoff time in milliseconds, default 50ms. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### RetryPolicyConfig
+
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| retry_custom | [ bool](#bool ) | Default is false, the error code of brpc's retry strategy is used. If it is True, it will be retried on additional error codes, including some http errors (brpc does not retry http errors by default) |
+| retry_aggressive | [ bool](#bool ) | Whether to retry on any http or brpc error, default is false. |
+| max_retry_count | [ int32](#int32 ) | The number of retries, default 3. |
+| backoff_mode | [ RetryPolicyBackOffMode](#retrypolicybackoffmode ) | backoff time mode, default is FIX_BACKOFF. |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) backoff_config.fixed_backoff_config | [ FixedBackOffConfig](#fixedbackoffconfig ) | The fixed backoff time config. |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) backoff_config.exponential_backoff_config | [ ExponentialBackOffConfig](#exponentialbackoffconfig ) | The exponential backoff time config. |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) backoff_config.random_backoff_config | [ RandomBackOffConfig](#randombackoffconfig ) | The random backoff time config. |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+ <!-- end messages -->
+
+
+
+
 ### ServerConfig
 
 
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| feature_mapping | [map ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry ) | Optional. Feature name mapping rules. Key: source or predefined feature name Value: model feature name |
+| feature_mapping | [map ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry ) | Optional. Feature name mapping rules. Key: source or predefined feature name. Value: model feature name. |
 | tls_config | [ TlsConfig](#tlsconfig ) | Whether to enable tls for server |
 | host | [ string](#string ) | e.g. 192.168.2.51 |
 | service_port | [ int32](#int32 ) | The port used for model inference. |
 | communication_port | [ int32](#int32 ) | The port used for communication between parties serving. |
-| brpc_builtin_service_port | [ int32](#int32 ) | Brpc builtin service listen port Default: disable service |
-| metrics_exposer_port | [ int32](#int32 ) | `/metrics` service listen port Default: disable service |
+| brpc_builtin_service_port | [ int32](#int32 ) | Brpc builtin service listen port. Default: disable service |
+| metrics_exposer_port | [ int32](#int32 ) | `/metrics` service listen port. Default: disable service |
 | worker_num | [ int32](#int32 ) | Number of pthreads that server runs on. If this option <= 0, use default value. Default: #cpu-cores |
-| max_concurrency | [ int32](#int32 ) | Server-level max number of requests processed in parallel Default: 0 (unlimited) |
+| max_concurrency | [ int32](#int32 ) | Server-level max number of requests processed in parallel. Default: 0 (unlimited) |
 | op_exec_worker_num | [ int32](#int32 ) | Number of pthreads that server runs to execute ops. If this option <= 0, use default value. Default: #cpu-cores |
  <!-- end Fields -->
  <!-- end HasFields -->
@@ -474,6 +569,22 @@ Supported model source type
 | ST_FILE | 1 | Local filesystem |
 | ST_OSS | 2 | OSS/AWS S3 |
 | ST_HTTP | 3 | Http source |
+| ST_DP | 4 | DataProxy source |
+
+
+ <!-- end Enums -->
+
+
+
+### RetryPolicyBackOffMode
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| INVALID_MODE | 0 | No retry. |
+| FIXED_BACKOFF | 1 | Retry with fixed backoff. |
+| EXPONENTIAL_BACKOFF | 2 | Retry with exponential backoff. |
+| RANDOM_BACKOFF | 3 | Retry with random backoff. |
 
 
  <!-- end Enums -->

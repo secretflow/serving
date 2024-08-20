@@ -28,7 +28,7 @@ namespace secretflow::serving {
 ModelInfoProcessor::ModelInfoProcessor(
     std::string local_party_id, const ModelInfo& local_model_info,
     const std::unordered_map<std::string, ModelInfo>& remote_model_info)
-    : local_party_id_(local_party_id),
+    : local_party_id_(std::move(local_party_id)),
       local_model_info_(&local_model_info),
       remote_model_info_(&remote_model_info) {
   // build local_node_views_

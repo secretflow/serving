@@ -21,7 +21,7 @@ You could start SecretFlow-Serving service via `docker-compose <https://github.c
 
     1. Both parties of Secretflow-Serving use mock feature source to produce random feature values.
     2. The model files in the examples directory are loaded by ``Alice`` and ``Bob``'s Secretflow-Serving respectively。
-    3. The SecretFlow-Serving is served through the HTTP protocol. However, for production environments, it is recommended to use HTTPS instead. Please check :ref:`TLS Configuration <TlsConfig>` for details.
+    3. The SecretFlow-Serving in this example provides services through the `HTTP` protocol. However, for a production environment, it is recommended to use `mTLS` to secure all communication links and access the service via `HTTPS`. Please check :ref:`mTLS Configuration <TlsConfig>` for details.
 
 
 .. code-block:: bash

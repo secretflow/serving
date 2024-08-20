@@ -22,6 +22,7 @@
 #include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/network.h"
+#include "secretflow_serving/util/retry_policy.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/apis/error_code.pb.h"
@@ -80,17 +81,21 @@ HttpFeatureAdapter::HttpFeatureAdapter(
   const auto& http_opts = spec_.http_opts();
 
   // init channel
+  auto channel_name = http_opts.endpoint();
   channel_ = CreateBrpcChannel(
-      http_opts.endpoint(), "http", http_opts.enable_lb(),
+      channel_name, http_opts.endpoint(), "http", http_opts.enable_lb(),
       http_opts.timeout_ms() > 0 ? http_opts.timeout_ms() : kTimeoutMs,
       http_opts.connect_timeout_ms() > 0 ? http_opts.connect_timeout_ms()
                                          : kConnectTimeoutMs,
       http_opts.has_tls_config() ? &http_opts.tls_config() : nullptr);
+  retry_count_ =
+      RetryPolicyFactory::GetInstance()->GetMaxRetryCount(channel_name);
 }
 
 void HttpFeatureAdapter::OnFetchFeature(const Request& request,
                                         Response* response) {
   brpc::Controller cntl;
+  cntl.set_max_retry(retry_count_);
   cntl.http_request().uri() = spec_.http_opts().endpoint();
   cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
   cntl.http_request().set_content_type("application/json");

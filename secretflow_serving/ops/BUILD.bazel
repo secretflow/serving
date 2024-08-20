@@ -149,7 +149,6 @@ serving_cc_test(
     srcs = ["dot_product_test.cc"],
     deps = [
         ":dot_product",
-        "//secretflow_serving/util:test_utils",
     ],
 )
 
@@ -212,7 +211,6 @@ serving_cc_test(
     srcs = ["arrow_processing_test.cc"],
     deps = [
         ":arrow_processing",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -245,7 +243,6 @@ serving_cc_test(
     srcs = ["tree_select_test.cc"],
     deps = [
         ":tree_select",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -268,7 +265,6 @@ serving_cc_test(
     srcs = ["tree_merge_test.cc"],
     deps = [
         ":tree_merge",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -291,7 +287,6 @@ serving_cc_test(
     srcs = ["tree_ensemble_predict_test.cc"],
     deps = [
         ":tree_ensemble_predict",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )

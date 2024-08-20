@@ -106,22 +106,45 @@ serving_cc_test(
 )
 
 serving_cc_library(
+    name = "backoff_policy",
+    hdrs = ["backoff_policy.h"],
+    deps = [
+        "//secretflow_serving/config:retry_policy_cc_config",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "retry_policy",
+    srcs = ["retry_policy.cc"],
+    hdrs = ["retry_policy.h"],
+    deps = [
+        ":backoff_policy",
+        "//secretflow_serving/config:retry_policy_cc_config",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/core:singleton",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
     name = "network",
     srcs = ["network.cc"],
     hdrs = ["network.h"],
     deps = [
+        ":retry_policy",
         "//secretflow_serving/config:tls_config_cc_proto",
         "//secretflow_serving/core:exception",
         "@com_github_brpc_brpc//:brpc",
     ],
 )
 
-serving_cc_library(
-    name = "test_utils",
-    srcs = ["test_utils.cc"],
-    hdrs = ["test_utils.h"],
+serving_cc_test(
+    name = "retry_policy_test",
+    srcs = ["retry_policy_test.cc"],
     deps = [
-        ":arrow_helper",
+        ":retry_policy",
+        "//secretflow_serving/source:http_service_cc_proto",
     ],
 )
 

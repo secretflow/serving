@@ -24,9 +24,11 @@ class Executable {
     size_t id;
 
     // input
-    // `features` or `node_inputs` should be set
+    // `features` or `prev_node_outputs` should be set
     std::shared_ptr<arrow::RecordBatch> features;
-    std::unordered_map<std::string, op::OpComputeInputs> node_inputs;
+    std::unordered_map<std::string,
+                       std::vector<std::shared_ptr<arrow::RecordBatch>>>
+        prev_node_outputs;
 
     // output
     std::vector<NodeOutput> outputs;

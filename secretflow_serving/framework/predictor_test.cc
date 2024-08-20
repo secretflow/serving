@@ -67,7 +67,7 @@ class MockExecutable : public Executable {
         mock_schema_(
             arrow::schema({arrow::field("test_name", arrow::utf8())})) {}
 
-  const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema() {
+  const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema() override {
     return mock_schema_;
   }
 
@@ -79,7 +79,7 @@ class MockExecutable : public Executable {
 
 class MockExecutionCore : public ExecutionCore {
  public:
-  MockExecutionCore(Options opts) : ExecutionCore(std::move(opts)) {}
+  explicit MockExecutionCore(Options opts) : ExecutionCore(std::move(opts)) {}
 
   MOCK_METHOD2(Execute,
                void(const apis::ExecuteRequest*, apis::ExecuteResponse*));
@@ -91,12 +91,10 @@ class MockRemoteExecute : public RemoteExecute {
   void Run() override {}
   void Cancel() override {}
   void WaitToFinish() override {
-    exec_ctx_.CheckAndUpdateResponse(mock_exec_res);
+    ctx_.exec_res = mock_exec_res;
+    MergeResponseHeader(ctx_.exec_res, ctx_.pred_res);
   }
-  void GetOutputs(
-      std::unordered_map<std::string, apis::NodeIo>* node_io_map) override {
-    ExeResponseToIoMap(mock_exec_res, node_io_map);
-  }
+
   apis::ExecuteResponse mock_exec_res;
 };
 
@@ -105,20 +103,19 @@ class MockPredictor : public Predictor {
   explicit MockPredictor(const Options& options) : Predictor(options) {}
 
   std::unique_ptr<RemoteExecute> BuildRemoteExecute(
-      const apis::PredictRequest* request, apis::PredictResponse* response,
-      const std::shared_ptr<Execution>& execution, std::string target_id,
+      ExecuteContext ctx, const std::string& target_id,
       const std::unique_ptr<::google::protobuf::RpcChannel>& channel) override {
     auto exec = std::make_unique<MockRemoteExecute>(
-        request, response, execution, target_id, opts_.party_id, channel.get());
-    exec->mock_exec_res = remote_exec_res_;
+        std::move(ctx), opts_.party_id, channel.get());
+    exec->mock_exec_res = remote_exec_res_[target_id];
     return exec;
   }
 
-  apis::ExecuteResponse remote_exec_res_;
+  std::map<std::string, apis::ExecuteResponse> remote_exec_res_;
 };
 
-bool ExeRequestEqual(const apis::ExecuteRequest* arg,
-                     const apis::ExecuteRequest* expect) {
+bool ExecRequestEqual(const apis::ExecuteRequest* arg,
+                      const apis::ExecuteRequest* expect) {
   if (arg->service_spec().id() != expect->service_spec().id()) {
     return false;
   }
@@ -172,13 +169,14 @@ bool ExeRequestEqual(const apis::ExecuteRequest* arg,
 }
 
 MATCHER_P(ExecuteRequestEqual, expect, "") {
-  return ExeRequestEqual(arg, expect);
+  return ExecRequestEqual(arg, expect);
 }
 
 class PredictorTest : public ::testing::Test {
  protected:
   void SetUpEnv(std::vector<std::string>& node_def_jsons,
-                std::vector<std::string>& execution_def_jsons) {
+                std::vector<std::string>& execution_def_jsons,
+                std::vector<std::string> parties) {
     MockExecutionCore::Options exec_opts{"test_id", "alice", std::nullopt,
                                          std::nullopt,
                                          std::make_unique<MockExecutable>()};
@@ -215,15 +213,18 @@ class PredictorTest : public ::testing::Test {
       }
 
       executions.emplace_back(std::make_shared<Execution>(
-          i, std::move(executino_def), std::move(e_nodes)));
+          i, std::move(executino_def), std::move(e_nodes), i == 0,
+          i == (execution_def_jsons.size() - 1)));
     }
 
     // mock channel
+    // first party as self party
     channel_map_ = std::make_shared<PartyChannelMap>();
-    auto channel = std::make_unique<brpc::Channel>();
-    channel_map_->emplace(std::make_pair("bob", std::move(channel)));
-
-    p_opts_.party_id = "alice";
+    for (size_t i = 1; i < parties.size(); ++i) {
+      channel_map_->emplace(
+          std::make_pair(parties[i], std::make_unique<brpc::Channel>()));
+    }
+    p_opts_.party_id = parties[0];
     p_opts_.channels = channel_map_;
     p_opts_.executions = std::move(executions);
 
@@ -304,7 +305,7 @@ TEST_F(PredictorTest, Predict) {
 }
 )JSON"}};
   for (auto& execution_def_jsons : execution_def_jsons_list) {
-    SetUpEnv(node_def_jsons, execution_def_jsons);
+    SetUpEnv(node_def_jsons, execution_def_jsons, {"alice", "bob"});
     apis::PredictRequest request;
     apis::PredictResponse response;
 
@@ -318,12 +319,12 @@ TEST_F(PredictorTest, Predict) {
     for (int i = 0; i < params_num; ++i) {
       request.mutable_fs_params()->at("bob").add_query_datas("bob_test_params");
     }
-    auto feature_1 = request.add_predefined_features();
+    auto* feature_1 = request.add_predefined_features();
     feature_1->mutable_field()->set_name("feature_1");
     feature_1->mutable_field()->set_type(FieldType::FIELD_STRING);
     std::vector<std::string> ss = {"true", "false", "true"};
     feature_1->mutable_value()->mutable_ss()->Assign(ss.begin(), ss.end());
-    auto feature_2 = request.add_predefined_features();
+    auto* feature_2 = request.add_predefined_features();
     feature_2->mutable_field()->set_name("feature_2");
     feature_2->mutable_field()->set_type(FieldType::FIELD_DOUBLE);
     std::vector<double> ds = {1.1, 2.2, 3.3};
@@ -339,9 +340,9 @@ TEST_F(PredictorTest, Predict) {
       bob_exec0_res.mutable_status()->set_code(1);
       bob_exec0_res.mutable_service_spec()->set_id("test_service_id");
       bob_exec0_res.mutable_result()->set_execution_id(0);
-      auto node = bob_exec0_res.mutable_result()->add_nodes();
+      auto* node = bob_exec0_res.mutable_result()->add_nodes();
       node->set_name("mock_node_1");
-      auto io = node->add_ios();
+      auto* io = node->add_ios();
       io->add_datas("mock_bob_data");
 
       // build execute request
@@ -365,9 +366,9 @@ TEST_F(PredictorTest, Predict) {
       alice_exec0_res.mutable_status()->set_code(1);
       alice_exec0_res.mutable_service_spec()->set_id("test_service_id");
       alice_exec0_res.mutable_result()->set_execution_id(0);
-      auto node = alice_exec0_res.mutable_result()->add_nodes();
+      auto* node = alice_exec0_res.mutable_result()->add_nodes();
       node->set_name("mock_node_1");
-      auto io = node->add_ios();
+      auto* io = node->add_ios();
       io->add_datas("mock_alice_data");
 
       // build execute request
@@ -394,9 +395,9 @@ TEST_F(PredictorTest, Predict) {
       alice_exec1_res.mutable_status()->set_code(1);
       alice_exec1_res.mutable_service_spec()->set_id("test_service_id");
       alice_exec1_res.mutable_result()->set_execution_id(1);
-      auto node = alice_exec1_res.mutable_result()->add_nodes();
+      auto* node = alice_exec1_res.mutable_result()->add_nodes();
       node->set_name("mock_node_2");
-      auto io = node->add_ios();
+      auto* io = node->add_ios();
       auto schema = arrow::schema({arrow::field("score_0", arrow::utf8()),
                                    arrow::field("score_1", arrow::utf8())});
       arrow::StringBuilder builder;
@@ -415,9 +416,9 @@ TEST_F(PredictorTest, Predict) {
       alice_exec1_req.mutable_feature_source()->set_type(
           apis::FeatureSourceType::FS_NONE);
       alice_exec1_req.mutable_task()->set_execution_id(1);
-      auto node = alice_exec1_req.mutable_task()->add_nodes();
-      node->set_name("mock_node_2");
-      auto io = node->add_ios();
+      auto* node = alice_exec1_req.mutable_task()->add_nodes();
+      node->set_name("mock_node_1");
+      auto* io = node->add_ios();
       // local first
       io->add_datas("mock_alice_data");
       io->add_datas("mock_bob_data");
@@ -437,7 +438,7 @@ TEST_F(PredictorTest, Predict) {
         .Times(1)
         .WillOnce(::testing::SetArgPointee<1>(alice_exec1_res));
 
-    mock_predictor_->remote_exec_res_ = bob_exec0_res;
+    mock_predictor_->remote_exec_res_.emplace("bob", bob_exec0_res);
     ASSERT_NO_THROW(mock_predictor_->Predict(&request, &response));
     for (const auto& [k, v] : response.header().data()) {
       std::cout << k << " : " << v << std::endl;
@@ -448,12 +449,207 @@ TEST_F(PredictorTest, Predict) {
     ASSERT_EQ(response.header().data().at("alice-res-k1"), "alice-res-v1");
     ASSERT_EQ(response.results_size(), params_num);
     for (int i = 0; i < params_num; ++i) {
-      auto result = response.results(i);
+      const auto& result = response.results(i);
       ASSERT_EQ(result.scores_size(), 2);
       for (int j = 0; j < result.scores_size(); ++j) {
         ASSERT_EQ(result.scores(j).name(), "score_" + std::to_string(j));
         ASSERT_EQ(result.scores(j).value(), i + 1);
       }
+    }
+  }
+}
+
+TEST_F(PredictorTest, Predict3Party) {
+  // mock execution
+  std::vector<std::string> node_def_jsons = {
+      R"JSON(
+{
+  "name": "mock_node_1",
+  "op": "TEST_OP_0",
+}
+)JSON",
+      R"JSON(
+{
+  "name": "mock_node_2",
+  "op": "TEST_OP_1",
+  "parents": [ "mock_node_1" ],
+}
+)JSON"};
+
+  std::vector<std::string> execution_def_jsons = {
+      R"JSON(
+{
+  "nodes": [
+    "mock_node_1"
+  ],
+  "config": {
+    "dispatch_type": "DP_ALL"
+  }
+}
+)JSON",
+      R"JSON(
+{
+  "nodes": [
+    "mock_node_2"
+  ],
+  "config": {
+    "dispatch_type": "DP_ANYONE"
+  }
+}
+)JSON"};
+  SetUpEnv(node_def_jsons, execution_def_jsons, {"alice", "bob", "carol"});
+  apis::PredictRequest request;
+  apis::PredictResponse response;
+
+  // mock predict request
+  request.mutable_header()->mutable_data()->insert({"test-k", "test-v"});
+  request.mutable_service_spec()->set_id("test_service_id");
+  request.mutable_fs_params()->insert({"bob", {}});
+  request.mutable_fs_params()->insert({"carol", {}});
+  request.mutable_fs_params()->at("bob").set_query_context("bob_test_context");
+  request.mutable_fs_params()->at("carol").set_query_context(
+      "bob_test_context");
+  int params_num = 3;
+  for (int i = 0; i < params_num; ++i) {
+    request.mutable_fs_params()->at("bob").add_query_datas("bob_test_params");
+    request.mutable_fs_params()->at("carol").add_query_datas(
+        "carol_test_params");
+  }
+  auto* feature_1 = request.add_predefined_features();
+  feature_1->mutable_field()->set_name("feature_1");
+  feature_1->mutable_field()->set_type(FieldType::FIELD_STRING);
+  std::vector<std::string> ss = {"true", "false", "true"};
+  feature_1->mutable_value()->mutable_ss()->Assign(ss.begin(), ss.end());
+  auto* feature_2 = request.add_predefined_features();
+  feature_2->mutable_field()->set_name("feature_2");
+  feature_2->mutable_field()->set_type(FieldType::FIELD_DOUBLE);
+  std::vector<double> ds = {1.1, 2.2, 3.3};
+  feature_2->mutable_value()->mutable_ds()->Assign(ds.begin(), ds.end());
+
+  // mock bob&carol's res
+  apis::ExecuteResponse bob_exec0_res;
+  apis::ExecuteResponse carol_exec0_res;
+  {
+    // build execute reponse
+    bob_exec0_res.mutable_header()->mutable_data()->insert(
+        {"bob-res-k", "bob-res-v"});
+    bob_exec0_res.mutable_status()->set_code(1);
+    bob_exec0_res.mutable_service_spec()->set_id("test_service_id");
+    bob_exec0_res.mutable_result()->set_execution_id(0);
+    auto* bob_node = bob_exec0_res.mutable_result()->add_nodes();
+    bob_node->set_name("mock_node_1");
+    bob_node->add_ios()->add_datas("mock_bob_data");
+
+    carol_exec0_res.mutable_header()->mutable_data()->insert(
+        {"carol-res-k", "carol-res-v"});
+    carol_exec0_res.mutable_status()->set_code(1);
+    carol_exec0_res.mutable_service_spec()->set_id("test_service_id");
+    carol_exec0_res.mutable_result()->set_execution_id(0);
+    auto* carol_node = carol_exec0_res.mutable_result()->add_nodes();
+    carol_node->set_name("mock_node_1");
+    carol_node->add_ios()->add_datas("mock_carol_data");
+  }
+  // mock alice's req & res
+  apis::ExecuteResponse alice_exec0_res;
+  apis::ExecuteRequest alice_exec0_req;
+  {
+    // build execute reponse
+    alice_exec0_res.mutable_header()->mutable_data()->insert(
+        {"alice-res-k", "alice-res-v"});
+    alice_exec0_res.mutable_status()->set_code(1);
+    alice_exec0_res.mutable_service_spec()->set_id("test_service_id");
+    alice_exec0_res.mutable_result()->set_execution_id(0);
+    auto* node = alice_exec0_res.mutable_result()->add_nodes();
+    node->set_name("mock_node_1");
+    auto* io = node->add_ios();
+    io->add_datas("mock_alice_data");
+
+    // build execute request
+    alice_exec0_req.mutable_header()->mutable_data()->insert(
+        {"test-k", "test-v"});
+    *alice_exec0_req.mutable_service_spec() = request.service_spec();
+    alice_exec0_req.set_requester_id(p_opts_.party_id);
+    alice_exec0_req.mutable_feature_source()->set_type(
+        apis::FeatureSourceType::FS_PREDEFINED);
+    alice_exec0_req.mutable_feature_source()->mutable_predefineds()->CopyFrom(
+        request.predefined_features());
+    alice_exec0_req.mutable_task()->set_execution_id(0);
+  }
+
+  // mock alice any one req & res
+  apis::ExecuteResponse alice_exec1_res;
+  apis::ExecuteRequest alice_exec1_req;
+  {
+    // build execute reponse
+    alice_exec1_res.mutable_header()->mutable_data()->insert(
+        {"alice-res-k", "alice-res-v"});
+    alice_exec1_res.mutable_header()->mutable_data()->insert(
+        {"alice-res-k1", "alice-res-v1"});
+    alice_exec1_res.mutable_status()->set_code(1);
+    alice_exec1_res.mutable_service_spec()->set_id("test_service_id");
+    alice_exec1_res.mutable_result()->set_execution_id(1);
+    auto* node = alice_exec1_res.mutable_result()->add_nodes();
+    node->set_name("mock_node_2");
+    auto* io = node->add_ios();
+    auto schema = arrow::schema({arrow::field("score_0", arrow::utf8()),
+                                 arrow::field("score_1", arrow::utf8())});
+    arrow::StringBuilder builder;
+    std::shared_ptr<arrow::Array> array;
+    SERVING_CHECK_ARROW_STATUS(builder.AppendValues({"1", "2", "3"}));
+    SERVING_CHECK_ARROW_STATUS(builder.Finish(&array));
+    auto record_batch = MakeRecordBatch(schema, 3, {array, array});
+    io->add_datas(SerializeRecordBatch(record_batch));
+  }
+  {
+    // build execute request
+    alice_exec1_req.mutable_header()->mutable_data()->insert(
+        {"test-k", "test-v"});
+    *alice_exec1_req.mutable_service_spec() = request.service_spec();
+    alice_exec1_req.set_requester_id(p_opts_.party_id);
+    alice_exec1_req.mutable_feature_source()->set_type(
+        apis::FeatureSourceType::FS_NONE);
+    alice_exec1_req.mutable_task()->set_execution_id(1);
+    auto* node = alice_exec1_req.mutable_task()->add_nodes();
+    node->set_name("mock_node_1");
+    auto* io = node->add_ios();
+    // local first
+    io->add_datas("mock_alice_data");
+    io->add_datas("mock_bob_data");
+    io->add_datas("mock_carol_data");
+  }
+
+  EXPECT_CALL(*mock_exec_core_,
+              Execute(testing::Matcher<const apis::ExecuteRequest*>(
+                          ExecuteRequestEqual(&alice_exec0_req)),
+                      ::testing::_))
+      .Times(1)
+      .WillOnce(::testing::SetArgPointee<1>(alice_exec0_res));
+
+  EXPECT_CALL(*mock_exec_core_,
+              Execute(testing::Matcher<const apis::ExecuteRequest*>(
+                          ExecuteRequestEqual(&alice_exec1_req)),
+                      ::testing::_))
+      .Times(1)
+      .WillOnce(::testing::SetArgPointee<1>(alice_exec1_res));
+
+  mock_predictor_->remote_exec_res_.emplace("bob", bob_exec0_res);
+  mock_predictor_->remote_exec_res_.emplace("carol", carol_exec0_res);
+  ASSERT_NO_THROW(mock_predictor_->Predict(&request, &response));
+  for (const auto& [k, v] : response.header().data()) {
+    std::cout << k << " : " << v << std::endl;
+  }
+  ASSERT_EQ(response.header().data_size(), 4);
+  ASSERT_EQ(response.header().data().at("carol-res-k"), "carol-res-v");
+  ASSERT_EQ(response.header().data().at("bob-res-k"), "bob-res-v");
+  ASSERT_EQ(response.header().data().at("alice-res-k"), "alice-res-v");
+  ASSERT_EQ(response.header().data().at("alice-res-k1"), "alice-res-v1");
+  ASSERT_EQ(response.results_size(), params_num);
+  for (int i = 0; i < params_num; ++i) {
+    const auto& result = response.results(i);
+    ASSERT_EQ(result.scores_size(), 2);
+    for (int j = 0; j < result.scores_size(); ++j) {
+      ASSERT_EQ(result.scores(j).name(), "score_" + std::to_string(j));
+      ASSERT_EQ(result.scores(j).value(), i + 1);
     }
   }
 }

@@ -33,6 +33,7 @@ class OssSource : public Source {
 
  private:
   std::unique_ptr<OssClient> oss_client_;
+  OssOptions oss_opts_;
 };
 
 }  // namespace secretflow::serving

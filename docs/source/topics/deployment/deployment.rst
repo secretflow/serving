@@ -14,7 +14,8 @@ The deployment diagram of the SecretFlow-Serving system that we plan to deploy i
 .. image:: /imgs/architecture.png
 
 .. note::
-    1. The SecretFlow-Serving is served through the HTTP protocol. It is recommended to use HTTPS instead in production environments. Please check :ref:`TLS Configuration <TlsConfig>` for details.
+    1. The SecretFlow-Serving in this example provides services through the `HTTP` protocol. However, for a production environment, it is recommended to use `mTLS` to secure all communication links and access the service via `HTTPS`. Please check :ref:`mTLS Configuration <TlsConfig>` for details.
+    2. SecretFlow-Serving supports configuring different `mTLS` settings for various communication links. For more detailed information, please refer to the :ref:`Server Configuration <ServingConfig>`, :ref:`Cluster Communication Configuration <ClusterConfig>`, and :ref:`SPI Communication Configuration <HttpOptions>`.
 
 Step 1: Deploy SecretFlow-Serving
 =================================
@@ -98,6 +99,8 @@ See :ref:`Serving Config <ServingConfig>` for more config information
   * The above configuration is referenced from `alice-serving-config <https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_.
   * For ``Bob``, you should refer to `bob-serving-config <https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_ .
   * **Note** `mockOpts` is configured here for a mock feature data source, which will provide simulated feature data to support the model prediction process. In actual use, please provide feature data in the form of a feature service by implementing the :ref:`SecretFlow-Serving Feature Service SPI <BatchFeatureService>`.
+  * **Note** You can modify the retry strategy for communication between parties by modifying `retry_policy_config` field of :ref:`channel_desc <ChannelDesc>`, you can refer to :ref:`here <RetryPolicyConfig>`.
+  * **Note** If your :ref:`feature source <FeatureSourceConfig>` is from :ref:`http <HttpOptions>`, you can modify the retry strategy of feature fetching by modifying `retry_policy_config` field of :ref:`http_opts <HttpOptions>`, please refer to :ref:`here <RetryPolicyConfig>`.
 
 .. _log_conf_file:
 

@@ -91,7 +91,7 @@ class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
       std::shared_ptr<Execution> execution, ThreadPool* thread_pool)
       : node_items_(node_items),
         execution_(std::move(execution)),
-        context_(execution_->GetExitNodeNum()),
+        context_(execution_->GetOutputNodeNum()),
         thread_pool_(thread_pool),
         propagator_(execution_->nodes()),
         sched_count_(0) {}
@@ -109,7 +109,7 @@ class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
     node_item.op_kernel->Compute(&(frame->compute_ctx));
     sched_count_++;
 
-    if (execution_->IsExitNode(node_item.node->node_def().name())) {
+    if (execution_->IsOutputNode(node_item.node->node_def().name())) {
       context_.AddResult(node_item.node->node_def().name(),
                          frame->compute_ctx.output);
     }
@@ -117,16 +117,43 @@ class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
     CompleteOutEdge(node_item.node->out_edges(), frame->compute_ctx.output);
   }
 
-  void Schedule(std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+  void Schedule(std::shared_ptr<arrow::RecordBatch>& features) {
     for (const auto& node : execution_->GetEntryNodes()) {
-      auto iter = inputs.find(node->node_def().name());
-      SERVING_ENFORCE(iter != inputs.end(), errors::ErrorCode::INVALID_ARGUMENT,
-                      "can not found inputs for node:{}",
-                      node->node_def().name());
       auto* frame = propagator_.GetFrame(node->GetName());
-      frame->compute_ctx.inputs = std::move(iter->second);
+      SERVING_ENFORCE_EQ(frame->compute_ctx.inputs.size(), 0U);
+      frame->compute_ctx.inputs.emplace_back(
+          std::vector<std::shared_ptr<arrow::RecordBatch>>{features});
+      frame->pending_count = 0;
 
       SubmitTask(node->node_def().name());
+    }
+
+    context_.WaitFinish();
+  }
+
+  void Schedule(std::unordered_map<
+                std::string, std::vector<std::shared_ptr<arrow::RecordBatch>>>&
+                    prev_exec_outputs) {
+    for (const auto& node : execution_->GetEntryNodes()) {
+      auto* frame = propagator_.GetFrame(node->GetName());
+      for (const auto& e : node->in_edges()) {
+        auto n_iter = prev_exec_outputs.find(e->src_node());
+        if (n_iter != prev_exec_outputs.end()) {
+          // Do not `std::move` the vector,
+          // because other nodes may also use it as an input.
+          frame->compute_ctx.inputs[e->dst_input_id()] = n_iter->second;
+          frame->pending_count--;
+          continue;
+        }
+        std::shared_ptr<Node> tmp_node;
+        SERVING_ENFORCE(execution_->TryGetNode(e->src_node(), &tmp_node),
+                        errors::ErrorCode::LOGIC_ERROR,
+                        "can not found {}'s output data", e->src_node());
+      }
+
+      if (frame->pending_count == 0) {
+        SubmitTask(node->node_def().name());
+      }
     }
 
     context_.WaitFinish();
@@ -210,11 +237,10 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
     auto iter = node_items_->find(node_name);
     SERVING_ENFORCE(iter != node_items_->end(), errors::ErrorCode::LOGIC_ERROR);
     const auto& input_schema = iter->second.op_kernel->GetAllInputSchema();
-    entry_node_names_.emplace_back(node_name);
     input_schema_map_.emplace(node_name, input_schema);
   }
 
-  if (execution_->IsEntry()) {
+  if (execution_->IsGraphEntry()) {
     // build feature schema from entry execution
     auto iter = input_schema_map_.begin();
     const auto& first_input_schema_list = iter->second;
@@ -242,23 +268,27 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
 
 std::vector<NodeOutput> Executor::Run(
     std::shared_ptr<arrow::RecordBatch>& features) {
-  SERVING_ENFORCE(execution_->IsEntry(), errors::ErrorCode::LOGIC_ERROR);
-  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
-  for (const auto& entry_node_name : entry_node_names_) {
-    op::OpComputeInputs op_inputs;
-    std::vector<std::shared_ptr<arrow::RecordBatch>> record_list = {features};
-    op_inputs.emplace_back(std::move(record_list));
-    inputs.emplace(entry_node_name, std::move(op_inputs));
+  auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
+                                                  ThreadPool::GetInstance());
+  sched->Schedule(features);
+
+  auto task_exception = sched->GetTaskException();
+  if (task_exception) {
+    SPDLOG_ERROR("Execution {} run with exception.", execution_->id());
+    std::rethrow_exception(task_exception);
   }
-  return Run(inputs);
+  SERVING_ENFORCE_EQ(sched->GetSchedCount(), execution_->nodes().size());
+  return sched->GetResults();
 }
 
 std::vector<NodeOutput> Executor::Run(
-    std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+    std::unordered_map<std::string,
+                       std::vector<std::shared_ptr<arrow::RecordBatch>>>&
+        prev_node_outputs) {
+  SERVING_ENFORCE(!execution_->IsGraphEntry(), errors::ErrorCode::LOGIC_ERROR);
   auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
                                                   ThreadPool::GetInstance());
-
-  sched->Schedule(inputs);
+  sched->Schedule(prev_node_outputs);
 
   auto task_exception = sched->GetTaskException();
   if (task_exception) {

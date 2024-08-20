@@ -1,0 +1,80 @@
+// Copyright 2024 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving;
+
+enum RetryPolicyBackOffMode {
+  // No retry.
+  INVALID_MODE = 0;
+
+  // Retry with fixed backoff.
+  FIXED_BACKOFF = 1;
+
+  // Retry with exponential backoff.
+  EXPONENTIAL_BACKOFF = 2;
+
+  // Retry with random backoff.
+  RANDOM_BACKOFF = 3;
+}
+
+message FixedBackOffConfig {
+  // The backoff time between each retry, in milliseconds, default 10ms.
+  int32 interval_ms = 1;
+}
+
+message ExponentialBackOffConfig {
+  // The initial backoff time in milliseconds, default 10ms.
+  int32 init_ms = 1;
+
+  // The backoff time increase factor, should be greater than 1, default 2.
+  int32 factor = 2;
+}
+
+message RandomBackOffConfig {
+  // The minimum backoff time in milliseconds, default 10ms.
+  int32 min_ms = 1;
+
+  // The maximum backoff time in milliseconds, default 50ms.
+  int32 max_ms = 2;
+}
+
+message RetryPolicyConfig {
+  // Default is false, the error code of brpc's retry strategy is used. If it is
+  // True, it will be retried on additional error codes, including some http
+  // errors (brpc does not retry http errors by default)
+  bool retry_custom = 1;
+
+  // Whether to retry on any http or brpc error, default is false.
+  bool retry_aggressive = 2;
+
+  // The number of retries, default 3.
+  int32 max_retry_count = 3;
+
+  // backoff time mode, default is FIX_BACKOFF.
+  RetryPolicyBackOffMode backoff_mode = 4;
+
+  oneof backoff_config {
+    // The fixed backoff time config.
+    FixedBackOffConfig fixed_backoff_config = 5;
+
+    // The exponential backoff time config.
+    ExponentialBackOffConfig exponential_backoff_config = 6;
+
+    // The random backoff time config.
+    RandomBackOffConfig random_backoff_config = 7;
+  }
+}

@@ -38,6 +38,7 @@ class HttpFeatureAdapter : public FeatureAdapter {
                              const Request& request);
 
  protected:
+  int retry_count_;
   std::unique_ptr<google::protobuf::RpcChannel> channel_;
   std::vector<FeatureField> feature_fields_;
 };

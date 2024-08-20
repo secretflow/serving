@@ -14,11 +14,19 @@
 
 #pragma once
 
-#include "arrow/api.h"
+#include <string>
 
-namespace secretflow::serving::test {
+#include "secretflow_serving/source/source.h"
 
-std::shared_ptr<arrow::RecordBatch> ShuffleRecordBatch(
-    std::shared_ptr<arrow::RecordBatch> input_batch);
+namespace secretflow::serving {
 
-}  // namespace secretflow::serving::test
+class DataProxySource : public Source {
+ public:
+  DataProxySource(const ModelConfig& config, const std::string& service_id);
+  ~DataProxySource() = default;
+
+ protected:
+  void OnPullModel(const std::string& dst_path) override;
+};
+
+}  // namespace secretflow::serving

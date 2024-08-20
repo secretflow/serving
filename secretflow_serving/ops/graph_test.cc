@@ -103,6 +103,9 @@ REGISTER_OP_KERNEL(TEST_OP_0, MockOpKernel0);
 REGISTER_OP_KERNEL(TEST_OP_1, MockOpKernel1);
 REGISTER_OP_KERNEL(TEST_OP_2, MockOpKernel2);
 REGISTER_OP_KERNEL(TEST_OP_3, MockOpKernel3);
+using CopyMockOpKernel3 = MockOpKernel3;
+REGISTER_OP_KERNEL(TEST_OP_3_MERGE, CopyMockOpKernel3);
+
 REGISTER_OP_KERNEL(TEST_OP_4, MockOpKernel4);
 REGISTER_OP(TEST_OP_0, "0.0.1", "test_desc")
     .StringAttr("attr_s", "attr_s_desc", false, false)
@@ -121,6 +124,13 @@ REGISTER_OP(TEST_OP_2, "0.0.1", "test_desc")
     .Output("output", "output_desc");
 REGISTER_OP(TEST_OP_3, "0.0.1", "test_desc")
     .Returnable()
+    .StringAttr("attr_s", "attr_s_desc", false, false)
+    .Input("input", "input_desc")
+    .Input("input2", "input_desc")
+    .Output("output", "output_desc");
+REGISTER_OP(TEST_OP_3_MERGE, "0.0.1", "test_desc")
+    .Returnable()
+    .Mergeable()
     .StringAttr("attr_s", "attr_s_desc", false, false)
     .Input("input", "input_desc")
     .Input("input2", "input_desc")
@@ -232,23 +242,104 @@ TEST_F(GraphTest, Works) {
 
   EXPECT_TRUE(execution_list[0]);
   EXPECT_EQ(execution_list[0]->id(), 0);
-  EXPECT_TRUE(execution_list[0]->IsEntry());
-  EXPECT_FALSE(execution_list[0]->IsExit());
-  EXPECT_EQ(execution_list[0]->GetEntryNodeNum(), 1);
-  EXPECT_EQ(execution_list[0]->GetExitNodeNum(), 1);
-  EXPECT_FALSE(execution_list[0]->IsExitNode("node_b"));
-  EXPECT_FALSE(execution_list[0]->IsExitNode("node_a"));
-  EXPECT_FALSE(execution_list[0]->IsExitNode("node_c"));
-  EXPECT_TRUE(execution_list[0]->IsExitNode("node_d"));
+  EXPECT_TRUE(execution_list[0]->IsGraphEntry());
+  EXPECT_FALSE(execution_list[0]->IsGraphExit());
+  EXPECT_EQ(execution_list[0]->GetInputNodeNum(), 1);
+  EXPECT_EQ(execution_list[0]->GetOutputNodeNum(), 1);
+  EXPECT_FALSE(execution_list[0]->IsOutputNode("node_b"));
+  EXPECT_FALSE(execution_list[0]->IsOutputNode("node_a"));
+  EXPECT_FALSE(execution_list[0]->IsOutputNode("node_c"));
+  EXPECT_TRUE(execution_list[0]->IsOutputNode("node_d"));
 
   EXPECT_TRUE(execution_list[1]);
   EXPECT_EQ(execution_list[1]->id(), 1);
-  EXPECT_FALSE(execution_list[1]->IsEntry());
-  EXPECT_TRUE(execution_list[1]->IsExit());
-  EXPECT_EQ(execution_list[1]->GetEntryNodeNum(), 1);
-  EXPECT_EQ(execution_list[1]->GetExitNodeNum(), 1);
-  // EXPECT_TRUE(execution_list[1]->IsExitNode("node_e"));
-  EXPECT_TRUE(execution_list[1]->IsExitNode("node_f"));
+  EXPECT_FALSE(execution_list[1]->IsGraphEntry());
+  EXPECT_TRUE(execution_list[1]->IsGraphExit());
+  EXPECT_EQ(execution_list[1]->GetInputNodeNum(), 1);
+  EXPECT_EQ(execution_list[1]->GetOutputNodeNum(), 1);
+  // EXPECT_TRUE(execution_list[1]->IsOutputNode("node_e"));
+  EXPECT_TRUE(execution_list[1]->IsOutputNode("node_f"));
+}
+
+TEST_F(GraphTest, MultiInputEdgeForOneNode) {
+  std::string json_content = R"JSON(
+{
+  "version": "0.0.1",
+  "node_list": [
+    {
+      "name": "node_a",
+      "op": "TEST_OP_0",
+      "attr_values": {
+        "attr_s": {
+          "s": "a"
+        },
+      },
+    },
+    {
+      "name": "node_b",
+      "op": "TEST_OP_1",
+      "attr_values": {
+        "attr_s": {
+          "s": "b"
+        },
+      },
+    },
+    {
+      "name": "node_c",
+      "op": "TEST_OP_3_MERGE",
+      "parents": [ "node_a", "node_b" ],
+      "attr_values": {
+        "attr_s": {
+          "s": "b"
+        },
+      },
+    },
+  ],
+  "execution_list": [
+    {
+      "nodes": [
+        "node_a", "node_b",
+      ],
+      "config": {
+        "dispatch_type": "DP_ALL"
+      }
+    },
+    {
+      "nodes": [
+         "node_c"
+      ],
+      "config": {
+        "dispatch_type": "DP_ANYONE"
+      }
+    },
+  ]
+}
+)JSON";
+
+  GraphDef graph_def;
+  JsonToPb(json_content, &graph_def);
+
+  Graph g(std::move(graph_def));
+  const auto& execution_list = g.GetExecutions();
+  EXPECT_EQ(execution_list.size(), 2);
+
+  EXPECT_TRUE(execution_list[0]);
+  EXPECT_EQ(execution_list[0]->id(), 0);
+  EXPECT_TRUE(execution_list[0]->IsGraphEntry());
+  EXPECT_FALSE(execution_list[0]->IsGraphExit());
+  EXPECT_EQ(execution_list[0]->GetInputNodeNum(), 2);
+  EXPECT_EQ(execution_list[0]->GetOutputNodeNum(), 2);
+  EXPECT_TRUE(execution_list[0]->IsOutputNode("node_b"));
+  EXPECT_TRUE(execution_list[0]->IsOutputNode("node_a"));
+
+  EXPECT_TRUE(execution_list[1]);
+  EXPECT_EQ(execution_list[1]->id(), 1);
+  EXPECT_FALSE(execution_list[1]->IsGraphEntry());
+  EXPECT_TRUE(execution_list[1]->IsGraphExit());
+  EXPECT_EQ(execution_list[1]->GetInputNodeNum(), 1);
+  EXPECT_EQ(execution_list[1]->GetOutputNodeNum(), 1);
+  // EXPECT_TRUE(execution_list[1]->IsOutputNode("node_e"));
+  EXPECT_TRUE(execution_list[1]->IsOutputNode("node_c"));
 }
 
 struct ErrorParam {

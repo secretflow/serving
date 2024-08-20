@@ -29,8 +29,9 @@ void Executable::Run(Task& task) {
   if (task.features) {
     task.outputs = executor.Run(task.features);
   } else {
-    SERVING_ENFORCE(!task.node_inputs.empty(), errors::ErrorCode::LOGIC_ERROR);
-    task.outputs = executor.Run(task.node_inputs);
+    SERVING_ENFORCE(!task.prev_node_outputs.empty(),
+                    errors::ErrorCode::LOGIC_ERROR);
+    task.outputs = executor.Run(task.prev_node_outputs);
   }
 
   SPDLOG_DEBUG("Executable::Run end, task.outputs.size:{}",

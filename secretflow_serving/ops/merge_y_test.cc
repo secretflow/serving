@@ -120,9 +120,9 @@ TEST_P(MergeYParamTest, Works) {
   // compute
   ComputeContext compute_ctx;
   std::vector<std::shared_ptr<arrow::RecordBatch>> input_list;
-  for (size_t i = 0; i < feature_value_list.size(); ++i) {
+  for (const auto& v : feature_value_list) {
     arrow::DoubleBuilder builder;
-    SERVING_CHECK_ARROW_STATUS(builder.AppendValues(feature_value_list[i]));
+    SERVING_CHECK_ARROW_STATUS(builder.AppendValues(v));
     std::shared_ptr<arrow::Array> array;
     SERVING_CHECK_ARROW_STATUS(builder.Finish(&array));
     input_list.emplace_back(

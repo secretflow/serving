@@ -24,109 +24,8 @@
 
 namespace secretflow::serving {
 
-Predictor::Predictor(Options opts) : opts_(std::move(opts)) {}
-
-void Predictor::Predict(const apis::PredictRequest* request,
-                        apis::PredictResponse* response) {
-  std::unordered_map<std::string, apis::NodeIo> prev_node_io_map;
-  std::vector<std::unique_ptr<RemoteExecute>> async_running_execs;
-  async_running_execs.reserve(opts_.channels->size());
-
-  auto execute_locally =
-      [&](const std::shared_ptr<Execution>& execution,
-          std::unordered_map<std::string, apis::NodeIo>&& prev_io_map,
-          std::unordered_map<std::string, apis::NodeIo>* cur_io_map) {
-        // exec locally
-        auto local_exec = BuildLocalExecute(request, response, execution);
-        local_exec->SetInputs(std::move(prev_io_map));
-        local_exec->Run();
-        local_exec->GetOutputs(cur_io_map);
-      };
-
-  for (const auto& e : opts_.executions) {
-    async_running_execs.clear();
-    std::unordered_map<std::string, apis::NodeIo> new_node_io_map;
-    if (e->GetDispatchType() == DispatchType::DP_ALL) {
-      // remote exec
-      for (const auto& [party_id, channel] : *opts_.channels) {
-        auto ctx = BuildRemoteExecute(request, response, e, party_id, channel);
-        ctx->SetInputs(std::move(prev_node_io_map));
-        ctx->Run();
-
-        async_running_execs.emplace_back(std::move(ctx));
-      }
-
-      // exec locally
-      if (execution_core_) {
-        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
-      } else {
-        // TODO: support no execution core scene
-        SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
-      }
-
-      // join async exec
-      for (const auto& exec : async_running_execs) {
-        exec->WaitToFinish();
-        exec->GetOutputs(&new_node_io_map);
-      }
-
-    } else if (e->GetDispatchType() == DispatchType::DP_ANYONE) {
-      // exec locally
-      if (execution_core_) {
-        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
-      } else {
-        // TODO: support no execution core scene
-        SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
-      }
-    } else if (e->GetDispatchType() == DispatchType::DP_SPECIFIED) {
-      if (e->SpecificToThis()) {
-        SERVING_ENFORCE(execution_core_, errors::ErrorCode::UNEXPECTED_ERROR);
-        execute_locally(e, std::move(prev_node_io_map), &new_node_io_map);
-      } else {
-        auto iter = opts_.specific_party_map.find(e->id());
-        SERVING_ENFORCE(iter != opts_.specific_party_map.end(),
-                        serving::errors::LOGIC_ERROR,
-                        "{} execution assign to no party", e->id());
-        auto ctx = BuildRemoteExecute(request, response, e, iter->second,
-                                      opts_.channels->at(iter->second));
-        ctx->SetInputs(std::move(prev_node_io_map));
-        ctx->Run();
-        ctx->WaitToFinish();
-        ctx->GetOutputs(&new_node_io_map);
-      }
-    } else {
-      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                    "unsupported dispatch type: {}",
-                    DispatchType_Name(e->GetDispatchType()));
-    }
-    prev_node_io_map.swap(new_node_io_map);
-  }
-
-  DealFinalResult(prev_node_io_map, response);
-}
-
-std::unique_ptr<RemoteExecute> Predictor::BuildRemoteExecute(
-    const apis::PredictRequest* request, apis::PredictResponse* response,
-    const std::shared_ptr<Execution>& execution, std::string target_id,
-    const std::unique_ptr<::google::protobuf::RpcChannel>& channel) {
-  return std::make_unique<RemoteExecute>(request, response, execution,
-                                         std::move(target_id), opts_.party_id,
-                                         channel.get());
-}
-
-std::unique_ptr<LocalExecute> Predictor::BuildLocalExecute(
-    const apis::PredictRequest* request, apis::PredictResponse* response,
-    const std::shared_ptr<Execution>& execution) {
-  return std::make_unique<LocalExecute>(request, response, execution,
-                                        opts_.party_id, opts_.party_id,
-                                        execution_core_);
-}
-
-void Predictor::DealFinalResult(
-    std::unordered_map<std::string, apis::NodeIo>& node_io_map,
-    apis::PredictResponse* response) {
-  SERVING_ENFORCE(node_io_map.size() == 1, errors::ErrorCode::LOGIC_ERROR);
-  auto& node_io = node_io_map.begin()->second;
+namespace {
+void DealFinalResult(apis::NodeIo& node_io, apis::PredictResponse* response) {
   SERVING_ENFORCE(node_io.ios_size() == 1, errors::ErrorCode::LOGIC_ERROR);
   const auto& ios = node_io.ios(0);
   SERVING_ENFORCE(ios.datas_size() == 1, errors::ErrorCode::LOGIC_ERROR);
@@ -139,18 +38,7 @@ void Predictor::DealFinalResult(
   }
 
   for (int j = 0; j < record_batch->num_columns(); ++j) {
-    auto col = record_batch->column(j);
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum tmp;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          tmp);
-      col = std::move(tmp).make_array();
-    }
-
-    auto col_vector = std::static_pointer_cast<arrow::DoubleArray>(col);
-
+    auto col_vector = CastToDoubleArray(record_batch->column(j));
     auto field_name = record_batch->schema()->field(j)->name();
     for (int64_t i = 0; i < record_batch->num_rows(); ++i) {
       auto* score = results[i]->add_scores();
@@ -158,6 +46,96 @@ void Predictor::DealFinalResult(
       score->set_value(col_vector->Value(i));
     }
   }
+}
+}  // namespace
+
+Predictor::Predictor(Options opts) : opts_(std::move(opts)) {}
+
+void Predictor::Predict(const apis::PredictRequest* request,
+                        apis::PredictResponse* response) {
+  auto execute_locally =
+      [&](ExecuteContext ctx,
+          std::unordered_map<std::string, apis::NodeIo>* io_map) {
+        // exec locally
+        LocalExecute exec(std::move(ctx), execution_core_);
+        exec.Run();
+        exec.GetOutputs(io_map);
+      };
+
+  std::unordered_map<std::string, apis::NodeIo> node_io_map;
+  std::vector<std::unique_ptr<RemoteExecute>> async_running_execs;
+  async_running_execs.reserve(opts_.channels->size());
+
+  std::string exit_node_name;
+  for (const auto& e : opts_.executions) {
+    async_running_execs.clear();
+    if (e->IsGraphExit()) {
+      exit_node_name = e->GetExitNodes().front()->GetName();
+    }
+    ExecuteContext ctx(request, response, e, opts_.party_id, node_io_map);
+    if (e->GetDispatchType() == DispatchType::DP_ALL) {
+      // remote exec
+      for (const auto& [party_id, channel] : *opts_.channels) {
+        auto exec = BuildRemoteExecute(ctx, party_id, channel);
+        exec->Run();
+        async_running_execs.emplace_back(std::move(exec));
+      }
+
+      // exec locally
+      if (execution_core_) {
+        execute_locally(std::move(ctx), &node_io_map);
+      } else {
+        // TODO: support no execution core scene
+        SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
+      }
+
+      // join async exec
+      for (const auto& exec : async_running_execs) {
+        exec->WaitToFinish();
+        exec->GetOutputs(&node_io_map);
+      }
+
+    } else if (e->GetDispatchType() == DispatchType::DP_ANYONE) {
+      // exec locally
+      if (execution_core_) {
+        execute_locally(std::move(ctx), &node_io_map);
+      } else {
+        // TODO: support no execution core scene
+        SERVING_THROW(errors::ErrorCode::NOT_IMPLEMENTED, "not implemented");
+      }
+    } else if (e->GetDispatchType() == DispatchType::DP_SPECIFIED) {
+      if (e->SpecificFlag()) {
+        SERVING_ENFORCE(execution_core_, errors::ErrorCode::UNEXPECTED_ERROR);
+        execute_locally(std::move(ctx), &node_io_map);
+      } else {
+        auto iter = opts_.specific_party_map.find(e->id());
+        SERVING_ENFORCE(iter != opts_.specific_party_map.end(),
+                        serving::errors::LOGIC_ERROR,
+                        "{} execution assign to no party", e->id());
+        auto exec = BuildRemoteExecute(std::move(ctx), iter->second,
+                                       opts_.channels->at(iter->second));
+        exec->Run();
+        exec->WaitToFinish();
+        exec->GetOutputs(&node_io_map);
+      }
+    } else {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "unsupported dispatch type: {}",
+                    DispatchType_Name(e->GetDispatchType()));
+    }
+  }
+
+  auto iter = node_io_map.find(exit_node_name);
+  SERVING_ENFORCE(iter != node_io_map.end(),
+                  errors::ErrorCode::UNEXPECTED_ERROR);
+  DealFinalResult(iter->second, response);
+}
+
+std::unique_ptr<RemoteExecute> Predictor::BuildRemoteExecute(
+    ExecuteContext ctx, const std::string& target_id,
+    const std::unique_ptr<::google::protobuf::RpcChannel>& channel) {
+  return std::make_unique<RemoteExecute>(std::move(ctx), target_id,
+                                         channel.get());
 }
 
 }  // namespace secretflow::serving

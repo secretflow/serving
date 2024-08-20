@@ -39,17 +39,7 @@ Double::Matrix TableToMatrix(const std::shared_ptr<arrow::RecordBatch>& table) {
 
   // 遍历table的每一列，将数据映射到Eigen::Matrix中
   for (int i = 0; i < cols; ++i) {
-    const auto& col = table->column(i);
-    std::shared_ptr<arrow::Array> double_array = col;
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum double_array_datum;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          double_array_datum);
-      double_array = std::move(double_array_datum).make_array();
-    }
-
+    auto double_array = CastToDoubleArray(table->column(i));
     // index 0 is validity bitmap, real data start with 1
     auto data = double_array->data()->GetMutableValues<double>(1);
     SERVING_ENFORCE(data, errors::ErrorCode::LOGIC_ERROR,

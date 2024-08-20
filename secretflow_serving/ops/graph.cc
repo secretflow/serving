@@ -58,20 +58,24 @@ void NodeTraversal(
 
 Execution::Execution(
     size_t id, ExecutionDef execution_def,
-    std::unordered_map<std::string, std::shared_ptr<Node>> nodes)
+    std::unordered_map<std::string, std::shared_ptr<Node>> nodes, bool is_entry,
+    bool is_exit)
     : id_(id),
       execution_def_(std::move(execution_def)),
       nodes_(std::move(nodes)),
-      is_entry_(false),
-      is_exit_(false) {
+      is_entry_(is_entry),
+      is_exit_(is_exit) {
   // get execution exit nodes & entry nodes
   for (const auto& [node_name, node] : nodes_) {
     const auto& dst_edges = node->out_edges();
     const auto& in_edges = node->in_edges();
     // find exit nodes
     if (dst_edges.empty()) {
+      SERVING_ENFORCE(is_exit_, errors::ErrorCode::LOGIC_ERROR,
+                      "only last execution could have exit node(no child): {} "
+                      "found node {}",
+                      id_, node_name);
       exit_node_names_.emplace(node_name);
-      is_exit_ = true;
     } else {
       if (std::any_of(dst_edges.begin(), dst_edges.end(),
                       [&](const auto& edge) {
@@ -82,29 +86,37 @@ Execution::Execution(
     }
     // find entry nodes
     if (in_edges.empty()) {
+      SERVING_ENFORCE(
+          is_entry_, errors::ErrorCode::LOGIC_ERROR,
+          "only frist execution could have entry node(no parents): {} "
+          "found node {}",
+          id_, node_name);
       entry_nodes_.emplace_back(node);
-      is_entry_ = true;
     } else {
-      for (const auto& edge : in_edges) {
-        if (nodes_.find(edge->src_node()) == nodes_.end()) {
-          entry_nodes_.emplace_back(node);
-        }
+      if (std::any_of(in_edges.begin(), in_edges.end(), [&](const auto& edge) {
+            return nodes_.find(edge->src_node()) == nodes_.end();
+          })) {
+        entry_nodes_.emplace_back(node);
       }
     }
   }
 
   CheckNodesReachability();
+
+  for (const auto& n : exit_node_names_) {
+    exit_nodes_.emplace_back(nodes_.find(n)->second);
+  }
 }
 
 DispatchType Execution::GetDispatchType() const {
   return execution_def_.config().dispatch_type();
 }
 
-size_t Execution::GetEntryNodeNum() const { return entry_nodes_.size(); }
+size_t Execution::GetInputNodeNum() const { return entry_nodes_.size(); }
 
-size_t Execution::GetExitNodeNum() const { return exit_node_names_.size(); }
+size_t Execution::GetOutputNodeNum() const { return exit_node_names_.size(); }
 
-bool Execution::IsExitNode(const std::string& node_name) const {
+bool Execution::IsOutputNode(const std::string& node_name) const {
   return exit_node_names_.find(node_name) != exit_node_names_.end();
 }
 
@@ -292,7 +304,8 @@ void Graph::BuildExecution() {
                       "found duplicate node:{} in executions", n_name);
     }
     executions_.emplace_back(std::make_shared<Execution>(
-        i, execution_def_list[i], std::move(nodes)));
+        i, execution_def_list[i], std::move(nodes), i == 0,
+        i == (execution_def_list.size() - 1)));
   }
   SERVING_ENFORCE(node_name_set.size() == nodes_.size(),
                   errors::ErrorCode::UNEXPECTED_ERROR,
@@ -313,20 +326,21 @@ void Graph::CheckExecutionValidate() {
                     "the same, cur exeution id {}, type: {}",
                     e->id(), DispatchType_Name(e->GetDispatchType()));
 
-    if (e->IsEntry()) {
+    if (e->IsGraphEntry()) {
       SERVING_ENFORCE(e->GetDispatchType() == DispatchType::DP_ALL,
                       errors::ErrorCode::LOGIC_ERROR);
     }
-    if (e->IsExit()) {
+    if (e->IsGraphExit()) {
       SERVING_ENFORCE(e->GetDispatchType() != DispatchType::DP_ALL,
                       errors::ErrorCode::LOGIC_ERROR);
-      SERVING_ENFORCE(e->GetExitNodeNum() == 1, errors::ErrorCode::LOGIC_ERROR);
-      SERVING_ENFORCE(e->IsExitNode(exit_node_->GetName()),
+      SERVING_ENFORCE(e->GetOutputNodeNum() == 1,
+                      errors::ErrorCode::LOGIC_ERROR);
+      SERVING_ENFORCE(e->IsOutputNode(exit_node_->GetName()),
                       errors::ErrorCode::LOGIC_ERROR);
     }
     // if previous execution is DP_ALL, first op should be mergeable
     if (prev_dispatch_type == DispatchType::DP_ALL) {
-      for (auto& node : e->GetEntryNodes()) {
+      for (const auto& node : e->GetEntryNodes()) {
         SERVING_ENFORCE(node->GetOpDef()->tag().mergeable(),
                         errors::ErrorCode::LOGIC_ERROR,
                         "previous execution is DP_ALL, but first op({}) is not "

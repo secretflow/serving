@@ -117,4 +117,10 @@ std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
 std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(
     const std::string& filename, const std::string& id_name);
 
+std::shared_ptr<arrow::DoubleArray> CastToDoubleArray(
+    const std::shared_ptr<arrow::Array>& array);
+
+std::shared_ptr<arrow::RecordBatch> ShuffleRecordBatch(
+    const std::shared_ptr<arrow::RecordBatch>& input_batch);
+
 }  // namespace secretflow::serving

@@ -133,16 +133,8 @@ void TreeSelect::DoCompute(ComputeContext* ctx) {
   std::map<size_t, std::shared_ptr<arrow::Array>> input_features;
   for (const auto& idx : used_feature_idx_list_) {
     const auto& col = ctx->inputs.front().front()->column(idx);
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum double_array_datum;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          double_array_datum);
-      input_features.emplace(idx, std::move(double_array_datum).make_array());
-    } else {
-      input_features.emplace(idx, col);
-    }
+    input_features.emplace(
+        idx, CastToDoubleArray(ctx->inputs.front().front()->column(idx)));
   }
 
   std::shared_ptr<arrow::Array> res_array;
