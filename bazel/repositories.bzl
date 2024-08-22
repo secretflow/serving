@@ -107,10 +107,10 @@ def _com_aws_c_event_stream():
         http_archive,
         name = "com_aws_c_event_stream",
         urls = [
-            "https://github.com/awslabs/aws-c-event-stream/archive/v0.1.5.tar.gz",
+            "https://github.com/awslabs/aws-c-event-stream/archive/v0.4.3.tar.gz",
         ],
-        sha256 = "f1b423a487b5d6dca118bfc0d0c6cc596dc476b282258a3228e73a8f730422d4",
-        strip_prefix = "aws-c-event-stream-0.1.5",
+        sha256 = "d7d82c38bae68d2287ac59972a76b2b6159e7a3d7c9b7edb1357495aa4d0c0de",
+        strip_prefix = "aws-c-event-stream-0.4.3",
         build_file = "@sf_serving//bazel:aws_c_event_stream.BUILD",
     )
 
