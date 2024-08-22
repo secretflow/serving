@@ -95,10 +95,10 @@ def _com_aws_c_common():
         http_archive,
         name = "com_aws_c_common",
         urls = [
-            "https://github.com/awslabs/aws-c-common/archive/v0.7.6.tar.gz",
+            "https://github.com/awslabs/aws-c-common/archive/v0.9.27.tar.gz",
         ],
-        sha256 = "2253bddca034108266f983f60a76a704e7dc71a94700ee2d8411da74adbaa62d",
-        strip_prefix = "aws-c-common-0.7.6",
+        sha256 = "0c0eecbd7aa04f85b1bdddf6342789bc8052737c6e9aa2ca35e26caed41d06ba",
+        strip_prefix = "aws-c-common-0.9.27",
         build_file = "@sf_serving//bazel:aws_c_common.BUILD",
     )
 
