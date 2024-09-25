@@ -16,7 +16,6 @@
 
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
-#include <linux/limits.h>
 
 #include <algorithm>
 #include <limits>
