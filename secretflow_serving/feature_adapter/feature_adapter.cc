@@ -41,15 +41,12 @@ void FeatureAdapter::CheckFeatureValid(
     const std::shared_ptr<arrow::RecordBatch>& features) {
   const auto& schema = features->schema();
   if (feature_schema_->num_fields() > 0) {
-    SERVING_ENFORCE(schema->Equals(*feature_schema_),
-                    errors::ErrorCode::NOT_FOUND,
-                    "result schema does not match the request expect.");
+    CheckReferenceFields(
+        schema, std::const_pointer_cast<arrow::Schema>(feature_schema_),
+        "result schema does not match the request expect.");
   }
-  SERVING_ENFORCE(
-      request.fs_param->query_datas().size() == features->num_rows(),
-      errors::ErrorCode::LOGIC_ERROR,
-      "query row_num {} should be equal to fetched row_num {}",
-      request.fs_param->query_datas().size(), features->num_rows());
+  SERVING_ENFORCE_EQ(features->num_rows(), request.fs_param->query_datas_size(),
+                     "fetched feature row num should be equal to query num");
 }
 
 }  // namespace secretflow::serving::feature

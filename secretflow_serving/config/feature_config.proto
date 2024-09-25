@@ -26,6 +26,7 @@ message FeatureSourceConfig {
     MockOptions mock_opts = 1;
     HttpOptions http_opts = 2;
     CsvOptions csv_opts = 3;
+    StreamingOptions streaming_opts = 4;
   }
 }
 
@@ -80,4 +81,30 @@ message CsvOptions {
   // Id column name, associated with FeatureParam::query_datas
   // Query datas is a subset of id column
   string id_name = 2;
+
+  // Optional. Only for Inferencer tool use.
+  // Defatult: false
+  bool streaming_mode = 11;
+  // Optional. Valid only if `streaming_mode=true`.
+  // This determines the size(byte) of each read batch.
+  int32 block_size = 12;
+}
+
+// Only for Inferencer tool use.
+message StreamingOptions {
+  // Input file path, specifies where to load data
+  string file_path = 1;
+
+  // Input file format.
+  // Optional value: CSV
+  // Default: CSV
+  string file_format = 2;
+
+  // Id column name, associated with FeatureParam::query_datas
+  // Query datas is a subset of id column
+  string id_name = 3;
+
+  // Optional.
+  // This determines the size(byte) of each read batch.
+  int32 block_size = 12;
 }

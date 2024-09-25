@@ -19,6 +19,7 @@
 #include <random>
 
 #include "arrow/compute/api.h"
+#include "arrow/io/api.h"
 #include "arrow/ipc/api.h"
 
 #include "secretflow_serving/core/exception.h"
@@ -386,35 +387,6 @@ void CheckReferenceFields(const std::shared_ptr<arrow::Schema>& src,
   }
 }
 
-std::shared_ptr<arrow::Table> ReadCsvFileToTable(
-    const std::string& path,
-    const std::shared_ptr<const arrow::Schema>& feature_schema) {
-  // read csv file
-  std::shared_ptr<arrow::io::ReadableFile> file;
-  SERVING_GET_ARROW_RESULT(arrow::io::ReadableFile::Open(path), file);
-
-  arrow::csv::ConvertOptions convert_options;
-
-  for (int i = 0; i < feature_schema->num_fields(); ++i) {
-    std::shared_ptr<arrow::Field> field = feature_schema->field(i);
-
-    convert_options.include_columns.push_back(field->name());
-    convert_options.column_types[field->name()] = field->type();
-  }
-
-  std::shared_ptr<arrow::csv::TableReader> csv_reader;
-  SERVING_GET_ARROW_RESULT(
-      arrow::csv::TableReader::Make(arrow::io::default_io_context(), file,
-                                    arrow::csv::ReadOptions::Defaults(),
-                                    arrow::csv::ParseOptions::Defaults(),
-                                    convert_options),
-      csv_reader);
-
-  std::shared_ptr<arrow::Table> table;
-  SERVING_GET_ARROW_RESULT(csv_reader->Read(), table);
-  return table;
-}
-
 arrow::Datum GetRowsFilter(
     const std::shared_ptr<arrow::ChunkedArray>& id_column,
     const std::vector<std::string>& ids) {
@@ -440,19 +412,6 @@ arrow::Datum GetRowsFilter(
   SERVING_GET_ARROW_RESULT(arrow::compute::IsIn(id_column, query_data_array),
                            filter);
   return filter;
-}
-
-std::shared_ptr<arrow::ChunkedArray> GetIdColumnFromFile(
-    const std::string& filename, const std::string& id_name) {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
-  fields.push_back(arrow::field(id_name, arrow::utf8()));
-  auto schema = arrow::schema(fields);
-  auto table = ReadCsvFileToTable(filename, schema);
-  auto id_column = table->GetColumnByName(id_name);
-  SERVING_ENFORCE(id_column, errors::ErrorCode::INVALID_ARGUMENT,
-                  "column: {} is not in csv file: {}", id_name, filename);
-
-  return id_column;
 }
 
 std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(

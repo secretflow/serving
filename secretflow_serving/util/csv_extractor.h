@@ -14,16 +14,12 @@
 
 #pragma once
 
-#include <utility>
-
 #include "arrow/api.h"
-#include "arrow/csv/api.h"
-#include "arrow/io/api.h"
 #include "google/protobuf/repeated_field.h"
 
 #include "secretflow_serving/spis/batch_feature_service.pb.h"
 
-namespace secretflow::serving {
+namespace secretflow::serving::csv {
 
 class CSVExtractor {
  public:
@@ -61,4 +57,4 @@ class CSVExtractor {
   std::map<std::string, std::shared_ptr<arrow::Table>> schema_tables_cache_;
 };
 
-}  // namespace secretflow::serving
+}  // namespace secretflow::serving::csv

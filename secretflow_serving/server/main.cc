@@ -23,6 +23,7 @@
 #include "secretflow_serving/server/server.h"
 #include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/server/version.h"
+#include "secretflow_serving/util/network.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/config/serving_config.pb.h"
@@ -33,6 +34,9 @@ DEFINE_string(config_mode, "",
               "defined. optional value: kuscia");
 DEFINE_string(serving_config_file, "",
               "read an ascii config protobuf from the supplied file name.");
+
+DEFINE_bool(enable_peers_load_balancer, false,
+            "whether to enable load balancer between parties");
 
 // logging config
 DEFINE_string(
@@ -53,8 +57,12 @@ DEFINE_string(
 void InitLogger() {
   secretflow::serving::LoggingConfig log_config;
   if (!FLAGS_logging_config_file.empty()) {
-    secretflow::serving::LoadPbFromJsonFile(FLAGS_logging_config_file,
-                                            &log_config);
+    auto logging_config_str =
+        secretflow::serving::ReadFileContent(FLAGS_logging_config_file);
+    if (!secretflow::serving::CheckContentEmpty(logging_config_str)) {
+      secretflow::serving::JsonToPb(
+          secretflow::serving::UnescapeJson(logging_config_str), &log_config);
+    }
   }
   secretflow::serving::SetupLogging(log_config);
 }
@@ -62,8 +70,12 @@ void InitLogger() {
 void InitTracer() {
   secretflow::serving::TraceConfig trace_log;
   if (!FLAGS_trace_config_file.empty()) {
-    secretflow::serving::LoadPbFromJsonFile(FLAGS_trace_config_file,
-                                            &trace_log);
+    auto trace_config_str =
+        secretflow::serving::ReadFileContent(FLAGS_trace_config_file);
+    if (!secretflow::serving::CheckContentEmpty(trace_config_str)) {
+      secretflow::serving::JsonToPb(
+          secretflow::serving::UnescapeJson(trace_config_str), &trace_log);
+    }
   }
   secretflow::serving::InitTracer(trace_log);
 }
@@ -91,7 +103,6 @@ int main(int argc, char* argv[]) {
           [&](const std::shared_ptr<const secretflow::serving::op::OpDef>& o) {
             op_names.emplace_back(o->name());
           });
-
       SPDLOG_INFO("op list: {}",
                   fmt::join(op_names.begin(), op_names.end(), ", "));
     }
@@ -121,8 +132,10 @@ int main(int argc, char* argv[]) {
       server_opts.service_id = serving_conf.id();
     }
 
+    auto clannels = secretflow::serving::BuildChannelsFromConfig(
+        server_opts.cluster_config, FLAGS_enable_peers_load_balancer);
     secretflow::serving::Server server(std::move(server_opts));
-    server.Start();
+    server.Start(std::move(clannels));
 
     server.WaitForEnd();
   } catch (const secretflow::serving::Exception& e) {

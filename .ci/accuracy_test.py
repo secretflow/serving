@@ -54,7 +54,7 @@ def dump_json(obj, filename, indent=2):
         json.dump(obj, ofile, indent=indent)
 
 
-def is_approximately_equal(a, b, epsilon) -> bool:
+def is_approximately_equal(a, b, epsilon=0.0001) -> bool:
     return abs(a - b) < epsilon
 
 
@@ -328,7 +328,7 @@ class AccuracyTestCase(ProcRunGuard):
 
         return json.dumps(body_dict)
 
-    def exec(self):
+    def exec(self, epsilon=0.0001):
         try:
             self.start_server()
 
@@ -364,7 +364,7 @@ class AccuracyTestCase(ProcRunGuard):
                         ]
                     )
                     assert is_approximately_equal(
-                        expect_score, s, 0.0001
+                        expect_score, s, epsilon
                     ), f'result not match, {s} vs {expect_score}'
         finally:
             self.stop_server()
@@ -459,3 +459,36 @@ if __name__ == "__main__":
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
         score_col_name='pred',
     ).exec()
+
+    AccuracyTestCase(
+        service_id="phe_sgd",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/phe_sgd',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="phe_sgd_no_feature",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/phe_sgd_no_feature',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="phe_glm",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/phe_glm',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='predict_score',
+    ).exec(0.1)

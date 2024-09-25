@@ -89,5 +89,6 @@ py_library(
         "version.py",
         ":api",
         ":protos",
+        "//python_lib/secretflow_serving_lib/config",
     ],
 )

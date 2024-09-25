@@ -26,7 +26,6 @@ def sf_serving_deps():
     _com_github_pybind11_bazel()
     _com_github_pybind11()
     _com_github_opentelemetry_cpp()
-    _com_github_curl()
 
     # aws s3
     _com_aws_c_common()
@@ -34,7 +33,7 @@ def sf_serving_deps():
     _com_aws_checksums()
     _com_aws_sdk()
 
-    _yacl()
+    _heu()
     _dataproxy()
 
     _com_github_brpc_brpc()
@@ -47,15 +46,15 @@ def _dataproxy():
         remote = "https://github.com/secretflow/dataproxy.git",
     )
 
-def _yacl():
+def _heu():
     maybe(
         http_archive,
-        name = "yacl",
+        name = "com_alipay_sf_heu",
         urls = [
-            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.5b2.tar.gz",
+            "https://github.com/secretflow/heu/archive/refs/tags/v0.5.1b0.tar.gz",
         ],
-        strip_prefix = "yacl-0.4.5b2",
-        sha256 = "b3fb75d41a32b80145a3bb9d36b8c039a262191f1a2f037292c649344289b01b",
+        strip_prefix = "heu-0.5.1b0",
+        sha256 = "26e81b55b2d4f734977f8d5e1ba672c20287f2971dcb5d7f3fa46295e2882012",
     )
 
 def _bazel_rules_pkg():
@@ -75,19 +74,6 @@ def _bazel_platform():
             "https://github.com/bazelbuild/platforms/releases/download/0.0.10/platforms-0.0.10.tar.gz",
         ],
         sha256 = "218efe8ee736d26a3572663b374a253c012b716d8af0c07e842e82f238a0a7ee",
-    )
-
-def _com_github_curl():
-    maybe(
-        http_archive,
-        name = "com_github_curl",
-        build_file = "@sf_serving//bazel:curl.BUILD",
-        sha256 = "e9c37986337743f37fd14fe8737f246e97aec94b39d1b71e8a5973f72a9fc4f5",
-        strip_prefix = "curl-7.60.0",
-        urls = [
-            "http://mirror.tensorflow.org/curl.haxx.se/download/curl-7.60.0.tar.gz",
-            "https://curl.haxx.se/download/curl-7.60.0.tar.gz",
-        ],
     )
 
 def _com_aws_c_common():

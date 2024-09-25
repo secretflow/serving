@@ -87,15 +87,14 @@ HttpFeatureAdapter::HttpFeatureAdapter(
       http_opts.timeout_ms() > 0 ? http_opts.timeout_ms() : kTimeoutMs,
       http_opts.connect_timeout_ms() > 0 ? http_opts.connect_timeout_ms()
                                          : kConnectTimeoutMs,
-      http_opts.has_tls_config() ? &http_opts.tls_config() : nullptr);
-  retry_count_ =
-      RetryPolicyFactory::GetInstance()->GetMaxRetryCount(channel_name);
+      http_opts.has_tls_config() ? &http_opts.tls_config() : nullptr,
+      http_opts.has_retry_policy_config() ? &http_opts.retry_policy_config()
+                                          : nullptr);
 }
 
 void HttpFeatureAdapter::OnFetchFeature(const Request& request,
                                         Response* response) {
   brpc::Controller cntl;
-  cntl.set_max_retry(retry_count_);
   cntl.http_request().uri() = spec_.http_opts().endpoint();
   cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
   cntl.http_request().set_content_type("application/json");
@@ -134,14 +133,12 @@ void HttpFeatureAdapter::OnFetchFeature(const Request& request,
       span_option.msg = fmt::format(
           "deserialize response context failed: request: {}, error: {}",
           spi_request, status.ToString());
-
     } else if (spi_response.status().code() != spis::ErrorCode::OK) {
       span_option.code = MappingErrorCode(spi_response.status().code());
       span_option.msg = fmt::format(
           "fetch features response error, request: {}, msg: {}, code: {}",
           spi_request, spi_response.status().msg(),
           spi_response.status().code());
-
     } else if (spi_response.features().empty()) {
       span_option.code = errors::ErrorCode::IO_ERROR;
       span_option.msg =

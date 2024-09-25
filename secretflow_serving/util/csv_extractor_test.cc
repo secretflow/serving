@@ -16,7 +16,6 @@
 
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
-#include <linux/limits.h>
 
 #include <algorithm>
 #include <limits>
@@ -31,7 +30,7 @@
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/utils.h"
 
-namespace secretflow::serving {
+namespace secretflow::serving::csv {
 
 TEST(CSVExtractor, TestReadCsvFile) {
   butil::TempFile tmpfile;
@@ -64,4 +63,4 @@ id,x1,x2,x3,x4
   EXPECT_EQ(int_col->Value(3), 1);
 }
 
-}  // namespace secretflow::serving
+}  // namespace secretflow::serving::csv

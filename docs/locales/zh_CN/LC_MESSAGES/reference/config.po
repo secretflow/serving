@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-31 14:20+0800\n"
+"POT-Creation-Date: 2024-08-14 17:42+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -794,7 +794,7 @@ msgstr ""
 #: ../../source/reference/config.md
 msgid ""
 "Optional. Feature name mapping rules. Key: source or predefined feature "
-"name Value: model feature name"
+"name. Value: model feature name."
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -830,7 +830,7 @@ msgid "brpc_builtin_service_port"
 msgstr ""
 
 #: ../../source/reference/config.md
-msgid "Brpc builtin service listen port Default: disable service"
+msgid "Brpc builtin service listen port. Default: disable service"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -838,7 +838,7 @@ msgid "metrics_exposer_port"
 msgstr ""
 
 #: ../../source/reference/config.md
-msgid "`/metrics` service listen port Default: disable service"
+msgid "`/metrics` service listen port. Default: disable service"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -857,7 +857,7 @@ msgstr ""
 
 #: ../../source/reference/config.md
 msgid ""
-"Server-level max number of requests processed in parallel Default: 0 "
+"Server-level max number of requests processed in parallel. Default: 0 "
 "(unlimited)"
 msgstr ""
 

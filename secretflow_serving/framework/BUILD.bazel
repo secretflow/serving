@@ -65,6 +65,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/apis:model_service_cc_proto",
         "//secretflow_serving/core:exception",
+        "//secretflow_serving/util:he_mgm",
     ],
 )
 

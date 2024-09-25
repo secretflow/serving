@@ -112,4 +112,26 @@ size_t CountSampleNum(
   return predefined_row_num;
 }
 
+std::string UnescapeJson(const std::string& json) {
+  std::string result;
+  bool escape = false;
+  for (char ch : json) {
+    if (escape) {
+      result += ch;
+      escape = false;
+    } else if (ch == '\\') {
+      escape = true;
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
+bool CheckContentEmpty(const std::string& str) {
+  return str.empty() ||
+         std::all_of(str.begin(), str.end(),
+                     [](unsigned char c) { return std::isspace(c); });
+}
+
 }  // namespace secretflow::serving

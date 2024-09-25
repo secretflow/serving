@@ -34,7 +34,9 @@ struct NodeItem {
 
 class Executor {
  public:
-  explicit Executor(const std::shared_ptr<Execution>& execution);
+  explicit Executor(const std::shared_ptr<Execution>& execution,
+                    const std::string& self_party_id,
+                    const std::vector<std::string>& party_ids);
   ~Executor() = default;
 
   const std::shared_ptr<const arrow::Schema>& GetInputFeatureSchema() const {
@@ -43,15 +45,22 @@ class Executor {
 
   // for middle execution
   std::vector<NodeOutput> Run(
+      const std::string& requester_id,
       std::unordered_map<std::string,
                          std::vector<std::shared_ptr<arrow::RecordBatch>>>&
           prev_node_outputs);
 
   // for entry execution
-  std::vector<NodeOutput> Run(std::shared_ptr<arrow::RecordBatch>& features);
+  std::vector<NodeOutput> Run(const std::string& requester_id,
+                              std::shared_ptr<arrow::RecordBatch>& features);
 
  private:
   std::shared_ptr<Execution> execution_;
+
+  std::string self_party_id_;
+  std::vector<std::string> party_ids_;
+
+  std::vector<std::string> entry_node_names_;
 
   std::shared_ptr<std::unordered_map<std::string, NodeItem>> node_items_;
 

@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-28 09:40+0000\n"
+"POT-Creation-Date: 2024-08-14 20:59+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: ../../source/topics/graph/intro_to_graph.rst:4
 msgid "Introduction to Graph"
@@ -66,8 +66,8 @@ msgid "tag: Some properties of the operator."
 msgstr "tag: 算子的特定属性描述。"
 
 #: ../../source/topics/graph/intro_to_graph.rst:22
-msgid "attributes: Please check `Attributes` part below."
-msgstr "attributes: 请参考下面 `属性` 的内容"
+msgid "attributes: Please check ``Attributes`` part below."
+msgstr "attributes: 请参考下面 ``属性`` 的内容"
 
 #: ../../source/topics/graph/intro_to_graph.rst:23
 msgid "inputs and output: The info of the inputs or output of the operator."
@@ -102,15 +102,15 @@ msgstr "type: 请参考 :doc:`AttrType </reference/model>` 获取详细信息。
 
 #: ../../source/topics/graph/intro_to_graph.rst:35
 msgid ""
-"is_optional: If True, when AttrValue is not provided, `default_value` "
+"is_optional: If True, when AttrValue is not provided, ``default_value`` "
 "would be used. Else, AttrValue must be provided."
 msgstr ""
-"is_optional: 为 True 时，如果对应的 AttrValue 没有设置，`default_value` 的值将会被使用。否则，对应的"
+"is_optional: 为 True 时，如果对应的 AttrValue 没有设置，``default_value`` 的值将会被使用。否则，对应的"
 " AttrValue 必需提供。"
 
 #: ../../source/topics/graph/intro_to_graph.rst:36
-msgid "default_value: Please check :ref:`AttrValue  <AttrValue>`."
-msgstr "default_value: 请参考 :doc:`AttrValue  </reference/model>` 获取详细信息。"
+msgid "default_value: Please check :ref:`AttrValue <AttrValue>`."
+msgstr "default_value: 请参考 :doc:`AttrValue </reference/model>` 获取详细信息。"
 
 #: ../../source/topics/graph/intro_to_graph.rst:39
 msgid "Nodes"
@@ -119,8 +119,8 @@ msgstr "节点"
 #: ../../source/topics/graph/intro_to_graph.rst:40
 msgid ""
 "Nodes are instances of operators. They store the attribute values "
-"(`AttrValue`) of the operators."
-msgstr "节点是算子的实例。节点内包含算子的属性对应的属性值（`AttrValue`）"
+"(``AttrValue``) of the operators."
+msgstr "节点是算子的实例。节点内包含算子的属性对应的属性值（``AttrValue``）"
 
 #: ../../source/topics/graph/intro_to_graph.rst:43
 msgid "NodeDef"
@@ -181,8 +181,8 @@ msgid "node_list: The node list of the graph."
 msgstr "node_list: 图拥有的节点列表。"
 
 #: ../../source/topics/graph/intro_to_graph.rst:62
-msgid "execution_list: Please check `Executions` part below."
-msgstr "execution_list: 请参考下面 `执行体` 的部分。"
+msgid "execution_list: Please check ``Executions`` part below."
+msgstr "execution_list: 请参考下面 ``执行体`` 的部分。"
 
 #: ../../source/topics/graph/intro_to_graph.rst:65
 msgid "Executions"
@@ -214,7 +214,7 @@ msgstr "nodes: 执行体中包含的节点列表。注意，这些节点应该�
 msgid ""
 "config: The runtime config of the execution. It describes the scheduling "
 "logic and session-related states of this execution unit. for more "
-"details, please check :ref:`RuntimeConfig  <RuntimeConfig>`."
+"details, please check :ref:`RuntimeConfig <RuntimeConfig>`."
 msgstr ""
 "config: 执行体的运行配置。其描述执行体的调度逻辑以及会话状态。请查看 :ref:`RuntimeConfig  "
 "<RuntimeConfig>` 获取更多信息。"
@@ -232,7 +232,7 @@ msgid ""
 "lib/>`_ is a python library that provides interfaces to obtain "
 "Secretflow-Serving operators and export model files that Secretflow-"
 "Serving can load. For more details, please check :doc:`secretflow-"
-"serving-lib docs  </reference/modules>`."
+"serving-lib docs </reference/modules>`."
 msgstr ""
 "因为Secretflow-Serving需要加载 `Secretflow "
 "<https://github.com/secretflow/secretflow>`_ 训练后导出的模型，Secretflow-"

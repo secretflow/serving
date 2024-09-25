@@ -20,6 +20,7 @@
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/util/he_mgm.h"
 
 #include "secretflow_serving/apis/model_service.pb.h"
 
@@ -60,7 +61,7 @@ void ModelInfoProcessor::CheckAndSetSpecificMap() {
 
   const auto& local_graph_view = local_model_info_->graph_view();
 
-  for (auto& [remote_party_id, model_info] : *remote_model_info_) {
+  for (const auto& [remote_party_id, model_info] : *remote_model_info_) {
     SERVING_ENFORCE_EQ(model_info.name(), local_model_info_->name(),
                        "model name mismatch with {}: {}, local: {}: {}",
                        remote_party_id, model_info.name(), local_party_id_,
@@ -77,6 +78,18 @@ void ModelInfoProcessor::CheckAndSetSpecificMap() {
         "execution list size mismatch with {}: {}, local: {}: {}",
         remote_party_id, graph_view.execution_list_size(), local_party_id_,
         local_graph_view.execution_list_size());
+
+    if (model_info.graph_view().has_he_info() &&
+        !model_info.graph_view().he_info().pk_buf().empty()) {
+      SERVING_ENFORCE_EQ(
+          model_info.graph_view().he_info().encode_scale(),
+          local_model_info_->graph_view().he_info().encode_scale(),
+          "he encode scale mismatch, {}: {}, local: {}", remote_party_id,
+          model_info.graph_view().he_info().encode_scale(),
+          local_model_info_->graph_view().he_info().encode_scale());
+      he::HeKitMgm::GetInstance()->InitDstKit(
+          remote_party_id, model_info.graph_view().he_info().pk_buf());
+    }
 
     CheckNodeViewList(graph_view.node_list(), remote_party_id);
 

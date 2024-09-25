@@ -14,6 +14,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//python:defs.bzl", "python_proto_compile")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -125,4 +126,21 @@ proto_library(
 cc_proto_library(
     name = "serving_config_cc_proto",
     deps = [":serving_config_proto"],
+)
+
+python_proto_compile(
+    name = "config_py_proto",
+    output_mode = "NO_PREFIX",
+    prefix_path = "../..",
+    protos = [
+        ":cluster_config_proto",
+        ":feature_config_proto",
+        ":logging_config_proto",
+        ":model_config_proto",
+        ":retry_policy_config_proto",
+        ":server_config_proto",
+        ":serving_config_proto",
+        ":tls_config_proto",
+        ":trace_config_proto",
+    ],
 )

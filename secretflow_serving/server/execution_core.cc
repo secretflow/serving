@@ -113,6 +113,7 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     // executable run
     Executable::Task task;
     task.id = request->task().execution_id();
+    task.requester_id = request->requester_id();
     task.features = features;
     for (const auto& n : request->task().nodes()) {
       SERVING_ENFORCE_EQ(n.ios_size(), 1,

@@ -26,6 +26,9 @@ const std::string kHttpPrefix = "http://";
 const std::string kHttpsPrefix = "https://";
 const std::string kDefaultLoadBalancer = "rr";
 
+const int32_t kPeerConnectTimeoutMs = 500;
+const int32_t kPeerRpcTimeoutMs = 2000;
+
 std::string FillHttpPrefix(const std::string& addr, bool ssl_enabled) {
   if (absl::StartsWith(addr, kHttpPrefix) ||
       absl::StartsWith(addr, kHttpsPrefix)) {
@@ -104,9 +107,46 @@ std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
 
   RetryPolicyFactory::GetInstance()->SetConfig(name, retry_policy_config);
   opts.retry_policy = RetryPolicyFactory::GetInstance()->GetRetryPolicy(name);
+  opts.max_retry = RetryPolicyFactory::GetInstance()->GetMaxRetryCount(name);
 
   return CreateBrpcChannel(endpoint, protocol, enable_lb, rpc_timeout_ms,
                            connect_timeout_ms, tls_config, opts);
+}
+
+std::shared_ptr<
+    std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>
+BuildChannelsFromConfig(const ClusterConfig& cluster_config,
+                        bool enable_peers_load_balancer) {
+  SERVING_ENFORCE(cluster_config.parties_size() > 1,
+                  errors::ErrorCode::INVALID_ARGUMENT,
+                  "too few parties params for cluster config, get: {}",
+                  cluster_config.parties_size());
+
+  auto channels = std::make_shared<
+      std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>();
+  for (const auto& party : cluster_config.parties()) {
+    if (party.id() == cluster_config.self_id()) {
+      continue;
+    }
+    const auto& channel_desc = cluster_config.channel_desc();
+    channels->emplace(
+        party.id(),
+        CreateBrpcChannel(
+            party.id(), party.address(), channel_desc.protocol(),
+            enable_peers_load_balancer,
+            channel_desc.rpc_timeout_ms() > 0 ? channel_desc.rpc_timeout_ms()
+                                              : kPeerRpcTimeoutMs,
+            channel_desc.connect_timeout_ms() > 0
+                ? channel_desc.connect_timeout_ms()
+                : kPeerConnectTimeoutMs,
+            channel_desc.has_tls_config() ? &channel_desc.tls_config()
+                                          : nullptr,
+            channel_desc.has_retry_policy_config()
+                ? &channel_desc.retry_policy_config()
+                : nullptr));
+  }
+
+  return channels;
 }
 
 }  // namespace secretflow::serving

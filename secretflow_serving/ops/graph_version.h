@@ -16,7 +16,7 @@
 
 // Version upgrade when `GraphDef` changed.
 #define SERVING_GRAPH_MAJOR_VERSION 0
-#define SERVING_GRAPH_MINOR_VERSION 1
+#define SERVING_GRAPH_MINOR_VERSION 2
 #define SERVING_GRAPH_PATCH_VERSION 0
 
 #define SERVING_STR_HELPER(x) #x

@@ -30,6 +30,22 @@
 
 namespace secretflow::serving::kuscia {
 
+namespace {
+const char* kSpiTlsConfigKey = "spi_tls_config";
+
+const char* kServingIdKey = "serving_id";
+
+const char* kClusterDefKey = "cluster_def";
+
+const char* kInputConfigKey = "input_config";
+
+const char* kAllocatedPortKey = "allocated_ports";
+
+const char* kOssMetaKey = "oss_meta";
+
+const char* kHttpSourceMetaKey = "http_source_meta";
+}  // namespace
+
 namespace kusica_proto = ::kuscia::proto::api::v1alpha1::appconfig;
 
 KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
@@ -48,19 +64,19 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
                   raw_config_str);
 
   // get services id
-  SERVING_ENFORCE(doc["serving_id"].IsString(),
+  SERVING_ENFORCE(doc[kServingIdKey].IsString(),
                   errors::ErrorCode::INVALID_ARGUMENT);
-  service_id_ = {doc["serving_id"].GetString(),
-                 doc["serving_id"].GetStringLength()};
+  service_id_ = {doc[kServingIdKey].GetString(),
+                 doc[kServingIdKey].GetStringLength()};
 
   int self_party_idx = 0;
   std::string self_party_id;
   {
     // parse cluster_def
-    SERVING_ENFORCE(doc["cluster_def"].IsString(),
+    SERVING_ENFORCE(doc[kClusterDefKey].IsString(),
                     errors::ErrorCode::INVALID_ARGUMENT);
-    std::string cluster_def_str = {doc["cluster_def"].GetString(),
-                                   doc["cluster_def"].GetStringLength()};
+    std::string cluster_def_str = {doc[kClusterDefKey].GetString(),
+                                   doc[kClusterDefKey].GetStringLength()};
 
     kusica_proto::ClusterDefine cluster_def;
     JsonToPb(cluster_def_str, &cluster_def);
@@ -91,10 +107,10 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
   {
     // parse input config
-    SERVING_ENFORCE(doc["input_config"].IsString(),
+    SERVING_ENFORCE(doc[kInputConfigKey].IsString(),
                     errors::ErrorCode::INVALID_ARGUMENT);
-    std::string input_config_str = {doc["input_config"].GetString(),
-                                    doc["input_config"].GetStringLength()};
+    std::string input_config_str = {doc[kInputConfigKey].GetString(),
+                                    doc[kInputConfigKey].GetStringLength()};
 
     KusciaServingConfig serving_config;
     JsonToPb(input_config_str, &serving_config);
@@ -112,11 +128,11 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
   {
     // parse allocated_ports
-    SERVING_ENFORCE(doc["allocated_ports"].IsString(),
+    SERVING_ENFORCE(doc[kAllocatedPortKey].IsString(),
                     errors::ErrorCode::INVALID_ARGUMENT);
     std::string allocated_ports_str = {
-        doc["allocated_ports"].GetString(),
-        doc["allocated_ports"].GetStringLength()};
+        doc[kAllocatedPortKey].GetString(),
+        doc[kAllocatedPortKey].GetStringLength()};
 
     kusica_proto::AllocatedPorts allocated_ports;
     JsonToPb(allocated_ports_str, &allocated_ports);
@@ -144,15 +160,24 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
   // load oss config
   if (model_config_.source_type() == SourceType::ST_OSS) {
-    SERVING_ENFORCE(doc["oss_meta"].IsString(),
+    SERVING_ENFORCE(doc.HasMember(kOssMetaKey),
                     errors::ErrorCode::INVALID_ARGUMENT);
-    std::string oss_meta_str = {doc["oss_meta"].GetString(),
-                                doc["oss_meta"].GetStringLength()};
-    if (!oss_meta_str.empty()) {
-      OSSSourceMeta oss_meta;
-      JsonToPb(oss_meta_str, model_config_.mutable_oss_source_meta());
-    } else {
-      SPDLOG_WARN("oss meta is null");
+    SERVING_ENFORCE(doc[kOssMetaKey].IsString(),
+                    errors::ErrorCode::INVALID_ARGUMENT);
+    std::string oss_meta_str = {doc[kOssMetaKey].GetString(),
+                                doc[kOssMetaKey].GetStringLength()};
+    SERVING_ENFORCE(!oss_meta_str.empty(), errors::ErrorCode::INVALID_ARGUMENT,
+                    "get empty `oss_meta`");
+    JsonToPb(oss_meta_str, model_config_.mutable_oss_source_meta());
+  } else if (model_config_.source_type() == SourceType::ST_HTTP) {
+    if (doc.HasMember(kHttpSourceMetaKey)) {
+      SERVING_ENFORCE(doc[kHttpSourceMetaKey].IsString(),
+                      errors::ErrorCode::INVALID_ARGUMENT);
+      std::string meta_str = {doc[kHttpSourceMetaKey].GetString(),
+                              doc[kHttpSourceMetaKey].GetStringLength()};
+      if (!meta_str.empty()) {
+        JsonToPb(meta_str, model_config_.mutable_http_source_meta());
+      }
     }
   }
 
@@ -190,20 +215,15 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
   // fill spi tls config
   if (feature_config_.has_value() && feature_config_->has_http_opts()) {
     auto* http_opts = feature_config_->mutable_http_opts();
-    const char* KSpiTlsConfigKey = "spi_tls_config";
-    if (doc.HasMember(KSpiTlsConfigKey)) {
-      SERVING_ENFORCE(doc[KSpiTlsConfigKey].IsString(),
+    if (doc.HasMember(kSpiTlsConfigKey)) {
+      SERVING_ENFORCE(doc[kSpiTlsConfigKey].IsString(),
                       errors::ErrorCode::INVALID_ARGUMENT);
       std::string spi_tls_config_str = {
-          doc[KSpiTlsConfigKey].GetString(),
-          doc[KSpiTlsConfigKey].GetStringLength()};
+          doc[kSpiTlsConfigKey].GetString(),
+          doc[kSpiTlsConfigKey].GetStringLength()};
       if (!spi_tls_config_str.empty()) {
         SPDLOG_INFO("spi tls config: {}", spi_tls_config_str);
-        TlsConfig spi_tls_config;
-        JsonToPb(spi_tls_config_str, &spi_tls_config);
-        http_opts->mutable_tls_config()->CopyFrom(spi_tls_config);
-      } else {
-        SPDLOG_WARN("spi tls config is empty");
+        JsonToPb(spi_tls_config_str, http_opts->mutable_tls_config());
       }
     }
   }

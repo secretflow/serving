@@ -60,14 +60,20 @@ serving_cc_library(
 )
 
 serving_cc_library(
+    name = "csv_util",
+    srcs = ["csv_util.cc"],
+    hdrs = ["csv_util.h"],
+    deps = [
+        ":arrow_helper",
+    ],
+)
+
+serving_cc_library(
     name = "csv_extractor",
     srcs = ["csv_extractor.cc"],
     hdrs = ["csv_extractor.h"],
     deps = [
-        ":arrow_helper",
-        ":utils",
-        "//secretflow_serving/core:exception",
-        "//secretflow_serving/protos:data_type_cc_proto",
+        ":csv_util",
         "//secretflow_serving/spis:batch_feature_service_cc_proto",
     ],
 )
@@ -133,6 +139,7 @@ serving_cc_library(
     hdrs = ["network.h"],
     deps = [
         ":retry_policy",
+        "//secretflow_serving/config:cluster_config_cc_proto",
         "//secretflow_serving/config:tls_config_cc_proto",
         "//secretflow_serving/core:exception",
         "@com_github_brpc_brpc//:brpc",
@@ -153,5 +160,16 @@ serving_cc_test(
     srcs = ["thread_safe_queue_test.cc"],
     deps = [
         ":thread_safe_queue",
+    ],
+)
+
+serving_cc_library(
+    name = "he_mgm",
+    srcs = ["he_mgm.cc"],
+    hdrs = ["he_mgm.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/core:singleton",
+        "@com_alipay_sf_heu//heu/library/numpy",
     ],
 )

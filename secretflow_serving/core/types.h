@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "Eigen/Core"
+#include "heu/library/numpy/eigen_traits.h"
 
 namespace secretflow::serving {
 

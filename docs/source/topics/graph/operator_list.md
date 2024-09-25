@@ -6,7 +6,111 @@ SecretFlow-Serving Operator List
 ================================
 
 
-Last update: Wed May 29 20:14:58 2024
+Last update: Mon Aug 12 14:41:29 2024
+## PHE_2P_REDUCE
+
+
+Operator version: 0.0.1
+
+Two-party computation operator. Select data encrypted by either our side or the peer party according to the configuration.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|select_crypted_for_peer|If `True`, select the data can be decrypted by peer, including self calculated partial_y and peer's rand, otherwise select selfs.|Boolean|Y||
+|rand_number_col_name|The name of the rand number column in the input and output|String|Y||
+|partial_y_col_name|The name of the partial_y column in the input and output|String|Y||
+
+### Tags
+
+
+|Name|Description|
+| :--- | :--- |
+|mergeable|The operator accept the output of operators with different participants and will somehow merge them.|
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|compute results|The compute results from both self and peer's|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|selected results|The selected data|
+
+## PHE_2P_MERGE_Y
+
+
+Operator version: 0.0.1
+
+Two-party computation operator. Merge the obfuscated partial_y decrypted by the peer party with the partial_y based on self own key to obtain the final prediction score.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|exp_iters|Number of iterations of `exp` approximation, valid when `link_function` set `LF_EXP_TAYLOR`|Integer32|N|Default: 0.|
+|link_function|Type of link function, defined in `secretflow_serving/protos/link_function.proto`. Optional value: LF_EXP, LF_EXP_TAYLOR, LF_RECIPROCAL, LF_IDENTITY, LF_SIGMOID_RAW, LF_SIGMOID_MM1, LF_SIGMOID_MM3, LF_SIGMOID_GA, LF_SIGMOID_T1, LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, LF_SIGMOID_SR, LF_SIGMOID_SEGLS|String|Y||
+|yhat_scale|In order to prevent value overflow, GLM training is performed on the scaled y label. So in the prediction process, you need to enlarge yhat back to get the real predicted value, `yhat = yhat_scale * link(X * W)`|Double|N|Default: 1.0.|
+|score_col_name|The name of the score column in the output|String|Y||
+|crypted_y_col_name|The name of the crypted partial_y column in the second input|String|Y||
+|decrypted_y_col_name|The name of the decrypted partial_y column in the first input|String|Y||
+
+### Tags
+
+
+|Name|Description|
+| :--- | :--- |
+|returnable|The operator's output can be the final result|
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|crypted_data|The crypted data selected by `PHE_2P_REDUCE`|
+|decrypted_data|The decrypted data output by `PHE_2P_DECRYPT_PEER_Y`|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|score|The final linear predict score.|
+
+## PHE_2P_DECRYPT_PEER_Y
+
+
+Operator version: 0.0.1
+
+Two-party computation operator. Decrypt the obfuscated partial_y and add a random number.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|decrypted_col_name|The name of the decrypted result column in the output|String|Y||
+|partial_y_col_name|The name of the partial_y(which can be decrypt by self) column in the input|String|Y||
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|crypted_data|Input feature table|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|decrypted_data|Decrypted partial_y with the added random number.|
+
 ## MERGE_Y
 
 
@@ -76,6 +180,39 @@ Calculate the dot product of feature weights and values
 |Name|Description|
 | :--- | :--- |
 |partial_ys|The calculation results, they have a data type of `double`.|
+
+## PHE_2P_DOT_PRODUCT
+
+
+Operator version: 0.0.1
+
+Two-party computation operator. Load the encrypted feature weights, compute their dot product with the feature values, and add random noise to the result for obfuscation. Only supports computation between two parties, with the weights being encrypted using the other party's key.
+### Attrs
+
+
+|Name|Description|Type|Required|Notes|
+| :--- | :--- | :--- | :--- | :--- |
+|result_col_name|The name of the calculation result(partial_y) column in the output|String|Y||
+|offset_col_name|The name of the offset column(feature) in the input|String|N|Default: .|
+|rand_number_col_name|The name of the generated rand number column in the output|String|Y||
+|feature_types|List of input feature data types. Optional value: DT_UINT8, DT_INT8, DT_UINT16, DT_INT16, DT_UINT32, DT_INT32, DT_UINT64, DT_INT64, DT_FLOAT, DT_DOUBLE|String List|N|Default: [].|
+|feature_weights_ciphertext|feature weight ciphertext matrix bytes|Bytes|N||
+|intercept_ciphertext|Intercept ciphertext bytes or matrix bytes|Bytes|N||
+|feature_names|List of feature names. Note that if there is an offset column, it needs to be the last one in the list|String List|N|Default: [].|
+
+### Inputs
+
+
+|Name|Description|
+| :--- | :--- |
+|features|Input features|
+
+### Output
+
+
+|Name|Description|
+| :--- | :--- |
+|partial_y|Calculation results|
 
 ## ARROW_PROCESSING
 

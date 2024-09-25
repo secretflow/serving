@@ -29,9 +29,9 @@ namespace secretflow::serving {
 // 预测 - 服务入口
 class PredictionServiceImpl : public apis::PredictionService {
  public:
-  explicit PredictionServiceImpl(const std::string& party_id);
-
-  void Init(const std::shared_ptr<PredictionCore>& prediction_core);
+  explicit PredictionServiceImpl(
+      const std::string& party_id,
+      const std::shared_ptr<PredictionCore>& prediction_core);
 
   void Predict(::google::protobuf::RpcController* controller,
                const apis::PredictRequest* request,
@@ -48,7 +48,7 @@ class PredictionServiceImpl : public apis::PredictionService {
     ::prometheus::Family<::prometheus::Counter>& predict_counter_family;
     ::prometheus::Counter& predict_counter;
 
-    explicit Stats(std::map<std::string, std::string> labels,
+    explicit Stats(const std::map<std::string, std::string>& labels,
                    const std::shared_ptr<::prometheus::Registry>& registry =
                        metrics::GetDefaultRegistry());
   };
@@ -60,11 +60,9 @@ class PredictionServiceImpl : public apis::PredictionService {
  private:
   const std::string& party_id_;
 
-  Stats stats_;
-
   std::shared_ptr<PredictionCore> prediction_core_;
 
-  std::atomic<bool> init_flag_;
+  Stats stats_;
 };
 
 }  // namespace secretflow::serving

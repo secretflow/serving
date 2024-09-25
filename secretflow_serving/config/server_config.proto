@@ -32,7 +32,8 @@ message ServerConfig {
   // e.g. 192.168.2.51
   string host = 3;
 
-  // The port used for model inference.
+  // The port used for model predict service.
+  // Default: disable service
   int32 service_port = 4;
 
   // The port used for communication between parties serving.

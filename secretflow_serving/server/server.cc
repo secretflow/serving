@@ -21,7 +21,6 @@
 #include "secretflow_serving/framework/model_loader.h"
 #include "secretflow_serving/ops/graph.h"
 #include "secretflow_serving/server/execution_service_impl.h"
-#include "secretflow_serving/server/health.h"
 #include "secretflow_serving/server/metrics/default_metrics_registry.h"
 #include "secretflow_serving/server/metrics/metrics_service.h"
 #include "secretflow_serving/server/prediction_service_impl.h"
@@ -34,15 +33,9 @@
 #include "secretflow_serving/apis/metrics.pb.h"
 #include "secretflow_serving/apis/prediction_service.pb.h"
 
-DEFINE_bool(enable_peers_load_balancer, false,
-            "whether to enable load balancer between parties");
-
 namespace secretflow::serving {
 
 namespace {
-
-const int32_t kPeerConnectTimeoutMs = 500;
-const int32_t kPeerRpcTimeoutMs = 2000;
 
 void SetServerTLSOpts(const TlsConfig& tls_config,
                       brpc::ServerSSLOptions* server_ssl_opts) {
@@ -61,6 +54,7 @@ Server::Server(Options opts) : opts_(std::move(opts)) {
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "too few parties params for cluster config, get: {}",
                   opts_.cluster_config.parties_size());
+  hr_ = std::make_unique<health::ServingHealthReporter>();
 }
 
 Server::~Server() {
@@ -71,10 +65,15 @@ Server::~Server() {
   communication_server_.Join();
   metrics_server_.Join();
 
+  hr_ = nullptr;
   model_service_ = nullptr;
 }
 
-void Server::Start() {
+void Server::Start(
+    std::shared_ptr<
+        std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>
+        channels,
+    google::protobuf::Service* additional_service) {
   const auto& self_party_id = opts_.cluster_config.self_id();
 
   // get model package
@@ -86,36 +85,11 @@ void Server::Start() {
   SERVING_ENFORCE(!host.empty(), errors::ErrorCode::INVALID_ARGUMENT,
                   "get empty host.");
 
-  // build channels
   std::vector<std::string> cluster_ids;
-  auto channels = std::make_shared<PartyChannelMap>();
-  for (const auto& party : opts_.cluster_config.parties()) {
-    cluster_ids.emplace_back(party.id());
-    if (party.id() == self_party_id) {
-      continue;
-    }
-    const auto& channel_desc = opts_.cluster_config.channel_desc();
-    channels->emplace(
-        party.id(),
-        CreateBrpcChannel(
-            party.id(), party.address(), channel_desc.protocol(),
-            FLAGS_enable_peers_load_balancer,
-            channel_desc.rpc_timeout_ms() > 0 ? channel_desc.rpc_timeout_ms()
-                                              : kPeerRpcTimeoutMs,
-            channel_desc.connect_timeout_ms() > 0
-                ? channel_desc.connect_timeout_ms()
-                : kPeerConnectTimeoutMs,
-            channel_desc.has_tls_config() ? &channel_desc.tls_config()
-                                          : nullptr,
-            channel_desc.has_retry_policy_config()
-                ? &channel_desc.retry_policy_config()
-                : nullptr));
-  }
-
-  auto com_address =
-      fmt::format("{}:{}", host, opts_.server_config.communication_port());
-  auto service_address =
-      fmt::format("{}:{}", host, opts_.server_config.service_port());
+  std::transform(opts_.cluster_config.parties().begin(),
+                 opts_.cluster_config.parties().end(),
+                 std::back_inserter(cluster_ids),
+                 [](const auto& p) { return p.id(); });
 
   // load model package
   auto loader = std::make_unique<ModelLoader>();
@@ -126,7 +100,7 @@ void Server::Start() {
   // build execution core
   std::vector<Executor> executors;
   for (const auto& execution : graph.GetExecutions()) {
-    executors.emplace_back(Executor(execution));
+    executors.emplace_back(execution, self_party_id, cluster_ids);
   }
   ExecutionCore::Options exec_opts;
   exec_opts.id = opts_.service_id;
@@ -197,12 +171,22 @@ void Server::Start() {
   }
 
   // start commnication server
+  auto com_address =
+      fmt::format("{}:{}", host, opts_.server_config.communication_port());
   std::map<std::string, ModelInfo> model_info_map = {
       {opts_.service_id, model_info_collector.GetSelfModelInfo()}};
   model_service_ = std::make_unique<ModelServiceImpl>(std::move(model_info_map),
                                                       self_party_id);
   {
     brpc::ServerOptions com_server_options;
+    com_server_options.health_reporter = hr_.get();
+    if (opts_.server_config.brpc_builtin_service_port() > 0) {
+      com_server_options.has_builtin_services = true;
+      com_server_options.internal_port =
+          opts_.server_config.brpc_builtin_service_port();
+      SPDLOG_INFO("brpc built-in service port: {}",
+                  com_server_options.internal_port);
+    }
     if (opts_.server_config.worker_num() > 0) {
       com_server_options.num_threads = opts_.server_config.worker_num();
     }
@@ -221,6 +205,13 @@ void Server::Start() {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
                     "fail to add model service into com brpc server.");
     }
+    if (additional_service != nullptr) {
+      if (communication_server_.AddService(
+              additional_service, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+        SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                      "fail to add additional service into com brpc server.");
+      }
+    }
     // start services server
     communication_server_.set_version(SERVING_VERSION_STRING);
     if (communication_server_.Start(com_address.c_str(), &com_server_options) !=
@@ -229,61 +220,21 @@ void Server::Start() {
                     "fail to start communication brpc server at {}",
                     com_address);
     }
-
     SPDLOG_INFO("begin communication server listen at {}, ", com_address);
-  }
 
-  // start service server
-  brpc::ServerOptions server_options;
-  server_options.max_concurrency = opts_.server_config.max_concurrency();
-  if (opts_.server_config.worker_num() > 0) {
-    server_options.num_threads = opts_.server_config.worker_num();
+    // FIXME:
+    // kuscia场景需要在服务启动后，使服务状态可用，此时才能挂载路由。
+    // 但服务需要完成 exchange model info 才能 ready
+    hr_->SetStatusCode(200);
   }
-  if (opts_.server_config.brpc_builtin_service_port() > 0) {
-    server_options.has_builtin_services = true;
-    server_options.internal_port =
-        opts_.server_config.brpc_builtin_service_port();
-    SPDLOG_INFO("brpc built-in service port: {}", server_options.internal_port);
-  }
-  if (opts_.server_config.has_tls_config()) {
-    SetServerTLSOpts(opts_.server_config.tls_config(),
-                     server_options.mutable_ssl_options());
-  }
-  health::ServingHealthReporter hr;
-  server_options.health_reporter = &hr;
-  // FIXME:
-  // kuscia场景需要在服务启动后，使服务状态可用，此时才能挂载路由。但服务需要完成
-  // exchange model info 才能 ready
-  hr.SetStatusCode(200);
-
-  if (service_server_.AddService(model_service_.get(),
-                                 brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to add model service into brpc server.");
-  }
-  auto* prediction_service = new PredictionServiceImpl(self_party_id);
-  if (service_server_.AddService(prediction_service,
-                                 brpc::SERVER_OWNS_SERVICE) != 0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to add prediction service into brpc server.");
-  }
-  service_server_.set_version(SERVING_VERSION_STRING);
-  if (service_server_.Start(service_address.c_str(), &server_options) != 0) {
-    SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
-                  "fail to start service brpc server at {}", service_address);
-  }
-
-  SPDLOG_INFO("begin service server listen at {}, ", service_address);
 
   // exchange model info
   SPDLOG_INFO("start exchange model_info");
-
   model_info_collector.DoCollect();
   auto specific_map = model_info_collector.GetSpecificMap();
-
   SPDLOG_INFO("end exchange model_info");
 
-  // build prediction core, let prediction service begin to serve
+  // build prediction core
   Predictor::Options predictor_opts;
   predictor_opts.party_id = self_party_id;
   predictor_opts.channels = channels;
@@ -297,9 +248,44 @@ void Server::Start() {
   prediction_core_opts.party_id = self_party_id;
   prediction_core_opts.cluster_ids = std::move(cluster_ids);
   prediction_core_opts.predictor = predictor;
-  auto prediction_core =
+  prediction_core_ =
       std::make_shared<PredictionCore>(std::move(prediction_core_opts));
-  prediction_service->Init(prediction_core);
+
+  if (opts_.server_config.service_port() > 0) {
+    auto service_address =
+        fmt::format("{}:{}", host, opts_.server_config.service_port());
+
+    // start service server
+    brpc::ServerOptions server_options;
+    server_options.max_concurrency = opts_.server_config.max_concurrency();
+    if (opts_.server_config.worker_num() > 0) {
+      server_options.num_threads = opts_.server_config.worker_num();
+    }
+    if (opts_.server_config.has_tls_config()) {
+      SetServerTLSOpts(opts_.server_config.tls_config(),
+                       server_options.mutable_ssl_options());
+    }
+    if (service_server_.AddService(model_service_.get(),
+                                   brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to add model service into brpc server.");
+    }
+    auto* prediction_service =
+        new PredictionServiceImpl(self_party_id, prediction_core_);
+    if (service_server_.AddService(prediction_service,
+                                   brpc::SERVER_OWNS_SERVICE) != 0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to add prediction service into brpc server.");
+    }
+    service_server_.set_version(SERVING_VERSION_STRING);
+    if (service_server_.Start(service_address.c_str(), &server_options) != 0) {
+      SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
+                    "fail to start service brpc server at {}", service_address);
+    }
+    SPDLOG_INFO("begin service server listen at {}, ", service_address);
+  } else {
+    SPDLOG_INFO("service port is 0, prediction service is disabled.");
+  }
 }
 
 void Server::WaitForEnd() {

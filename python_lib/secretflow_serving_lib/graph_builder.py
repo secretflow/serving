@@ -31,6 +31,7 @@ from .graph_pb2 import (
     GraphView,
     NodeDef,
     RuntimeConfig,
+    HeConfig,
 )
 from .op_pb2 import OpDef
 
@@ -149,6 +150,9 @@ class _GraphProtoWrapper:
     def __init__(self, version: str):
         self.version = version
         self.executions = []
+        self.pk_bytes = None
+        self.sk_bytes = None
+        self.scale = None
 
     def add_execution(self, exec: _ExecutionProtoWrapper):
         self.executions.append(exec)
@@ -159,9 +163,17 @@ class _GraphProtoWrapper:
     def get_execution_count(self):
         return len(self.executions)
 
+    def set_he_config(self, pk_bytes, sk_bytes, scale):
+        self.pk_bytes = pk_bytes
+        self.sk_bytes = sk_bytes
+        self.scale = scale
+
     def proto(self) -> GraphDef:
         return GraphDef(
             version=self.version,
+            he_config=HeConfig(
+                pk_buf=self.pk_bytes, sk_buf=self.sk_bytes, encode_scale=self.scale
+            ),
             execution_list=[exec.proto() for exec in self.executions],
             node_list=list(
                 chain.from_iterable(
@@ -227,6 +239,9 @@ class GraphBuilder:
                 DispatchType.Value(dispatch_type), specific_flag, session_run
             )
         )
+
+    def set_he_config(self, pk_bytes, sk_bytes, scale):
+        self.graph.set_he_config(pk_bytes, sk_bytes, scale)
 
     def build_proto(self) -> GraphDef:
         '''Get the GraphDef include all nodes and executions'''

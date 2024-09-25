@@ -278,7 +278,8 @@ TEST_F(ExecutorTest, MassiveWorks) {
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
                                                std::move(nodes), true, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   std::shared_ptr<arrow::RecordBatch> inputs;
@@ -293,7 +294,7 @@ TEST_F(ExecutorTest, MassiveWorks) {
     inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
   // run
-  auto output = executor->Run(inputs);
+  auto output = executor->Run("test_requester_id", inputs);
 
   // build expect
   auto expect_output_schema =
@@ -378,7 +379,8 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
                                                std::move(nodes), true, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   std::shared_ptr<arrow::RecordBatch> inputs;
@@ -394,7 +396,7 @@ TEST_F(ExecutorTest, ComplexMassiveWorks) {
   }
 
   // run
-  auto output = executor->Run(inputs);
+  auto output = executor->Run("test_requester_id", inputs);
 
   // build expect
   auto expect_output_schema =
@@ -482,7 +484,8 @@ TEST_F(ExecutorTest, FeatureInput) {
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
                                                std::move(nodes), true, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   std::shared_ptr<arrow::RecordBatch> inputs;
@@ -497,7 +500,7 @@ TEST_F(ExecutorTest, FeatureInput) {
     inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
   // run
-  auto output = executor->Run(inputs);
+  auto output = executor->Run("test_requester_id", inputs);
 
   // build expect
   auto expect_output_schema =
@@ -583,7 +586,8 @@ TEST_F(ExecutorTest, ExceptionWorks) {
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
                                                std::move(nodes), true, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   std::shared_ptr<arrow::RecordBatch> inputs;
@@ -598,7 +602,8 @@ TEST_F(ExecutorTest, ExceptionWorks) {
     inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
   // run
-  EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
+  EXPECT_THROW(executor->Run("test_requester_id", inputs),
+               ::secretflow::serving::Exception);
 
   // expect
   EXPECT_EQ(ThreadPool::GetInstance()->GetTaskSize(), 0);
@@ -673,7 +678,8 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
 
   auto execution = std::make_shared<Execution>(0, std::move(executino_def),
                                                std::move(nodes), true, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   std::shared_ptr<arrow::RecordBatch> inputs;
@@ -688,7 +694,8 @@ TEST_F(ExecutorTest, ExceptionComplexMassiveWorks) {
     inputs = MakeRecordBatch(input_schema, 4, {array_0});
   }
   // run
-  EXPECT_THROW(executor->Run(inputs), ::secretflow::serving::Exception);
+  EXPECT_THROW(executor->Run("test_requester_id", inputs),
+               ::secretflow::serving::Exception);
 
   // wait for thread pool to pop remain tasks
   executor.reset();
@@ -766,7 +773,8 @@ TEST_F(ExecutorTest, PrevNodeDataInput) {
       std::unordered_map<std::string, std::shared_ptr<Node>>{
           {"node_c", nodes["node_c"]}, {"node_d", nodes["node_d"]}},
       false, true);
-  auto executor = std::make_shared<Executor>(execution);
+  auto executor = std::make_shared<Executor>(execution, "alice",
+                                             std::vector<std::string>{"bob"});
 
   // mock input
   auto input_schema =
@@ -791,7 +799,7 @@ TEST_F(ExecutorTest, PrevNodeDataInput) {
       "node_b", std::vector<std::shared_ptr<arrow::RecordBatch>>{output_b});
 
   // run
-  auto output = executor->Run(prev_node_io);
+  auto output = executor->Run("test_requester_id", prev_node_io);
 
   // build expect
   auto expect_output_schema =
