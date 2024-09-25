@@ -41,8 +41,6 @@ class PheDotProduct : public OpKernel {
   std::string result_col_name_;
   std::string rand_number_col_name_;
 
-  double offset_ = 0.0;
-
   bool no_feature_ = false;
   bool has_intercept_ = false;
 };
