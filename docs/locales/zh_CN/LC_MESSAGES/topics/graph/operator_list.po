@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-29 20:16+0800\n"
+"POT-Creation-Date: 2024-08-12 14:42+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,27 +22,39 @@ msgid "SecretFlow-Serving Operator List"
 msgstr "SecretFlow-Serving 算子列表"
 
 #: ../../source/topics/graph/operator_list.md:9
-msgid "Last update: Wed May 29 20:14:58 2024"
+msgid "Last update: Mon Aug 12 14:41:29 2024"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md:10
-msgid "MERGE_Y"
+msgid "PHE_2P_REDUCE"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md:13
-msgid "Operator version: 0.0.3"
+#: ../../source/topics/graph/operator_list.md:49
+#: ../../source/topics/graph/operator_list.md:89
+#: ../../source/topics/graph/operator_list.md:187
+#: ../../source/topics/graph/operator_list.md:220
+#: ../../source/topics/graph/operator_list.md:257
+#: ../../source/topics/graph/operator_list.md:293
+msgid "Operator version: 0.0.1"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md:15
-msgid "Merge all partial y(score) and apply link function"
+msgid ""
+"Two-party computation operator. Select data encrypted by either our side "
+"or the peer party according to the configuration."
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md:16
-#: ../../source/topics/graph/operator_list.md:55
-#: ../../source/topics/graph/operator_list.md:86
-#: ../../source/topics/graph/operator_list.md:123
+#: ../../source/topics/graph/operator_list.md:52
+#: ../../source/topics/graph/operator_list.md:92
+#: ../../source/topics/graph/operator_list.md:120
 #: ../../source/topics/graph/operator_list.md:159
-#: ../../source/topics/graph/operator_list.md:195
+#: ../../source/topics/graph/operator_list.md:190
+#: ../../source/topics/graph/operator_list.md:223
+#: ../../source/topics/graph/operator_list.md:260
+#: ../../source/topics/graph/operator_list.md:296
+#: ../../source/topics/graph/operator_list.md:332
 msgid "Attrs"
 msgstr ""
 
@@ -64,6 +76,116 @@ msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
 msgid "Notes"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "select_crypted_for_peer"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid ""
+"If `True`, select the data can be decrypted by peer, including self "
+"calculated partial_y and peer's rand, otherwise select selfs."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Boolean"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Y"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "rand_number_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the rand number column in the input and output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "String"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "partial_y_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the partial_y column in the input and output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:25
+#: ../../source/topics/graph/operator_list.md:64
+#: ../../source/topics/graph/operator_list.md:131
+#: ../../source/topics/graph/operator_list.md:233
+#: ../../source/topics/graph/operator_list.md:305
+#: ../../source/topics/graph/operator_list.md:343
+msgid "Tags"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "mergeable"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid ""
+"The operator accept the output of operators with different participants "
+"and will somehow merge them."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:32
+#: ../../source/topics/graph/operator_list.md:71
+#: ../../source/topics/graph/operator_list.md:100
+#: ../../source/topics/graph/operator_list.md:139
+#: ../../source/topics/graph/operator_list.md:170
+#: ../../source/topics/graph/operator_list.md:203
+#: ../../source/topics/graph/operator_list.md:240
+#: ../../source/topics/graph/operator_list.md:276
+#: ../../source/topics/graph/operator_list.md:312
+#: ../../source/topics/graph/operator_list.md:350
+msgid "Inputs"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "compute results"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The compute results from both self and peer's"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:39
+#: ../../source/topics/graph/operator_list.md:79
+#: ../../source/topics/graph/operator_list.md:107
+#: ../../source/topics/graph/operator_list.md:146
+#: ../../source/topics/graph/operator_list.md:177
+#: ../../source/topics/graph/operator_list.md:210
+#: ../../source/topics/graph/operator_list.md:247
+#: ../../source/topics/graph/operator_list.md:283
+#: ../../source/topics/graph/operator_list.md:319
+#: ../../source/topics/graph/operator_list.md:357
+msgid "Output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "selected results"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The selected data"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:46
+msgid "PHE_2P_MERGE_Y"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:51
+msgid ""
+"Two-party computation operator. Merge the obfuscated partial_y decrypted "
+"by the peer party with the partial_y based on self own key to obtain the "
+"final prediction score."
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -89,22 +211,6 @@ msgid "Default: 0."
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid "output_col_name"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "The column name of merged score"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "String"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "Y"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
 msgid "link_function"
 msgstr ""
 
@@ -117,14 +223,6 @@ msgid ""
 "LF_SIGMOID_T3, LF_SIGMOID_T5, LF_SIGMOID_T7, LF_SIGMOID_T9, "
 "LF_SIGMOID_LS7, LF_SIGMOID_SEG3, LF_SIGMOID_SEG5, LF_SIGMOID_DF, "
 "LF_SIGMOID_SR, LF_SIGMOID_SEGLS"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "input_col_name"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "The column name of partial_y"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -146,11 +244,28 @@ msgstr ""
 msgid "Default: 1.0."
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:27
-#: ../../source/topics/graph/operator_list.md:96
-#: ../../source/topics/graph/operator_list.md:168
-#: ../../source/topics/graph/operator_list.md:206
-msgid "Tags"
+#: ../../source/topics/graph/operator_list.md
+msgid "score_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the score column in the output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "crypted_y_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the crypted partial_y column in the second input"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "decrypted_y_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the decrypted partial_y column in the first input"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -162,22 +277,87 @@ msgid "The operator's output can be the final result"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid "mergeable"
+msgid "crypted_data"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The crypted data selected by `PHE_2P_REDUCE`"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "decrypted_data"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The decrypted data output by `PHE_2P_DECRYPT_PEER_Y`"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "score"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The final linear predict score."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:86
+msgid "PHE_2P_DECRYPT_PEER_Y"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:91
+msgid ""
+"Two-party computation operator. Decrypt the obfuscated partial_y and add "
+"a random number."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "decrypted_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the decrypted result column in the output"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
 msgid ""
-"The operator accept the output of operators with different participants "
-"and will somehow merge them."
+"The name of the partial_y(which can be decrypt by self) column in the "
+"input"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:35
-#: ../../source/topics/graph/operator_list.md:66
-#: ../../source/topics/graph/operator_list.md:103
-#: ../../source/topics/graph/operator_list.md:139
-#: ../../source/topics/graph/operator_list.md:175
-#: ../../source/topics/graph/operator_list.md:213
-msgid "Inputs"
+#: ../../source/topics/graph/operator_list.md
+msgid "Input feature table"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Decrypted partial_y with the added random number."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:114
+msgid "MERGE_Y"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:117
+msgid "Operator version: 0.0.3"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:119
+msgid "Merge all partial y(score) and apply link function"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "output_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The column name of merged score"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "input_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The column name of partial_y"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -188,15 +368,6 @@ msgstr ""
 msgid "The list of partial y, data type: `double`"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:42
-#: ../../source/topics/graph/operator_list.md:73
-#: ../../source/topics/graph/operator_list.md:110
-#: ../../source/topics/graph/operator_list.md:146
-#: ../../source/topics/graph/operator_list.md:182
-#: ../../source/topics/graph/operator_list.md:220
-msgid "Output"
-msgstr ""
-
 #: ../../source/topics/graph/operator_list.md
 msgid "scores"
 msgstr ""
@@ -205,16 +376,16 @@ msgstr ""
 msgid "The merge result of `partial_ys`, data type: `double`"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:49
+#: ../../source/topics/graph/operator_list.md:153
 msgid "DOT_PRODUCT"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:52
-#: ../../source/topics/graph/operator_list.md:192
+#: ../../source/topics/graph/operator_list.md:156
+#: ../../source/topics/graph/operator_list.md:329
 msgid "Operator version: 0.0.2"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:54
+#: ../../source/topics/graph/operator_list.md:158
 msgid "Calculate the dot product of feature weights and values"
 msgstr ""
 
@@ -274,24 +445,103 @@ msgid "features"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid "Input feature table"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
 msgid "The calculation results, they have a data type of `double`."
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:80
+#: ../../source/topics/graph/operator_list.md:184
+msgid "PHE_2P_DOT_PRODUCT"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:189
+msgid ""
+"Two-party computation operator. Load the encrypted feature weights, "
+"compute their dot product with the feature values, and add random noise "
+"to the result for obfuscation. Only supports computation between two "
+"parties, with the weights being encrypted using the other party's key."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "result_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the calculation result(partial_y) column in the output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "offset_col_name"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the offset column(feature) in the input"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Default: ."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "The name of the generated rand number column in the output"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "feature_types"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid ""
+"List of input feature data types. Optional value: DT_UINT8, DT_INT8, "
+"DT_UINT16, DT_INT16, DT_UINT32, DT_INT32, DT_UINT64, DT_INT64, DT_FLOAT, "
+"DT_DOUBLE"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Default: []."
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "feature_weights_ciphertext"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "feature weight ciphertext matrix bytes"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Bytes"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "intercept_ciphertext"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Intercept ciphertext bytes or matrix bytes"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid ""
+"List of feature names. Note that if there is an offset column, it needs "
+"to be the last one in the list"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Input features"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "partial_y"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md
+msgid "Calculation results"
+msgstr ""
+
+#: ../../source/topics/graph/operator_list.md:217
 msgid "ARROW_PROCESSING"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:83
-#: ../../source/topics/graph/operator_list.md:120
-#: ../../source/topics/graph/operator_list.md:156
-msgid "Operator version: 0.0.1"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md:85
+#: ../../source/topics/graph/operator_list.md:222
 msgid "Replay secretflow compute functions"
 msgstr ""
 
@@ -304,10 +554,6 @@ msgid "Whether `trace_content` is serialized json"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid "Boolean"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
 msgid "Default: False."
 msgstr ""
 
@@ -317,10 +563,6 @@ msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
 msgid "Serialized data of secretflow compute trace"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "Bytes"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -347,11 +589,11 @@ msgstr ""
 msgid "output"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:117
+#: ../../source/topics/graph/operator_list.md:254
 msgid "TREE_SELECT"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:122
+#: ../../source/topics/graph/operator_list.md:259
 msgid ""
 "Obtaining the local prediction path information of the decision tree "
 "using input features."
@@ -424,13 +666,6 @@ msgid "input_feature_types"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid ""
-"List of input feature data types. Optional value: DT_UINT8, DT_INT8, "
-"DT_UINT16, DT_INT16, DT_UINT32, DT_INT32, DT_UINT64, DT_INT64, DT_FLOAT, "
-"DT_DOUBLE"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
 msgid "node_ids"
 msgstr ""
 
@@ -450,11 +685,11 @@ msgstr ""
 msgid "The local prediction path information of the decision tree."
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:153
+#: ../../source/topics/graph/operator_list.md:290
 msgid "TREE_MERGE"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:158
+#: ../../source/topics/graph/operator_list.md:295
 msgid ""
 "Merge the `TREE_SELECT` output from multiple parties to obtain a unique "
 "prediction path and return the result weights."
@@ -468,10 +703,6 @@ msgstr ""
 msgid ""
 "The weight list for leaf node, If party does not possess weights. The "
 "attr can be omitted."
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
-msgid "Default: []."
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
@@ -491,18 +722,14 @@ msgid "Input tree selects"
 msgstr ""
 
 #: ../../source/topics/graph/operator_list.md
-msgid "score"
-msgstr ""
-
-#: ../../source/topics/graph/operator_list.md
 msgid "The prediction result of tree."
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:189
+#: ../../source/topics/graph/operator_list.md:326
 msgid "TREE_ENSEMBLE_PREDICT"
 msgstr ""
 
-#: ../../source/topics/graph/operator_list.md:194
+#: ../../source/topics/graph/operator_list.md:331
 msgid ""
 "Accept the weighted results from multiple trees (`TREE_SELECT` + "
 "`TREE_MERGE`), merge them, and obtain the final prediction result of the "

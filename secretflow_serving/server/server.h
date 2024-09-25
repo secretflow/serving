@@ -20,7 +20,9 @@
 
 #include "brpc/server.h"
 
+#include "secretflow_serving/server/health.h"
 #include "secretflow_serving/server/model_service_impl.h"
+#include "secretflow_serving/server/prediction_core.h"
 
 #include "secretflow_serving/config/cluster_config.pb.h"
 #include "secretflow_serving/config/feature_config.pb.h"
@@ -45,10 +47,17 @@ class Server {
   explicit Server(Options opts);
   ~Server();
 
-  void Start();
+  void Start(std::shared_ptr<std::map<
+                 std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>
+                 channels,
+             google::protobuf::Service* additional_service = nullptr);
 
   // This will block the current thread until termination is successful.
   void WaitForEnd();
+
+  std::shared_ptr<PredictionCore> GetPredictionCore() {
+    return prediction_core_;
+  }
 
  private:
   const Options opts_;
@@ -57,7 +66,11 @@ class Server {
   brpc::Server communication_server_;
   brpc::Server metrics_server_;
 
+  std::unique_ptr<health::ServingHealthReporter> hr_;
+
   std::unique_ptr<ModelServiceImpl> model_service_;
+
+  std::shared_ptr<PredictionCore> prediction_core_;
 };
 
 }  // namespace secretflow::serving

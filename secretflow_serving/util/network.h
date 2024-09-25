@@ -21,6 +21,7 @@
 
 #include "secretflow_serving/core/exception.h"
 
+#include "secretflow_serving/config/cluster_config.pb.h"
 #include "secretflow_serving/config/retry_policy_config.pb.h"
 #include "secretflow_serving/config/tls_config.pb.h"
 
@@ -37,4 +38,8 @@ std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
     const TlsConfig* tls_config);
 
+std::shared_ptr<
+    std::map<std::string, std::unique_ptr<::google::protobuf::RpcChannel>>>
+BuildChannelsFromConfig(const ClusterConfig& cluster_config,
+                        bool enable_peers_load_balancer = false);
 }  // namespace secretflow::serving

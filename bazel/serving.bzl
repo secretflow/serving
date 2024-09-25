@@ -52,7 +52,7 @@ def serving_cc_binary(
         deps = [],
         **kargs):
     cc_binary(
-        linkopts = linkopts,
+        linkopts = linkopts + ["-ldl"],
         copts = copts + _serving_copts(),
         deps = deps,
         **kargs

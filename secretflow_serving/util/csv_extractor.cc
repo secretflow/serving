@@ -21,15 +21,17 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <utility>
 
 #include "arrow/compute/api.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/csv_util.h"
 #include "secretflow_serving/util/utils.h"
 
-namespace secretflow::serving {
+namespace secretflow::serving::csv {
 
 namespace {
 
@@ -123,7 +125,7 @@ class ArrayReorderVisitor : public arrow::ArrayVisitor {
 };
 
 std::shared_ptr<arrow::RecordBatch> ReorderRows(
-    std::shared_ptr<arrow::RecordBatch> rows,
+    const std::shared_ptr<arrow::RecordBatch> &rows,
     const std::vector<size_t> &order) {
   const auto &raw_columns = rows->columns();
   std::vector<std::shared_ptr<arrow::Array>> reordered_rows;
@@ -140,7 +142,7 @@ std::shared_ptr<arrow::RecordBatch> ReorderRows(
 std::vector<std::string> GetIdsFromQueryDatas(
     const ::google::protobuf::RepeatedPtrField<std::string> &query_data) {
   std::vector<std::string> ids;
-  for (auto &data : query_data) {
+  for (const auto &data : query_data) {
     ids.push_back(data);
   }
   return ids;
@@ -150,7 +152,7 @@ std::vector<std::string> GetIdsFromQueryDatas(
 
 CSVExtractor::CSVExtractor(const std::shared_ptr<const arrow::Schema> &schema,
                            std::string filename, std::string id_column_name)
-    : CSVExtractor(filename, id_column_name) {
+    : CSVExtractor(std::move(filename), std::move(id_column_name)) {
   FetchTable(schema);
 }
 
@@ -235,4 +237,4 @@ std::shared_ptr<arrow::RecordBatch> CSVExtractor::ExtractRows(
   return reordered_rows;
 }
 
-}  // namespace secretflow::serving
+}  // namespace secretflow::serving::csv

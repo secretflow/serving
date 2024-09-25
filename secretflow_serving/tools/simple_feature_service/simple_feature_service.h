@@ -34,7 +34,7 @@ class SimpleBatchFeatureService : public spis::BatchFeatureService {
                          ::google::protobuf::Closure *done) override;
 
  private:
-  CSVExtractor extractor_;
+  csv::CSVExtractor extractor_;
 };
 
 }  // namespace secretflow::serving

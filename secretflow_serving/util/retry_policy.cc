@@ -29,7 +29,7 @@ const std::unordered_set<int32_t> KCustomRetryBrpcCode = {};
 const std::unordered_set<int32_t> KCustomRetryHttpCode = {500, 502, 503,
                                                           504, 408, 429};
 
-constexpr int32_t kMaxRetryCount = 3;
+constexpr int32_t kDefaultMaxRetryCount = 3;
 const char* KDefaultPolicyName = "__default__";
 
 }  // namespace
@@ -122,7 +122,8 @@ RetryPolicyFactory::RetryPolicyFactory() {
   std::shared_ptr<brpc::RetryPolicy> policy =
       std::make_shared<RetryPolicy<FixedBackOffPolicy>>(
           false, false, static_cast<FixedBackOffConfig*>(nullptr));
-  retry_policies_.emplace(KDefaultPolicyName, Policy{policy, kMaxRetryCount});
+  retry_policies_.emplace(KDefaultPolicyName,
+                          Policy{policy, kDefaultMaxRetryCount});
 }
 
 void RetryPolicyFactory::SetConfig(const std::string& name,
@@ -137,11 +138,10 @@ void RetryPolicyFactory::SetConfig(const std::string& name,
 
   auto custom_retry = false;
   auto retry_aggressive = false;
-  int32_t max_retry_count = kMaxRetryCount;
+  int32_t max_retry_count = kDefaultMaxRetryCount;
 
-  if (config) {
+  if (config != nullptr) {
     custom_retry = config->retry_custom();
-
     retry_aggressive = config->retry_aggressive();
 
     if (config->max_retry_count() != 0) {
@@ -150,7 +150,6 @@ void RetryPolicyFactory::SetConfig(const std::string& name,
 
     switch (config->backoff_mode()) {
       case RetryPolicyBackOffMode::EXPONENTIAL_BACKOFF:
-
         policy = MakeRetryPolicy(custom_retry, retry_aggressive,
                                  config->has_exponential_backoff_config(),
                                  config->exponential_backoff_config());
@@ -169,9 +168,7 @@ void RetryPolicyFactory::SetConfig(const std::string& name,
         break;
     }
   }
-
   SPDLOG_INFO("Regist retry policy: name={}", name);
-
   retry_policies_[name] = Policy{policy, max_retry_count};
 }
 

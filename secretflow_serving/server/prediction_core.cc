@@ -31,12 +31,7 @@ PredictionCore::PredictionCore(Options opts) : opts_(std::move(opts)) {
 void PredictionCore::Predict(const apis::PredictRequest* request,
                              apis::PredictResponse* response) noexcept {
   try {
-    response->mutable_service_spec()->CopyFrom(request->service_spec());
-    auto* status = response->mutable_status();
-
-    CheckArgument(request);
-    opts_.predictor->Predict(request, response);
-    status->set_code(errors::ErrorCode::OK);
+    PredictImpl(request, response);
   } catch (const Exception& e) {
     SPDLOG_ERROR("Predict failed, request: {}, code:{}, msg:{}, stack:{}",
                  PbToJsonNoExcept(request), e.code(), e.what(),
@@ -49,6 +44,17 @@ void PredictionCore::Predict(const apis::PredictRequest* request,
     response->mutable_status()->set_code(errors::ErrorCode::UNEXPECTED_ERROR);
     response->mutable_status()->set_msg(e.what());
   }
+}
+
+void PredictionCore::PredictImpl(const apis::PredictRequest* request,
+                                 apis::PredictResponse* response) {
+  response->mutable_service_spec()->CopyFrom(request->service_spec());
+  auto* status = response->mutable_status();
+
+  CheckArgument(request);
+
+  opts_.predictor->Predict(request, response);
+  status->set_code(errors::ErrorCode::OK);
 }
 
 void PredictionCore::CheckArgument(const apis::PredictRequest* request) {

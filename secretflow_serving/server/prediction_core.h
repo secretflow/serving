@@ -39,6 +39,9 @@ class PredictionCore {
   void Predict(const apis::PredictRequest* request,
                apis::PredictResponse* response) noexcept;
 
+  void PredictImpl(const apis::PredictRequest* request,
+                   apis::PredictResponse* response);
+
   const std::string& GetServiceID() const { return opts_.service_id; }
 
   const std::string& GetPartyID() const { return opts_.party_id; }

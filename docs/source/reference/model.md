@@ -54,6 +54,8 @@
     - [ExecutionDef](#executiondef)
     - [GraphDef](#graphdef)
     - [GraphView](#graphview)
+    - [HeConfig](#heconfig)
+    - [HeInfo](#heinfo)
     - [NodeDef](#nodedef)
     - [NodeDef.AttrValuesEntry](#nodedef-attrvaluesentry)
     - [NodeView](#nodeview)
@@ -323,7 +325,7 @@ Representation operator property
 | ----- | ---- | ----------- |
 | returnable | [ bool](#bool ) | The operator's output can be the final result |
 | mergeable | [ bool](#bool ) | The operator accept the output of operators with different participants and will somehow merge them. |
-| session_run | [ bool](#bool ) | The operator needs to be executed in session. |
+| session_run | [ bool](#bool ) | The operator needs to be executed in session. TODO: not supported yet. |
 | variable_inputs | [ bool](#bool ) | Whether this op has variable input argument. default `false`. |
  <!-- end Fields -->
  <!-- end HasFields -->
@@ -356,6 +358,8 @@ and a set of executions that describes the scheduling of the graph.
 | version | [ string](#string ) | Version of the graph |
 | node_list | [repeated NodeDef](#nodedef ) | none |
 | execution_list | [repeated ExecutionDef](#executiondef ) | none |
+| he_config | [ HeConfig](#heconfig ) | none |
+| party_num | [ int32](#int32 ) | none |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -371,6 +375,35 @@ only structural information and excluding the data components.
 | version | [ string](#string ) | Version of the graph |
 | node_list | [repeated NodeView](#nodeview ) | none |
 | execution_list | [repeated ExecutionDef](#executiondef ) | none |
+| he_info | [ HeInfo](#heinfo ) | none |
+| party_num | [ int32](#int32 ) | none |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### HeConfig
+The config for HE compute.
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| pk_buf | [ bytes](#bytes ) | Serialized public key bytes |
+| sk_buf | [ bytes](#bytes ) | Serialized secret key bytes |
+| encode_scale | [ int64](#int64 ) | Encode scale for data |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### HeInfo
+The public info for HE compute.
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| pk_buf | [ bytes](#bytes ) | Serialized public key bytes |
+| encode_scale | [ int64](#int64 ) | Encode scale for data |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -684,6 +717,8 @@ Supported dispatch type
 | DP_ALL | 1 | Dispatch all participants. |
 | DP_ANYONE | 2 | Dispatch any participant. |
 | DP_SPECIFIED | 3 | Dispatch specified participant. |
+| DP_SELF | 4 | Dispatch self. |
+| DP_PEER | 12 | For 2-parties, Dispatch peer participant. |
 
 
  <!-- end Enums -->

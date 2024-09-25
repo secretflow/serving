@@ -14,9 +14,6 @@
 
 #pragma once
 
-#include <map>
-#include <vector>
-
 #include "secretflow_serving/feature_adapter/feature_adapter.h"
 #include "secretflow_serving/util/csv_extractor.h"
 
@@ -34,7 +31,7 @@ class FileAdapter : public FeatureAdapter {
   void OnFetchFeature(const Request& request, Response* response) override;
 
  private:
-  CSVExtractor extractor_;
+  csv::CSVExtractor extractor_;
 };
 
 }  // namespace secretflow::serving::feature

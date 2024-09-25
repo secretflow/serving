@@ -23,6 +23,8 @@ class Executable {
   struct Task {
     size_t id;
 
+    std::string requester_id;
+
     // input
     // `features` or `prev_node_outputs` should be set
     std::shared_ptr<arrow::RecordBatch> features;

@@ -27,11 +27,11 @@ void Executable::Run(Task& task) {
   SERVING_ENFORCE(task.id < executors_.size(), errors::ErrorCode::LOGIC_ERROR);
   auto executor = executors_[task.id];
   if (task.features) {
-    task.outputs = executor.Run(task.features);
+    task.outputs = executor.Run(task.requester_id, task.features);
   } else {
     SERVING_ENFORCE(!task.prev_node_outputs.empty(),
                     errors::ErrorCode::LOGIC_ERROR);
-    task.outputs = executor.Run(task.prev_node_outputs);
+    task.outputs = executor.Run(task.requester_id, task.prev_node_outputs);
   }
 
   SPDLOG_DEBUG("Executable::Run end, task.outputs.size:{}",

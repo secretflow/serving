@@ -24,6 +24,7 @@
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/ops/node.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/he_mgm.h"
 
 #include "secretflow_serving/protos/op.pb.h"
 
@@ -44,6 +45,12 @@ struct ComputeContext {
   // TODO: Session
   OpComputeInputs inputs;
   std::shared_ptr<arrow::RecordBatch> output;
+
+  std::set<std::string> other_party_ids;
+  std::string self_id;
+  std::string requester_id;
+
+  he::HeKitMgm* he_kit_mgm = nullptr;
 };
 
 class OpKernel {
@@ -108,8 +115,6 @@ class OpKernel {
 
     DoCompute(ctx);
 
-    SERVING_ENFORCE_EQ(rows, ctx->output->num_rows(),
-                       "rows of input and output be equal");
     if (output_schema_->num_fields() > 0) {
       // only check when output schema is valid
       SERVING_ENFORCE(

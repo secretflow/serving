@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-31 14:26+0800\n"
+"POT-Creation-Date: 2024-08-20 11:45+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,7 +48,7 @@ msgstr ""
 "Hans/reference/concepts/appimage_cn#id2>`_ 。SecretFlow-Serving 的 "
 "`AppImage` 如下所示："
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:78
+#: ../../source/topics/deployment/serving_on_kuscia.rst:85
 msgid ""
 "The explanation of the common fields can be found `here "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
@@ -57,421 +57,513 @@ msgstr ""
 "其中通用的字段说明可见 `这里 <https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/concepts/appimage_cn#appimage-ref>`_ 。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:80
+#: ../../source/topics/deployment/serving_on_kuscia.rst:87
 msgid "Other field explanations are as follows:"
 msgstr "其他字段说明如下："
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:86
-msgid "`configTemplates`:"
+#: ../../source/topics/deployment/serving_on_kuscia.rst:99
+msgid "**configTemplates**:"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:83
+#: ../../source/topics/deployment/serving_on_kuscia.rst:96
+msgid "**serving-config.conf**:"
+msgstr ""
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:91
 msgid ""
-"`serving_id`: Service ID identifier, corresponding to the configuration "
-":ref:`ServingConfig.id <ServingConfig>`. The current content is a "
+"**serving_id**: Service ID identifier, corresponding to the configuration"
+" :ref:`ServingConfig.id <ServingConfig>`. The current content is a "
 "placeholder and will actually be replaced by the content in `Kuscia API "
 "/api/v1/serving/create <https://www.secretflow.org.cn/docs/kuscia/latest"
 "/zh-Hans/reference/apis/serving_cn#create-serving>`_ at startup."
 msgstr ""
-"`serving_id`： 服务ID标识，对应配置 :ref:`ServingConfig.id "
+"**serving_id**： 服务ID标识，对应配置 :ref:`ServingConfig.id "
 "<ServingConfig>`。当前内容为占位符，实际会在启动时被 `Kuscia API /api/v1/serving/create "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/apis/serving_cn#create-serving>`_ 中的内容替换。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:84
+#: ../../source/topics/deployment/serving_on_kuscia.rst:92
 msgid ""
-"`input_config`: SecretFlow-Serving startup configuration, details can be "
-"seen in the description below. The current content is a placeholder and "
-"will actually be replaced by the content in `Kuscia API "
+"**input_config**: SecretFlow-Serving startup configuration, details can "
+"be seen in the description below. The current content is a placeholder "
+"and will actually be replaced by the content in `Kuscia API "
 "/api/v1/serving/create <https://www.secretflow.org.cn/docs/kuscia/latest"
 "/zh-Hans/reference/apis/serving_cn#create-serving>`_ at startup."
 msgstr ""
-"`input_config`： SecretFlow-Serving 启动配置，详情可见下面的描述。当前内容为占位符，实际会在启动时被 "
+"**input_config**： SecretFlow-Serving 启动配置，详情可见下面的描述。当前内容为占位符，实际会在启动时被 "
 "`Kuscia API /api/v1/serving/create "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/apis/serving_cn#create-serving>`_ 中的内容替换。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:85
+#: ../../source/topics/deployment/serving_on_kuscia.rst:93
 msgid ""
-"`cluster_def`: See `AppImage explanation "
+"**cluster_def**: See `AppImage explanation "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/concepts/appimage_cn#appimage-ref>`_."
 msgstr ""
-"`cluster_def`：见 `AppImage 说明 "
+"**cluster_def**：见 `AppImage 说明 "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/concepts/appimage_cn#appimage-ref>`_。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:86
+#: ../../source/topics/deployment/serving_on_kuscia.rst:94
 msgid ""
-"`allocated_ports`: See `AppImage explanation "
+"**allocated_ports**: See `AppImage explanation "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/concepts/appimage_cn#appimage-ref>`_."
 msgstr ""
-"`allocated_ports`： 见 `AppImage 说明 "
+"**allocated_ports**： 见 `AppImage 说明 "
 "<https://www.secretflow.org.cn/docs/kuscia/latest/zh-"
 "Hans/reference/concepts/appimage_cn#appimage-ref>`_。"
-
-#: ../../source/topics/deployment/serving_on_kuscia.rst:92
-msgid "`ports`:"
-msgstr ""
-
-#: ../../source/topics/deployment/serving_on_kuscia.rst:89
-msgid "`service`: The :ref:`ServerConfig.service_port <ServerConfig>`"
-msgstr "`service`: 即 :ref:`ServerConfig.service_port <ServerConfig>`"
-
-#: ../../source/topics/deployment/serving_on_kuscia.rst:90
-msgid "`communication`: The :ref:`ServerConfig.communication_port <ServerConfig>`"
-msgstr "`communication`：即 :ref:`ServerConfig.communication_port <ServerConfig>`"
-
-#: ../../source/topics/deployment/serving_on_kuscia.rst:91
-msgid "`internal`: The :ref:`ServerConfig.metrics_exposer_port <ServerConfig>`"
-msgstr "`internal`：即 :ref:`ServerConfig.metrics_exposer_port <ServerConfig>`"
-
-#: ../../source/topics/deployment/serving_on_kuscia.rst:92
-msgid ""
-"`brpc-builtin`: The :ref:`ServerConfig.brpc_builtin_service_port "
-"<ServerConfig>`"
-msgstr ""
-"`brpc-builtin`：即 :ref:`ServerConfig.brpc_builtin_service_port "
-"<ServerConfig>`"
 
 #: ../../source/topics/deployment/serving_on_kuscia.rst:95
+msgid ""
+"**oss_meta**: OSS/S3 model source configuration, only effective when "
+"using OSS/S3 as the model data source. The actual content is in the form "
+"of a string-formatted JSON configuration, for example\" "
+"``{\\\"access_key\\\":\\\"test_ak\\\", "
+"\\\"secret_key\\\":\\\"test_sk\\\", \\\"virtual_hosted\\\":true, "
+"\\\"endpoint\\\":\\\"test_endpoint\\\", "
+"\\\"bucket\\\":\\\"test_bucket\\\"}``, the definition can be found "
+":ref:`here <OSSSourceMeta>`. This is an optional configuration and can be"
+" set up through the ``Kuscia configuration management`` system if needed."
+msgstr ""
+"**oss_meta**：OSS/S3 "
+"配置，只当使用OSS/S3作为模型数据源时生效。其真实内容为字符串格式化的Json配置，例如：``{\\\"access_key\\\":\\\"test_ak\\\",\"\\\"secret_key\\\":\\\"test_sk\\\","
+" \\\"virtual_hosted\\\":true, \\\"endpoint\\\":\\\"test_endpoint\\\", "
+"\\\"bucket\\\":\\\"test_bucket\\\"}``，其具体定义可见 :ref:`这里 <OSSSourceMeta>` "
+"该配置为可选配置，若需要使用可通过`Kuscia 配置管理系统`进行配置。"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:96
+msgid ""
+"**spi_tls_config**: The TLS configuration used by SPI. The actual content"
+" is in the form of a string-formatted JSON configuration, for example: "
+"``{\\\"certificate_path\\\":\\\"abc\\\", "
+"\\\"private_key_path\\\":\\\"def\\\",\\\"ca_file_path\\\":\\\"gkh\\\"}``,"
+" the definition can be found :ref:`here <TlsConfig>`. This is an optional"
+" configuration and can be set up through the ``Kuscia configuration "
+"management`` system if needed."
+msgstr ""
+"**spi_tls_config**：SPI链路使用的TLS配置。其真实内容为字符串格式化的Json配置，例如：``{\\\"certificate_path\\\":\\\"abc\\\",\"\\\"private_key_path\\\":\\\"def\\\",\\\"ca_file_path\\\":\\\"gkh\\\"}``，具体定义可见"
+" :ref:`这里 <TlsConfig>` 。该配置为可选配置，若需要使用可通过`Kuscia 配置管理系统`进行配置。"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:97
+msgid ""
+"**http_source_meta**: HTTP model source configuration, only effective "
+"when using HTTP as the model data source. The actual content is in the "
+"form of a string-formatted JSON configuration, for example\" "
+"``{\\\"connectTimeoutMs\\\":60000,\\\"timeoutMs\\\":120000,\\\"tlsConfig\\\":{\\\"certificatePath\\\":\\\"abc\\\","
+" \\\"privateKeyPath\\\":\\\"def\\\",\\\"caFilePath\\\":\\\"gkh\\\"}}``, "
+"the definition can be found :ref:`here <HTTPSourceMeta>`. This is an "
+"optional configuration and can be set up through the ``Kuscia "
+"configuration management`` system if needed."
+msgstr ""
+"**http_source_meta**：HTTP 数据源"
+"配置，只当使用HTTP服务作为模型数据源时生效。其真实内容为字符串格式化的Json配置，例如："
+"``{\\\"connectTimeoutMs\\\":60000,\\\"timeoutMs\\\":120000,\\\"tlsConfig\\\":{\\\"certificatePath\\\":\\\"abc\\\","
+" \\\"privateKeyPath\\\":\\\"def\\\",\\\"caFilePath\\\":\\\"gkh\\\"}}``"
+"，其具体定义可见 :ref:`这里 <HTTPSourceMeta>` "
+"该配置为可选配置，若需要使用可通过`Kuscia 配置管理系统`进行配置。"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:98
+msgid ""
+"**logging-config.conf**: SecretFlow-Serving Log Configuration. The actual"
+" content is in the form of a string-formatted JSON configuration, for "
+"example\" "
+"``{\\\"systemLogPath\\\":\\\"/tmp/alice/serving.log\\\",\\\"logLevel\\\":\\\"INFO_LOG_LEVEL\\\",\\\"maxLogFileSize\\\":4194304,\\\"maxLogFileCount\\\":10}``,"
+" the definition can be found :ref:`here <LoggingConfig>`. This is an "
+"optional configuration and can be set up through the ``Kuscia "
+"configuration management`` system if needed."
+msgstr ""
+"**logging-"
+"config.conf**：日志配置。其真实内容为字符串格式化的Json配置，例如：``{\\\"systemLogPath\\\":\\\"/tmp/alice/serving.log\\\",\\\"logLevel\\\":\\\"INFO_LOG_LEVEL\\\",\\\"maxLogFileSize\\\":4194304,\\\"maxLogFileCount\\\":10}``，具体定义可见"
+" :ref:`这里 <LoggingConfig>` 。该配置为可选配置，若需要使用可通过`Kuscia 配置管理系统`进行配置。"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:99
+msgid ""
+"**trace-config.conf**: SecretFlow-Serving Trace Configuration. The actual"
+" content is in the form of a string-formatted JSON configuration, for "
+"example\" "
+"``{\\\"traceLogEnable\\\":true,\\\"traceLogConf\\\":{\\\"traceLogPath\\\":\\\"/tmp/trace.log\\\"}}``,"
+" the definition can be found :ref:`here <TraceConfig>`. This is an "
+"optional configuration and can be set up through the ``Kuscia "
+"configuration management`` system if needed."
+msgstr ""
+"**trace-"
+"config.conf**：Trace配置。其真实内容为字符串格式化的Json配置，例如：``{\\\"traceLogEnable\\\":true,\\\"traceLogConf\\\":{\\\"traceLogPath\\\":\\\"/tmp/trace.log\\\"}}``，具体定义可见"
+" :ref:`这里 <TraceConfig>` 。该配置为可选配置，若需要使用可通过`Kuscia 配置管理系统`进行配置。"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:105
+msgid "**ports**:"
+msgstr ""
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:102
+msgid "**service**: The :ref:`ServerConfig.service_port <ServerConfig>`"
+msgstr "**service**: 即 :ref:`ServerConfig.service_port <ServerConfig>`"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:103
+msgid ""
+"**communication**: The :ref:`ServerConfig.communication_port "
+"<ServerConfig>`"
+msgstr "**communication**：即 :ref:`ServerConfig.communication_port <ServerConfig>`"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:104
+msgid "**internal**: The :ref:`ServerConfig.metrics_exposer_port <ServerConfig>`"
+msgstr "**internal**：即 :ref:`ServerConfig.metrics_exposer_port <ServerConfig>`"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:105
+msgid ""
+"**brpc-builtin**: The :ref:`ServerConfig.brpc_builtin_service_port "
+"<ServerConfig>`"
+msgstr ""
+"**brpc-builtin**：即 :ref:`ServerConfig.brpc_builtin_service_port "
+"<ServerConfig>`"
+
+#: ../../source/topics/deployment/serving_on_kuscia.rst:108
 msgid "Configuration description"
 msgstr "配置说明"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:98
+#: ../../source/topics/deployment/serving_on_kuscia.rst:111
 msgid "serving_input_config"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:100
+#: ../../source/topics/deployment/serving_on_kuscia.rst:113
 msgid ""
 "The launch and management of SecretFlow-Serving can be performed using "
 "the `Kuscia Serving API "
 "<https://www.secretflow.org.cn/docs/kuscia/v0.5.0b0/zh-"
 "Hans/reference/apis/serving_cn#serving>`_. In this section, we will "
-"explain the contents of the `serving_input_config` field within the "
-"`/api/v1/serving/create` request."
+"explain the contents of the ``serving_input_config`` field within the "
+"``/api/v1/serving/create`` request."
 msgstr ""
 "Kuscia 场景下，SecretFlow-Serving 的启动管理可通过 `Kuscia Serving API "
 "<https://www.secretflow.org.cn/docs/kuscia/v0.5.0b0/zh-"
 "Hans/reference/apis/serving_cn#serving>`_ 进行，这里我们将对 "
-"`/api/v1/serving/create` 请求中的 `serving_input_config` 字段内容进行说明。"
+"``/api/v1/serving/create`` 请求中的 ``serving_input_config`` 字段内容进行说明。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:155
+#: ../../source/topics/deployment/serving_on_kuscia.rst:168
 msgid "**Field description**:"
 msgstr "**字段说明**："
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:158
+#: ../../source/topics/deployment/serving_on_kuscia.rst:171
 msgid "Name"
 msgstr "名称"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:158
+#: ../../source/topics/deployment/serving_on_kuscia.rst:171
 msgid "Type"
 msgstr "类型"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:158
+#: ../../source/topics/deployment/serving_on_kuscia.rst:171
 msgid "Description"
 msgstr "描述"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:158
+#: ../../source/topics/deployment/serving_on_kuscia.rst:171
 msgid "Required"
 msgstr "必选"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:160
+#: ../../source/topics/deployment/serving_on_kuscia.rst:173
 msgid "partyConfigs"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:160
+#: ../../source/topics/deployment/serving_on_kuscia.rst:173
 msgid "map<str, PartyConfig>"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:160
+#: ../../source/topics/deployment/serving_on_kuscia.rst:173
 msgid ""
 "Dictionary of startup parameters for each participant. Key: Participant "
 "Unique ID; Value: PartyConfig (Json Object)."
 msgstr "各参与方启动参数字典。Key: 参与方id; Value: PartyConfig(Json Object)"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:160
-#: ../../source/topics/deployment/serving_on_kuscia.rst:162
-#: ../../source/topics/deployment/serving_on_kuscia.rst:166
-#: ../../source/topics/deployment/serving_on_kuscia.rst:168
-#: ../../source/topics/deployment/serving_on_kuscia.rst:170
-#: ../../source/topics/deployment/serving_on_kuscia.rst:172
-#: ../../source/topics/deployment/serving_on_kuscia.rst:176
+#: ../../source/topics/deployment/serving_on_kuscia.rst:173
+#: ../../source/topics/deployment/serving_on_kuscia.rst:175
+#: ../../source/topics/deployment/serving_on_kuscia.rst:179
+#: ../../source/topics/deployment/serving_on_kuscia.rst:181
 #: ../../source/topics/deployment/serving_on_kuscia.rst:183
-#: ../../source/topics/deployment/serving_on_kuscia.rst:191
-#: ../../source/topics/deployment/serving_on_kuscia.rst:201
-#: ../../source/topics/deployment/serving_on_kuscia.rst:203
-#: ../../source/topics/deployment/serving_on_kuscia.rst:205
-#: ../../source/topics/deployment/serving_on_kuscia.rst:207
+#: ../../source/topics/deployment/serving_on_kuscia.rst:185
+#: ../../source/topics/deployment/serving_on_kuscia.rst:190
+#: ../../source/topics/deployment/serving_on_kuscia.rst:198
+#: ../../source/topics/deployment/serving_on_kuscia.rst:206
+#: ../../source/topics/deployment/serving_on_kuscia.rst:216
+#: ../../source/topics/deployment/serving_on_kuscia.rst:218
+#: ../../source/topics/deployment/serving_on_kuscia.rst:220
+#: ../../source/topics/deployment/serving_on_kuscia.rst:222
 msgid "Yes"
 msgstr "是"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:162
+#: ../../source/topics/deployment/serving_on_kuscia.rst:175
 msgid "PartyConfig.serverConfig"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:162
-#: ../../source/topics/deployment/serving_on_kuscia.rst:168
-#: ../../source/topics/deployment/serving_on_kuscia.rst:170
-#: ../../source/topics/deployment/serving_on_kuscia.rst:172
-#: ../../source/topics/deployment/serving_on_kuscia.rst:174
-#: ../../source/topics/deployment/serving_on_kuscia.rst:176
+#: ../../source/topics/deployment/serving_on_kuscia.rst:175
 #: ../../source/topics/deployment/serving_on_kuscia.rst:181
+#: ../../source/topics/deployment/serving_on_kuscia.rst:183
+#: ../../source/topics/deployment/serving_on_kuscia.rst:185
 #: ../../source/topics/deployment/serving_on_kuscia.rst:187
-#: ../../source/topics/deployment/serving_on_kuscia.rst:191
-#: ../../source/topics/deployment/serving_on_kuscia.rst:207
+#: ../../source/topics/deployment/serving_on_kuscia.rst:189
+#: ../../source/topics/deployment/serving_on_kuscia.rst:196
+#: ../../source/topics/deployment/serving_on_kuscia.rst:202
+#: ../../source/topics/deployment/serving_on_kuscia.rst:206
+#: ../../source/topics/deployment/serving_on_kuscia.rst:222
 msgid "str"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:162
+#: ../../source/topics/deployment/serving_on_kuscia.rst:175
 msgid ":ref:`ServerConfig <ServerConfig>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:164
+#: ../../source/topics/deployment/serving_on_kuscia.rst:177
 msgid "PartyConfig.serverConfig.featureMapping"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:164
+#: ../../source/topics/deployment/serving_on_kuscia.rst:177
 msgid "map<str, str>"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:164
+#: ../../source/topics/deployment/serving_on_kuscia.rst:177
 msgid ""
 "Feature name mapping rules. Key: source or predefined feature name; "
 "Value: model feature name"
 msgstr "特征名称映射规则。Key: 数据源或请求定义中的特征名称；Value: 模型中使用的特征名称。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:164
-#: ../../source/topics/deployment/serving_on_kuscia.rst:174
-#: ../../source/topics/deployment/serving_on_kuscia.rst:181
+#: ../../source/topics/deployment/serving_on_kuscia.rst:177
 #: ../../source/topics/deployment/serving_on_kuscia.rst:187
-#: ../../source/topics/deployment/serving_on_kuscia.rst:193
-#: ../../source/topics/deployment/serving_on_kuscia.rst:195
-#: ../../source/topics/deployment/serving_on_kuscia.rst:197
-#: ../../source/topics/deployment/serving_on_kuscia.rst:209
-#: ../../source/topics/deployment/serving_on_kuscia.rst:211
+#: ../../source/topics/deployment/serving_on_kuscia.rst:196
+#: ../../source/topics/deployment/serving_on_kuscia.rst:202
+#: ../../source/topics/deployment/serving_on_kuscia.rst:208
+#: ../../source/topics/deployment/serving_on_kuscia.rst:210
+#: ../../source/topics/deployment/serving_on_kuscia.rst:212
+#: ../../source/topics/deployment/serving_on_kuscia.rst:224
+#: ../../source/topics/deployment/serving_on_kuscia.rst:226
 msgid "No"
 msgstr "否"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:166
+#: ../../source/topics/deployment/serving_on_kuscia.rst:179
 msgid "PartyConfig.modelConfig"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:166
 #: ../../source/topics/deployment/serving_on_kuscia.rst:179
-#: ../../source/topics/deployment/serving_on_kuscia.rst:183
-#: ../../source/topics/deployment/serving_on_kuscia.rst:185
-#: ../../source/topics/deployment/serving_on_kuscia.rst:189
-#: ../../source/topics/deployment/serving_on_kuscia.rst:199
-#: ../../source/topics/deployment/serving_on_kuscia.rst:201
-#: ../../source/topics/deployment/serving_on_kuscia.rst:203
-#: ../../source/topics/deployment/serving_on_kuscia.rst:205
+#: ../../source/topics/deployment/serving_on_kuscia.rst:194
+#: ../../source/topics/deployment/serving_on_kuscia.rst:198
+#: ../../source/topics/deployment/serving_on_kuscia.rst:200
+#: ../../source/topics/deployment/serving_on_kuscia.rst:204
+#: ../../source/topics/deployment/serving_on_kuscia.rst:214
+#: ../../source/topics/deployment/serving_on_kuscia.rst:216
+#: ../../source/topics/deployment/serving_on_kuscia.rst:218
+#: ../../source/topics/deployment/serving_on_kuscia.rst:220
 msgid "Object"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:166
+#: ../../source/topics/deployment/serving_on_kuscia.rst:179
 msgid ":ref:`ModelConfig <ModelConfig>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:168
+#: ../../source/topics/deployment/serving_on_kuscia.rst:181
 msgid "PartyConfig.modelConfig.modelId"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:168
+#: ../../source/topics/deployment/serving_on_kuscia.rst:181
 msgid "Unique id of the model package"
 msgstr "模型包标识ID"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:170
+#: ../../source/topics/deployment/serving_on_kuscia.rst:183
 msgid "PartyConfig.modelConfig.basePath"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:170
+#: ../../source/topics/deployment/serving_on_kuscia.rst:183
 msgid "The local path used to cache and load model package"
 msgstr "本地缓存路径，用于缓存模型包数据"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:172
+#: ../../source/topics/deployment/serving_on_kuscia.rst:185
 msgid "PartyConfig.modelConfig.sourcePath"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:172
+#: ../../source/topics/deployment/serving_on_kuscia.rst:185
 msgid ""
 "The path to the model package in the data source, where the content "
-"format may vary depending on the `sourceType`."
-msgstr "模型包路径，其具体内容格式取决于参数`sourceType`"
+"format may vary depending on the ``sourceType``."
+msgstr "模型包路径，其具体内容格式取决于参数 ``sourceType``"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:174
-msgid "PartyConfig.modelConfig.source_sha256"
+#: ../../source/topics/deployment/serving_on_kuscia.rst:187
+msgid "PartyConfig.modelConfig.sourceSha256"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:174
+#: ../../source/topics/deployment/serving_on_kuscia.rst:187
 msgid ""
 "The expected SHA256 hash of the model package. When provided, the fetched"
 " model package will be verified against it."
 msgstr "期望的模型包SHA256哈希值。提供时，会被用于校验获取的模型包是否匹配。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:176
+#: ../../source/topics/deployment/serving_on_kuscia.rst:189
 msgid "PartyConfig.modelConfig.sourceType"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:176
+#: ../../source/topics/deployment/serving_on_kuscia.rst:189
 msgid ""
-"Model data source type, options include: ST_FILE: In this case, the "
-"sourcePath should be a file path accessible to Serving. ST_DP: In this "
-"case, the sourcePath should be DomainData ID in DataMesh from Kuscia. and"
-" dpSourceMeta needs to be configured."
+"Model data source type, options include: ``ST_FILE``: In this case, the "
+"``sourcePath`` should be a file path accessible to Serving. ``ST_DP``: In"
+" this case, the ``sourcePath`` should be DomainData ID in DataMesh from "
+"Kuscia. and dpSourceMeta needs to be configured. ``ST_OSS``: In this "
+"case, the ``sourcePath`` should be the file path within the bucket. "
+"``ST_HTTP``: In this case, the ``sourcePath`` should be the download URL "
+"for the model package."
 msgstr ""
-"模型数据源类型，可选内容: ST_FILE: 此时`sourcePath`应为文件系统路径。ST_DP: "
-"此时`sourcePath`应为Kuscia DataMesh管理的 DomainData ID， 同时需要配置`dpSourceMeta`"
+"模型数据源类型，可选内容: ``ST_FILE``: 此时 ``sourcePath`` 应为文件系统路径。 ``ST_DP``: 此时 "
+"``sourcePath`` 应为 Kuscia DataMesh 管理的 DomainData ID， 同时需要配置 "
+"``dpSourceMeta``。 ``ST_OSS``: 此时 ``sourcePath`` 应为 Bucket 下的文件路径。 "
+"``ST_HTTP``: 此时 ``sourcePath`` 应为模型包的下载链接。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:179
+#: ../../source/topics/deployment/serving_on_kuscia.rst:194
 msgid "PartyConfig.modelConfig.dpSourceMeta"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:179
+#: ../../source/topics/deployment/serving_on_kuscia.rst:194
 msgid ":ref:`DPSourceMeta <DPSourceMeta>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:179
-msgid "No(If `sourceType`  is `DT_DP`, `dpSourceMeta` needs to be configured)"
-msgstr ""
+#: ../../source/topics/deployment/serving_on_kuscia.rst:194
+msgid ""
+"No(If ``sourceType``  is ``DT_DP``, ``dpSourceMeta`` needs to be "
+"configured)"
+msgstr "否（只当 ``sourceType`` 为 ``DT_DP`` 时, ``dpSourceMeta`` 需要被配置）"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:181
+#: ../../source/topics/deployment/serving_on_kuscia.rst:196
 msgid "PartyConfig.modelConfig.dpSourceMeta.dmHost"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:181
+#: ../../source/topics/deployment/serving_on_kuscia.rst:196
 msgid "The address of DataMesh in Kuscia. Default: datamesh:8071"
 msgstr "Kusica DataMesh地址, 默认值: datamesh:8071"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:183
+#: ../../source/topics/deployment/serving_on_kuscia.rst:198
 msgid "PartyConfig.featureSourceConfig"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:183
+#: ../../source/topics/deployment/serving_on_kuscia.rst:198
 msgid ":ref:`FeatureSourceConfig <FeatureSourceConfig>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:185
+#: ../../source/topics/deployment/serving_on_kuscia.rst:200
 msgid "PartyConfig.featureSourceConfig.mockOpts"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:185
+#: ../../source/topics/deployment/serving_on_kuscia.rst:200
 msgid ":ref:`MockOptions <MockOptions>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:185
-#: ../../source/topics/deployment/serving_on_kuscia.rst:189
-#: ../../source/topics/deployment/serving_on_kuscia.rst:199
-msgid "No(One of `csvOpts`, `mockOpts`, or `httpOpts` needs to be configured)"
-msgstr "否（`csvOpts`、`mockOpts`、`httpOpts`中的之一需要被配置）"
+#: ../../source/topics/deployment/serving_on_kuscia.rst:200
+#: ../../source/topics/deployment/serving_on_kuscia.rst:204
+#: ../../source/topics/deployment/serving_on_kuscia.rst:214
+msgid ""
+"No(One of ``csvOpts``, ``mockOpts``, or ``httpOpts`` needs to be "
+"configured)"
+msgstr "否（``csvOpts``, ``mockOpts`` 或者 ``httpOpts`` 中的之一需要被配置）"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:187
+#: ../../source/topics/deployment/serving_on_kuscia.rst:202
 msgid "PartyConfig.featureSourceConfig.mockOpts.type"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:187
+#: ../../source/topics/deployment/serving_on_kuscia.rst:202
 msgid ""
 "The method for generating mock feature values, options: \"MDT_RANDOM\" "
 "for random values, and \"MDT_FIXED\" for fixed values. Default: "
 "\"MDT_FIXED\"."
 msgstr "mock特征数据生成方法类型，可选：\"MDT_RANDOM\"用于生成随机值；\"MDT_FIXED\"返回固定值。默认设置为：\"MDT_FIXED\"。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:189
+#: ../../source/topics/deployment/serving_on_kuscia.rst:204
 msgid "PartyConfig.featureSourceConfig.httpOpts"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:189
+#: ../../source/topics/deployment/serving_on_kuscia.rst:204
 msgid ":ref:`HttpOptions <HttpOptions>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:191
+#: ../../source/topics/deployment/serving_on_kuscia.rst:206
 msgid "PartyConfig.featureSourceConfig.httpOpts.endpoint"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:191
+#: ../../source/topics/deployment/serving_on_kuscia.rst:206
 msgid "Feature service address"
-msgstr ""
+msgstr "特征服务地址"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:193
+#: ../../source/topics/deployment/serving_on_kuscia.rst:208
 msgid "PartyConfig.featureSourceConfig.httpOpts.enableLb"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:193
+#: ../../source/topics/deployment/serving_on_kuscia.rst:208
 msgid "bool"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:193
+#: ../../source/topics/deployment/serving_on_kuscia.rst:208
 msgid "Whether to enable round robin load balancer, Default: False"
 msgstr "是否开启轮询负载均衡访问，默认值：False。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:195
+#: ../../source/topics/deployment/serving_on_kuscia.rst:210
 msgid "PartyConfig.featureSourceConfig.httpOpts.connectTimeoutMs"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:195
-#: ../../source/topics/deployment/serving_on_kuscia.rst:197
-#: ../../source/topics/deployment/serving_on_kuscia.rst:209
-#: ../../source/topics/deployment/serving_on_kuscia.rst:211
+#: ../../source/topics/deployment/serving_on_kuscia.rst:210
+#: ../../source/topics/deployment/serving_on_kuscia.rst:212
+#: ../../source/topics/deployment/serving_on_kuscia.rst:224
+#: ../../source/topics/deployment/serving_on_kuscia.rst:226
 msgid "int32"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:195
-#: ../../source/topics/deployment/serving_on_kuscia.rst:211
+#: ../../source/topics/deployment/serving_on_kuscia.rst:210
+#: ../../source/topics/deployment/serving_on_kuscia.rst:226
 msgid "Max duration for a connect. -1 means wait indefinitely. Default: 500 (ms)"
 msgstr "连接超时时间，-1 即无限时间，默认值：500 (ms)"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:197
+#: ../../source/topics/deployment/serving_on_kuscia.rst:212
 msgid "PartyConfig.featureSourceConfig.httpOpts.timeoutMs"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:197
+#: ../../source/topics/deployment/serving_on_kuscia.rst:212
 msgid ""
 "Max duration of http request. -1 means wait indefinitely. Default: 1000 "
 "(ms)"
 msgstr "请求超时时间，-1 即无限时间，默认值：1000 (ms)"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:199
+#: ../../source/topics/deployment/serving_on_kuscia.rst:214
 msgid "PartyConfig.featureSourceConfig.csvOpts"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:199
+#: ../../source/topics/deployment/serving_on_kuscia.rst:214
 msgid ":ref:`CsvOptions <CsvOptions>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:201
-msgid "PartyConfig.featureSourceConfig.csvOpts.file_path"
+#: ../../source/topics/deployment/serving_on_kuscia.rst:216
+msgid "PartyConfig.featureSourceConfig.csvOpts.filePath"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:201
+#: ../../source/topics/deployment/serving_on_kuscia.rst:216
 msgid ""
 "Input file path, specifies where to load data. Note that this will load "
 "all of the data into memory at once"
 msgstr "文件路径，注意：整个文件会被全部加载到内存中，不建议生产系统使用。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:203
-msgid "PartyConfig.featureSourceConfig.csvOpts.id_name"
+#: ../../source/topics/deployment/serving_on_kuscia.rst:218
+msgid "PartyConfig.featureSourceConfig.csvOpts.idName"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:203
+#: ../../source/topics/deployment/serving_on_kuscia.rst:218
 msgid ""
-"Id column name, associated with `FeatureParam::query_datas`. "
-"`query_datas` is a subset of id column"
-msgstr "ID列名称，系统此时认为预测请求中`FeatureParam::query_datas`的内容为ID数据，将以此进行数据查询。"
+"Id column name, associated with ``FeatureParam::query_datas``. "
+"``query_datas`` is a subset of id column"
+msgstr "ID列名称，系统此时认为预测请求中 ``FeatureParam::query_datas`` 的内容为ID数据，将以此进行数据查询。"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:205
+#: ../../source/topics/deployment/serving_on_kuscia.rst:220
 msgid "PartyConfig.channelDesc"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:205
+#: ../../source/topics/deployment/serving_on_kuscia.rst:220
 msgid ":ref:`ChannelDesc <ChannelDesc>`"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:207
+#: ../../source/topics/deployment/serving_on_kuscia.rst:222
 msgid "PartyConfig.channelDesc.protocol"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:207
+#: ../../source/topics/deployment/serving_on_kuscia.rst:222
 msgid ""
 "Communication protocol, for optional value, see `here "
 "<https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols>`_"
@@ -479,14 +571,14 @@ msgstr ""
 "通信协议，可选值可以参考 `这里 "
 "<https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols>`_"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:209
+#: ../../source/topics/deployment/serving_on_kuscia.rst:224
 msgid "PartyConfig.channelDesc.rpcTimeoutMs"
 msgstr ""
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:209
+#: ../../source/topics/deployment/serving_on_kuscia.rst:224
 msgid "Max duration of RPC. -1 means wait indefinitely. Default: 2000 (ms)"
 msgstr "RPC超时时间， -1 即无穷时间。默认值：2000（ms）"
 
-#: ../../source/topics/deployment/serving_on_kuscia.rst:211
+#: ../../source/topics/deployment/serving_on_kuscia.rst:226
 msgid "PartyConfig.channelDesc.connectTimeoutMs"
 msgstr ""

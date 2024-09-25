@@ -22,6 +22,7 @@ from . import feature_pb2
 from . import bundle_pb2
 from . import data_type_pb2
 from . import link_function_pb2
+from . import config
 
 from .api import get_all_ops, get_op, get_graph_version
 from .graph_builder import GraphBuilder, check_graph_views, build_serving_tar
@@ -42,4 +43,5 @@ __all__ = [
     "link_function_pb2",
     "build_serving_tar",
     "GraphBuilder",
+    "config",
 ]

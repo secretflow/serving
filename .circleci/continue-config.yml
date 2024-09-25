@@ -109,6 +109,15 @@ jobs:
             exit ${test_status}
       - store_artifacts:
           path: accuracy_test.py.log
+      - run:
+          name: "inferencer test"
+          command: |
+            set +e
+            declare -i test_status
+            python3 .ci/inferencer_test.py 2>&1 | tee accuracy_test.py.log; test_status=${PIPESTATUS[0]}
+            exit ${test_status}
+      - store_artifacts:
+          path: inferencer_test.py.log
 
   macOS_lib_ut:
     macos:

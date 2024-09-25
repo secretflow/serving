@@ -18,9 +18,19 @@ load("//bazel:repositories.bzl", "sf_serving_deps")
 
 sf_serving_deps()
 
+load("@com_alipay_sf_heu//third_party/bazel_cpp:repositories.bzl", "heu_cpp_deps")
+
+heu_cpp_deps()
+
 load("@yacl//bazel:repositories.bzl", "yacl_deps")
 
 yacl_deps()
+
+load("@rules_cuda//cuda:repositories.bzl", "register_detected_cuda_toolchains", "rules_cuda_dependencies")
+
+rules_cuda_dependencies()
+
+register_detected_cuda_toolchains()
 
 load("@dataproxy//dataproxy_sdk/bazel:repositories.bzl", "dataproxy_deps")
 

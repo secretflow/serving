@@ -23,19 +23,12 @@
 
 namespace secretflow::serving {
 
-PredictionServiceImpl::PredictionServiceImpl(const std::string& party_id)
+PredictionServiceImpl::PredictionServiceImpl(
+    const std::string& party_id,
+    const std::shared_ptr<PredictionCore>& prediction_core)
     : party_id_(party_id),
-      stats_({{"handler", "PredictionService"}, {"party_id", party_id_}}),
-      init_flag_(false) {}
-
-void PredictionServiceImpl::Init(
-    const std::shared_ptr<PredictionCore>& prediction_core) {
-  SERVING_ENFORCE(prediction_core, errors::ErrorCode::LOGIC_ERROR);
-  SERVING_ENFORCE(!init_flag_, errors::ErrorCode::LOGIC_ERROR);
-
-  prediction_core_ = prediction_core;
-  init_flag_ = true;
-}
+      prediction_core_(prediction_core),
+      stats_({{"handler", "PredictionService"}, {"party_id", party_id_}}) {}
 
 void PredictionServiceImpl::Predict(
     ::google::protobuf::RpcController* controller,
@@ -56,14 +49,7 @@ void PredictionServiceImpl::Predict(
   SPDLOG_DEBUG("predict begin, request: {}", request->ShortDebugString());
   yacl::ElapsedTimer timer;
 
-  if (!init_flag_) {
-    response->mutable_service_spec()->CopyFrom(request->service_spec());
-    response->mutable_status()->set_code(errors::ErrorCode::NOT_READY);
-    response->mutable_status()->set_msg(
-        "prediction service is not ready to serve, please retry later.");
-  } else {
-    prediction_core_->Predict(request, response);
-  }
+  prediction_core_->Predict(request, response);
 
   timer.Pause();
   SPDLOG_DEBUG("predict end, time: {}", timer.CountMs());
@@ -95,7 +81,7 @@ void PredictionServiceImpl::RecordMetrics(const apis::PredictRequest& request,
 }
 
 PredictionServiceImpl::Stats::Stats(
-    std::map<std::string, std::string> labels,
+    const std::map<std::string, std::string>& labels,
     const std::shared_ptr<::prometheus::Registry>& registry)
     : api_request_counter_family(
           ::prometheus::BuildCounter()

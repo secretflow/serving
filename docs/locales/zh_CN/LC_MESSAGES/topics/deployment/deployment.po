@@ -283,7 +283,7 @@ msgstr "步骤 2：启动 Serving 服务"
 msgid ""
 "The file your workspace should be as follows, ``trace.config`` is "
 "optional:"
-msgstr "您工作区的文件应如下所示，``trace.config``是可选的："
+msgstr "您工作区的文件应如下所示，``trace.config`` 是可选的："
 
 #: ../../source/topics/deployment/deployment.rst:200
 msgid "Then you can start serving service by running docker compose up."

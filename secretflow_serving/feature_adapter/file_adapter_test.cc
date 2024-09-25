@@ -50,7 +50,7 @@ id,x1,x2,x3,x4
 )TEXT");
 
   FeatureSourceConfig config;
-  auto csv_opts = config.mutable_csv_opts();
+  auto* csv_opts = config.mutable_csv_opts();
   csv_opts->set_file_path(tmpfile.fname());
   csv_opts->set_id_name("id");
 

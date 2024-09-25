@@ -22,6 +22,7 @@ serving_cc_library(
         ":file_adapter",
         ":http_adapter",
         ":mock_adapter",
+        ":streaming_adapter",
     ],
 )
 
@@ -86,6 +87,18 @@ serving_cc_library(
     alwayslink = True,
 )
 
+serving_cc_library(
+    name = "streaming_adapter",
+    srcs = ["streaming_adapter.cc"],
+    hdrs = ["streaming_adapter.h"],
+    deps = [
+        ":feature_adapter_factory",
+        "//secretflow_serving/util:csv_util",
+        "@com_github_gflags_gflags//:gflags",
+    ],
+    alwayslink = True,
+)
+
 serving_cc_test(
     name = "file_adapter_test",
     srcs = ["file_adapter_test.cc"],
@@ -108,5 +121,14 @@ serving_cc_test(
     srcs = ["mock_adapter_test.cc"],
     deps = [
         ":mock_adapter",
+    ],
+)
+
+serving_cc_test(
+    name = "streaming_adapter_test",
+    srcs = ["streaming_adapter_test.cc"],
+    deps = [
+        ":streaming_adapter",
+        "@com_github_brpc_brpc//:butil",
     ],
 )

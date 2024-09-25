@@ -38,6 +38,7 @@ message OpTag {
   bool mergeable = 2;
 
   // The operator needs to be executed in session.
+  // TODO: not supported yet.
   bool session_run = 3;
 
   // Whether this op has variable input argument. default `false`.

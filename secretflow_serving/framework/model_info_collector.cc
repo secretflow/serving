@@ -15,58 +15,39 @@
 #include "secretflow_serving/framework/model_info_collector.h"
 
 #include <memory>
+#include <thread>
 #include <utility>
 
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/server/trace/trace.h"
+#include "secretflow_serving/util/he_mgm.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/apis/model_service.pb.h"
 
 namespace secretflow::serving {
 
-namespace {
-
-using std::invoke_result_t;
-
-class RetryRunner {
- public:
-  RetryRunner(uint32_t retry_counts, uint32_t retry_interval_ms)
-      : retry_counts_(retry_counts), retry_interval_ms_(retry_interval_ms) {}
-
-  template <typename Func, typename... Args,
-            typename = std::enable_if_t<
-                std::is_same_v<bool, invoke_result_t<Func, Args...>>>>
-  bool Run(Func&& f, Args&&... args) const {
-    auto runner_func = [&] {
-      return std::invoke(std::forward<Func>(f), std::forward<Args>(args)...);
-    };
-    for (uint32_t i = 0; i != retry_counts_; ++i) {
-      if (!runner_func()) {
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(retry_interval_ms_));
-      } else {
-        return true;
-      }
-    }
-    return false;
+ModelInfoCollector::ModelInfoCollector(Options opts) : opts_(std::move(opts)) {
+  if (opts_.model_bundle->graph().party_num() > 0) {
+    SERVING_ENFORCE_EQ(
+        opts_.model_bundle->graph().party_num(),
+        static_cast<int>(opts_.remote_channel_map->size()),
+        "serving party num mishmatch with graph party num, {} vs {}",
+        opts_.remote_channel_map->size(),
+        opts_.model_bundle->graph().party_num());
   }
 
- private:
-  uint32_t retry_counts_;
-  uint32_t retry_interval_ms_;
-};
-
-}  // namespace
-
-ModelInfoCollector::ModelInfoCollector(Options opts) : opts_(std::move(opts)) {
   // build model_info_
   model_info_.set_name(opts_.model_bundle->name());
   model_info_.set_desc(opts_.model_bundle->desc());
+
   auto* graph_view = model_info_.mutable_graph_view();
   graph_view->set_version(opts_.model_bundle->graph().version());
+  graph_view->set_party_num(opts_.model_bundle->graph().party_num());
+  graph_view->mutable_he_info()->set_pk_buf(
+      opts_.model_bundle->graph().he_config().pk_buf());
   for (const auto& node : opts_.model_bundle->graph().node_list()) {
     NodeView view;
     view.set_name(node.name());
@@ -81,6 +62,14 @@ ModelInfoCollector::ModelInfoCollector(Options opts) : opts_(std::move(opts)) {
 
   SPDLOG_INFO("local model info: party: {} : {}", opts_.self_party_id,
               PbToJson(&model_info_));
+
+  if (opts_.model_bundle->graph().has_he_config() &&
+      !opts_.model_bundle->graph().he_config().sk_buf().empty()) {
+    he::HeKitMgm::GetInstance()->InitLocalKit(
+        opts_.model_bundle->graph().he_config().pk_buf(),
+        opts_.model_bundle->graph().he_config().sk_buf(),
+        opts_.model_bundle->graph().he_config().encode_scale());
+  }
 }
 
 void ModelInfoCollector::DoCollect() {
@@ -105,6 +94,9 @@ bool ModelInfoCollector::TryCollect(
     const std::string& remote_party_id,
     const std::unique_ptr<::google::protobuf::RpcChannel>& channel) {
   brpc::Controller cntl;
+  // close brpc retry to make action controlled by us
+  cntl.set_max_retry(0);
+
   apis::GetModelInfoResponse response;
   apis::GetModelInfoRequest request;
   request.mutable_service_spec()->set_id(opts_.service_id);

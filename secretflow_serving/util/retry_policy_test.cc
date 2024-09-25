@@ -153,7 +153,6 @@ void StartServerAddRequest(int http_code, int error_cnt, int retried_count,
 
   brpc::Controller cntl;
   EXPECT_EQ(3, policy.max_retry_count);
-  cntl.set_max_retry(policy.max_retry_count);
   cntl.http_request().uri() =
       server_addr + "/HttpService";  // 设置为待访问的URL
   channel.CallMethod(NULL, &cntl, NULL, NULL, NULL /*done*/);

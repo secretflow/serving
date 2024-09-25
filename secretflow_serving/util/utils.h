@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <thread>
+
 #include "secretflow_serving/core/exception.h"
 
 #include "secretflow_serving/apis/error_code.pb.h"
@@ -77,4 +79,35 @@ void FeatureVisit(Func&& visitor, const Feature& f) {
 size_t CountSampleNum(
     const ::google::protobuf::RepeatedPtrField<Feature>& features);
 
+std::string UnescapeJson(const std::string& json);
+
+bool CheckContentEmpty(const std::string& str);
+
+class RetryRunner {
+ public:
+  RetryRunner(uint32_t retry_counts, uint32_t retry_interval_ms)
+      : retry_counts_(retry_counts), retry_interval_ms_(retry_interval_ms) {}
+
+  template <typename Func, typename... Args,
+            typename = std::enable_if_t<
+                std::is_same_v<bool, std::invoke_result_t<Func, Args...>>>>
+  bool Run(Func&& f, Args&&... args) const {
+    auto runner_func = [&] {
+      return std::invoke(std::forward<Func>(f), std::forward<Args>(args)...);
+    };
+    for (uint32_t i = 0; i != retry_counts_; ++i) {
+      if (!runner_func()) {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(retry_interval_ms_));
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+ private:
+  uint32_t retry_counts_;
+  uint32_t retry_interval_ms_;
+};
 }  // namespace secretflow::serving

@@ -88,12 +88,16 @@ class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
   ExecuteScheduler(
       const std::shared_ptr<std::unordered_map<std::string, NodeItem>>&
           node_items,
-      std::shared_ptr<Execution> execution, ThreadPool* thread_pool)
+      std::shared_ptr<Execution> execution, ThreadPool* thread_pool,
+      const std::string& self_party_id,
+      const std::vector<std::string>& party_ids,
+      const std::string& requester_id)
       : node_items_(node_items),
         execution_(std::move(execution)),
         context_(execution_->GetOutputNodeNum()),
         thread_pool_(thread_pool),
-        propagator_(execution_->nodes()),
+        propagator_(execution_->nodes(), self_party_id, party_ids,
+                    requester_id),
         sched_count_(0) {}
 
   void ExecuteNode(const std::string& node_name) {
@@ -218,8 +222,12 @@ class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
   std::exception_ptr task_exception_;
 };
 
-Executor::Executor(const std::shared_ptr<Execution>& execution)
-    : execution_(execution) {
+Executor::Executor(const std::shared_ptr<Execution>& execution,
+                   const std::string& self_party_id,
+                   const std::vector<std::string>& party_ids)
+    : execution_(execution),
+      self_party_id_(self_party_id),
+      party_ids_(party_ids) {
   // create op_kernel
   node_items_ = std::make_shared<std::unordered_map<std::string, NodeItem>>();
 
@@ -267,9 +275,11 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
 }
 
 std::vector<NodeOutput> Executor::Run(
+    const std::string& requester_id,
     std::shared_ptr<arrow::RecordBatch>& features) {
-  auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
-                                                  ThreadPool::GetInstance());
+  auto sched = std::make_shared<ExecuteScheduler>(
+      node_items_, execution_, ThreadPool::GetInstance(), self_party_id_,
+      party_ids_, requester_id);
   sched->Schedule(features);
 
   auto task_exception = sched->GetTaskException();
@@ -282,12 +292,15 @@ std::vector<NodeOutput> Executor::Run(
 }
 
 std::vector<NodeOutput> Executor::Run(
+    const std::string& requester_id,
     std::unordered_map<std::string,
                        std::vector<std::shared_ptr<arrow::RecordBatch>>>&
         prev_node_outputs) {
   SERVING_ENFORCE(!execution_->IsGraphEntry(), errors::ErrorCode::LOGIC_ERROR);
-  auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
-                                                  ThreadPool::GetInstance());
+  auto sched = std::make_shared<ExecuteScheduler>(
+      node_items_, execution_, ThreadPool::GetInstance(), self_party_id_,
+      party_ids_, requester_id);
+
   sched->Schedule(prev_node_outputs);
 
   auto task_exception = sched->GetTaskException();

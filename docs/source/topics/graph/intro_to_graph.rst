@@ -19,7 +19,7 @@ OpDef
 * desc: Description of the operator.
 * version: The version of the operator.
 * tag: Some properties of the operator.
-* attributes: Please check `Attributes` part below.
+* attributes: Please check ``Attributes`` part below.
 * inputs and output: The info of the inputs or output of the operator.
 
 Attributes
@@ -32,12 +32,12 @@ AttrDef
 * name: Must be unique among all attrs of the operator.
 * desc: Description of the attribute.
 * type: Please check :ref:`AttrType <AttrType>`.
-* is_optional: If True, when AttrValue is not provided, `default_value` would be used. Else, AttrValue must be provided.
-* default_value: Please check :ref:`AttrValue  <AttrValue>`.
+* is_optional: If True, when AttrValue is not provided, ``default_value`` would be used. Else, AttrValue must be provided.
+* default_value: Please check :ref:`AttrValue <AttrValue>`.
 
 Nodes
 -----
-Nodes are instances of operators. They store the attribute values (`AttrValue`) of the operators.
+Nodes are instances of operators. They store the attribute values (``AttrValue``) of the operators.
 
 NodeDef
 ^^^^^^^
@@ -59,7 +59,7 @@ GraphDef
 
 * version: Version of the graph.
 * node_list: The node list of the graph.
-* execution_list: Please check `Executions` part below.
+* execution_list: Please check ``Executions`` part below.
 
 Executions
 ----------
@@ -72,7 +72,7 @@ ExecutionDef
 ^^^^^^^^^^^^
 
 * nodes: Represents the nodes contained in this execution. Note that these node names should be findable and unique within the node definitions. One node can only exist in one execution and must exist in one.
-* config: The runtime config of the execution. It describes the scheduling logic and session-related states of this execution unit. for more details, please check :ref:`RuntimeConfig  <RuntimeConfig>`.
+* config: The runtime config of the execution. It describes the scheduling logic and session-related states of this execution unit. for more details, please check :ref:`RuntimeConfig <RuntimeConfig>`.
 
 Secretflow Serving Library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -81,4 +81,4 @@ Since Secretflow-Serving Load models trained by `Secretflow <https://github.com/
 Secretflow-Serving needs to export its :doc:`operators </topics/graph/operator_list>`. So
 `secretflow-serving-lib <https://pypi.org/project/secretflow-serving-lib/>`_ is a python library that
 provides interfaces to obtain Secretflow-Serving operators and export model files that Secretflow-Serving can load.
-For more details, please check :doc:`secretflow-serving-lib docs  </reference/modules>`.
+For more details, please check :doc:`secretflow-serving-lib docs </reference/modules>`.

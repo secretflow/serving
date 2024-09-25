@@ -28,7 +28,10 @@ struct FrameState {
 class Propagator {
  public:
   explicit Propagator(
-      const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes);
+      const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes,
+      const std::string& self_party_id,
+      const std::vector<std::string>& party_ids,
+      const std::string& requester_id);
 
   FrameState* GetFrame(const std::string& node_name);
 

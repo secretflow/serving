@@ -109,8 +109,6 @@ RemoteExecute::RemoteExecute(ExecuteContext ctx, const std::string& target_id,
                              ::google::protobuf::RpcChannel* channel)
     : ExecuteBase{std::move(ctx)}, channel_(channel) {
   SetTarget(target_id);
-  cntl_.set_max_retry(
-      RetryPolicyFactory::GetInstance()->GetMaxRetryCount(target_id));
   span_option_.cntl = &cntl_;
   span_option_.is_client = true;
   span_option_.party_id = ctx.local_id;

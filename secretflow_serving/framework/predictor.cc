@@ -25,12 +25,25 @@
 namespace secretflow::serving {
 
 namespace {
-void DealFinalResult(apis::NodeIo& node_io, apis::PredictResponse* response) {
+void DealFinalResult(apis::NodeIo& node_io, const apis::PredictRequest* request,
+                     const std::string& party_id,
+                     apis::PredictResponse* response) {
   SERVING_ENFORCE(node_io.ios_size() == 1, errors::ErrorCode::LOGIC_ERROR);
   const auto& ios = node_io.ios(0);
   SERVING_ENFORCE(ios.datas_size() == 1, errors::ErrorCode::LOGIC_ERROR);
+
   std::shared_ptr<arrow::RecordBatch> record_batch =
       DeserializeRecordBatch(ios.datas(0));
+
+  int64_t sample_num = 0;
+  if (request->predefined_features_size() > 0) {
+    sample_num = CountSampleNum(request->predefined_features());
+  } else {
+    sample_num = request->fs_params().find(party_id)->second.query_datas_size();
+  }
+  SERVING_ENFORCE_EQ(
+      record_batch->num_rows(), sample_num,
+      "The number of calculated results does not match the number of requests");
 
   std::vector<apis::PredictResult*> results(record_batch->num_rows());
   for (int64_t i = 0; i != record_batch->num_rows(); ++i) {
@@ -95,7 +108,8 @@ void Predictor::Predict(const apis::PredictRequest* request,
         exec->GetOutputs(&node_io_map);
       }
 
-    } else if (e->GetDispatchType() == DispatchType::DP_ANYONE) {
+    } else if (e->GetDispatchType() == DispatchType::DP_ANYONE ||
+               e->GetDispatchType() == DispatchType::DP_SELF) {
       // exec locally
       if (execution_core_) {
         execute_locally(std::move(ctx), &node_io_map);
@@ -118,6 +132,14 @@ void Predictor::Predict(const apis::PredictRequest* request,
         exec->WaitToFinish();
         exec->GetOutputs(&node_io_map);
       }
+    } else if (e->GetDispatchType() == DispatchType::DP_PEER) {
+      SERVING_ENFORCE(opts_.channels->size() == 1,
+                      errors::ErrorCode::UNEXPECTED_ERROR);
+      auto iter = opts_.channels->begin();
+      auto exec = BuildRemoteExecute(std::move(ctx), iter->first, iter->second);
+      exec->Run();
+      exec->WaitToFinish();
+      exec->GetOutputs(&node_io_map);
     } else {
       SERVING_THROW(errors::ErrorCode::UNEXPECTED_ERROR,
                     "unsupported dispatch type: {}",
@@ -128,7 +150,7 @@ void Predictor::Predict(const apis::PredictRequest* request,
   auto iter = node_io_map.find(exit_node_name);
   SERVING_ENFORCE(iter != node_io_map.end(),
                   errors::ErrorCode::UNEXPECTED_ERROR);
-  DealFinalResult(iter->second, response);
+  DealFinalResult(iter->second, request, opts_.party_id, response);
 }
 
 std::unique_ptr<RemoteExecute> Predictor::BuildRemoteExecute(

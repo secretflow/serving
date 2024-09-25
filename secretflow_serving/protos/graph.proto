@@ -30,6 +30,11 @@ enum DispatchType {
   DP_ANYONE = 2;
   // Dispatch specified participant.
   DP_SPECIFIED = 3;
+  // Dispatch self.
+  DP_SELF = 4;
+
+  // For 2-parties, Dispatch peer participant.
+  DP_PEER = 12;
 }
 
 // The runtime config of the execution.
@@ -103,6 +108,10 @@ message GraphDef {
   repeated NodeDef node_list = 2;
 
   repeated ExecutionDef execution_list = 3;
+
+  HeConfig he_config = 4;
+
+  int32 party_num = 10;
 }
 
 // The view of a graph is used to display the structure of the graph, containing
@@ -114,4 +123,26 @@ message GraphView {
   repeated NodeView node_list = 2;
 
   repeated ExecutionDef execution_list = 3;
+
+  HeInfo he_info = 4;
+
+  int32 party_num = 10;
+}
+
+// The config for HE compute.
+message HeConfig {
+  // Serialized public key bytes
+  bytes pk_buf = 1;
+  // Serialized secret key bytes
+  bytes sk_buf = 2;
+  // Encode scale for data
+  int64 encode_scale = 3;
+}
+
+// The public info for HE compute.
+message HeInfo {
+  // Serialized public key bytes
+  bytes pk_buf = 1;
+  // Encode scale for data
+  int64 encode_scale = 3;
 }
