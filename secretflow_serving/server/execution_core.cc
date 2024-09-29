@@ -187,11 +187,15 @@ std::shared_ptr<arrow::RecordBatch> ExecutionCore::BatchFetchFeatures(
     fa_request.fs_param = &request->feature_source().fs_param();
     feature::FeatureAdapter::Response fa_response;
     fa_response.header = response->mutable_header();
+    SPDLOG_INFO("spi begin, request: {}",
+                fa_request.fs_param->ShortDebugString());
     feature_adapter_->FetchFeature(fa_request, &fa_response);
-
+    double duration_ms = timer.CountMs();
+    SPDLOG_INFO("spi end, response: {} \ntime: {}",
+                fa_response.features->ToString(), duration_ms);
     RecordBatchFeatureMetrics(request->service_spec().id(),
                               request->requester_id(), errors::ErrorCode::OK,
-                              timer.CountMs());
+                              duration_ms);
     return fa_response.features;
   } catch (Exception& e) {
     RecordBatchFeatureMetrics(request->service_spec().id(),

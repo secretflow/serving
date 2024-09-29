@@ -95,12 +95,13 @@ if [[ -z ${VERSION} ]]; then
     echo "use binary version($VERSION) as docker image tag"
 fi
 
-IMAGE_TAG=secretflow/serving-anolis8:${VERSION}
-LATEST_TAG=secretflow/serving-anolis8:latest
+IMAGE_TAG=registry.cn-shanghai.aliyuncs.com/inscar-opensource-stack/serving:${VERSION}
+LATEST_TAG=registry.cn-shanghai.aliyuncs.com/inscar-opensource-stack/serving:latest
 
 # copy package
 mkdir -p ${HOST_PLATFORM}
 cp ${CODE_PATH}/sf_serving.tar.gz ./${HOST_PLATFORM}/
+cp ${CODE_PATH}/docker/logging.config ./${HOST_PLATFORM}/
 
 echo -e "Building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
 docker build --build-arg="TARGETPLATFORM=${HOST_PLATFORM}" . -f Dockerfile -t ${IMAGE_TAG}

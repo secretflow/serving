@@ -1,6 +1,4 @@
-#! /bin/bash
-#
-# Copyright 2022 Ant Group Co., Ltd.
+# Copyright 2023 Ant Group Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
 
+load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
 
-cd python_lib
-rm -rf dist
-python setup.py bdist_wheel
-python -m pip install dist/*.whl --force-reinstall
-cd -
+package(default_visibility = ["//visibility:public"])
 
-python -c "import secretflow_serving_lib"
+serving_cc_library(
+    name = "sql_processor",
+    srcs = ["sql_processor.cc"],
+    hdrs = ["sql_processor.h"],
+    deps = [
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/util:arrow_helper",
+        "@boost//:lexical_cast",
+        "@org_apache_arrow//:arrow",
+        "@org_sqlite//:sqlite3",
+        "@yacl//yacl/utils:scope_guard",
+    ],
+)

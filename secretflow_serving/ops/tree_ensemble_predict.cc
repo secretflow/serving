@@ -54,6 +54,10 @@ void TreeEnsemblePredict::DoCompute(ComputeContext* ctx) {
   SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                   errors::ErrorCode::LOGIC_ERROR);
 
+  // 日志埋点，打印输入的数据表信息
+  SPDLOG_INFO("tree_ensemble_predict input: {}",
+              ctx->inputs.front()[0]->ToString());
+
   // merge trees weight
   arrow::Datum incremented_datum(ctx->inputs.front().front()->column(0));
   for (size_t i = 1; i < ctx->inputs.size(); ++i) {
@@ -76,6 +80,9 @@ void TreeEnsemblePredict::DoCompute(ComputeContext* ctx) {
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
   ctx->output =
       MakeRecordBatch(output_schema_, res_array->length(), {res_array});
+
+  // 日志埋点，打印输出的数据表信息
+  SPDLOG_INFO("tree_ensemble_predict output: {}", ctx->output->ToString());
 }
 
 void TreeEnsemblePredict::BuildInputSchema() {

@@ -45,6 +45,8 @@ void TreeMerge::DoCompute(ComputeContext* ctx) {
   // matches.
   SERVING_ENFORCE(!weights_.empty(), errors::ErrorCode::LOGIC_ERROR,
                   "party doesn't have leaf weights, can not get merge result.");
+  // 日志埋点，打印输入的数据表信息
+  SPDLOG_INFO("tree_merge input: {}", ctx->inputs.front()[0]->ToString());
 
   const auto& selects_array = ctx->inputs.front().front()->column(0);
 
@@ -78,6 +80,7 @@ void TreeMerge::DoCompute(ComputeContext* ctx) {
   SERVING_CHECK_ARROW_STATUS(res_builder.Finish(&res_array));
   ctx->output =
       MakeRecordBatch(output_schema_, res_array->length(), {res_array});
+  SPDLOG_INFO("tree_merge output: {}", ctx->output->ToString());
 }
 
 void TreeMerge::BuildInputSchema() {

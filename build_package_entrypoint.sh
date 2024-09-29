@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 BASE_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # prepare version information before build
@@ -57,10 +56,11 @@ while getopts "j:" options; do
   esac
 done
 
+# OPENSOURCE-CLEANUP GSUB REMOVE KEYWORD_ONLY --repository_cache=/tmp/bazel_repo_cache
 if [[ ${bazel_jobs} -le 0 ]]; then
-    bazel build --verbose_failures -c opt //:sf_serving
+    bazel build --verbose_failures -c opt //:sf_serving --repository_cache=/tmp/bazel_repo_cache
 else
-    bazel build --verbose_failures -c opt //:sf_serving --jobs ${bazel_jobs}
+    bazel build --verbose_failures -c opt //:sf_serving --jobs ${bazel_jobs} --repository_cache=/tmp/bazel_repo_cache
 fi
 
 

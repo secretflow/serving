@@ -24,6 +24,7 @@
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+#include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/protos/data_type.pb.h"
 
@@ -127,22 +128,18 @@ void TreeSelect::DoCompute(ComputeContext* ctx) {
     SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
     ctx->output = MakeRecordBatch(
         output_schema_, ctx->inputs.front().front()->num_rows(), {res_array});
+    // 日志埋点,没有构造出来的树，直接返回空数据
+    SPDLOG_INFO("tree_select no tree, just return empty");
     return;
   }
+  // 日志埋点，打印输入的数据表信息
+  SPDLOG_INFO("tree_select input: {}", ctx->inputs.front()[0]->ToString());
 
   std::map<size_t, std::shared_ptr<arrow::Array>> input_features;
   for (const auto& idx : used_feature_idx_list_) {
     const auto& col = ctx->inputs.front().front()->column(idx);
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum double_array_datum;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          double_array_datum);
-      input_features.emplace(idx, std::move(double_array_datum).make_array());
-    } else {
-      input_features.emplace(idx, col);
-    }
+    input_features.emplace(
+        idx, CastToDoubleArray(ctx->inputs.front().front()->column(idx)));
   }
 
   std::shared_ptr<arrow::Array> res_array;
@@ -186,6 +183,8 @@ void TreeSelect::DoCompute(ComputeContext* ctx) {
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
   ctx->output = MakeRecordBatch(
       output_schema_, ctx->inputs.front().front()->num_rows(), {res_array});
+  // 日志埋点，决策树搜索结果
+  SPDLOG_INFO("tree_select output: {}", ctx->output->ToString());
 }
 
 void TreeSelect::BuildInputSchema() {

@@ -116,15 +116,6 @@ serving_cc_library(
     ],
 )
 
-serving_cc_library(
-    name = "test_utils",
-    srcs = ["test_utils.cc"],
-    hdrs = ["test_utils.h"],
-    deps = [
-        ":arrow_helper",
-    ],
-)
-
 serving_cc_test(
     name = "thread_safe_queue_test",
     srcs = ["thread_safe_queue_test.cc"],

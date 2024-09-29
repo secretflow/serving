@@ -194,7 +194,7 @@ The file your workspace should be as follows, ``trace.config`` is optional:
     ├── trace.config
     └── docker-compose.yaml
 
-Then you can start serving service by running docker compose up.
+Then you can start serving service by running docker compose up. 
 
 .. code-block:: bash
 

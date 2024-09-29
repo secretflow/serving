@@ -25,6 +25,7 @@ serving_cc_library(
         ":arrow_processing",
         ":dot_product",
         ":merge_y",
+        ":sql_operator",
     ],
 )
 
@@ -149,7 +150,6 @@ serving_cc_test(
     srcs = ["dot_product_test.cc"],
     deps = [
         ":dot_product",
-        "//secretflow_serving/util:test_utils",
     ],
 )
 
@@ -212,7 +212,6 @@ serving_cc_test(
     srcs = ["arrow_processing_test.cc"],
     deps = [
         ":arrow_processing",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -245,7 +244,6 @@ serving_cc_test(
     srcs = ["tree_select_test.cc"],
     deps = [
         ":tree_select",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -268,7 +266,6 @@ serving_cc_test(
     srcs = ["tree_merge_test.cc"],
     deps = [
         ":tree_merge",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -291,7 +288,29 @@ serving_cc_test(
     srcs = ["tree_ensemble_predict_test.cc"],
     deps = [
         ":tree_ensemble_predict",
-        "//secretflow_serving/util:test_utils",
         "//secretflow_serving/util:utils",
+    ],
+)
+
+serving_cc_library(
+    name = "sql_operator",
+    srcs = ["sql_operator.cc"],
+    hdrs = ["sql_operator.h"],
+    deps = [
+        ":node_def_util",
+        ":op_factory",
+        ":op_kernel_factory",
+        "//secretflow_serving/core:types",
+        "//secretflow_serving/ops/sql:sql_processor",
+        "//secretflow_serving/util:arrow_helper",
+    ],
+    alwayslink = True,
+)
+
+serving_cc_test(
+    name = "sql_operator_test",
+    srcs = ["sql_operator_test.cc"],
+    deps = [
+        ":sql_operator",
     ],
 )

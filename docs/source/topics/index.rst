@@ -32,9 +32,10 @@ Topics
    :caption: algorithm
 
    algorithm/intro
-
+   
 .. toctree::
    :maxdepth: 2
    :caption: algorithm
 
    algorithm/intro
+

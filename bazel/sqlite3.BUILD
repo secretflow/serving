@@ -1,6 +1,4 @@
-#! /bin/bash
-#
-# Copyright 2022 Ant Group Co., Ltd.
+# Copyright 2023 Ant Group Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
-cd python_lib
-rm -rf dist
-python setup.py bdist_wheel
-python -m pip install dist/*.whl --force-reinstall
-cd -
-
-python -c "import secretflow_serving_lib"
+cc_library(
+    name = "sqlite3",
+    srcs = ["sqlite3.c"],
+    hdrs = [
+        "sqlite3.h",
+        "sqlite3ext.h",
+    ],
+    copts = [
+        "-DSQLITE_ENABLE_STAT4",
+        "-DSQLITE_ENABLE_MATH_FUNCTIONS",
+    ],
+    includes = ["."],
+    linkopts = ["-ldl"],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+)

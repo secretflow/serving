@@ -139,18 +139,7 @@ void Predictor::DealFinalResult(
   }
 
   for (int j = 0; j < record_batch->num_columns(); ++j) {
-    auto col = record_batch->column(j);
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum tmp;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          tmp);
-      col = std::move(tmp).make_array();
-    }
-
-    auto col_vector = std::static_pointer_cast<arrow::DoubleArray>(col);
-
+    auto col_vector = CastToDoubleArray(record_batch->column(j));
     auto field_name = record_batch->schema()->field(j)->name();
     for (int64_t i = 0; i < record_batch->num_rows(); ++i) {
       auto* score = results[i]->add_scores();

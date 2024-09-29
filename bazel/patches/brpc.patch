@@ -70,7 +70,7 @@ index 4471bad1..d9cc6bd6 100644
 --- a/bazel/config/BUILD.bazel
 +++ b/bazel/config/BUILD.bazel
 @@ -94,6 +94,8 @@ config_setting(
-
+ 
  config_setting(
      name = "darwin",
 -    values = {"cpu": "darwin"},

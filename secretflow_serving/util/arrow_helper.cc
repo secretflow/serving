@@ -14,13 +14,12 @@
 
 #include "secretflow_serving/util/arrow_helper.h"
 
-#include <arrow/io/api.h>
-#include <arrow/ipc/api.h>
-
 #include <algorithm>
 #include <limits>
+#include <random>
 
 #include "arrow/compute/api.h"
+#include "arrow/ipc/api.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/utils.h"
@@ -467,6 +466,43 @@ std::shared_ptr<arrow::RecordBatch> ExtractRowsFromTable(
                            result);
 
   return result;
+}
+
+std::shared_ptr<arrow::DoubleArray> CastToDoubleArray(
+    const std::shared_ptr<arrow::Array>& array) {
+  std::shared_ptr<arrow::DoubleArray> result;
+  if (array->type_id() != arrow::Type::DOUBLE) {
+    arrow::Datum double_array_datum;
+    SERVING_GET_ARROW_RESULT(
+        arrow::compute::Cast(
+            array, arrow::compute::CastOptions::Safe(arrow::float64())),
+        double_array_datum);
+    result = std::static_pointer_cast<arrow::DoubleArray>(
+        std::move(double_array_datum).make_array());
+  } else {
+    result = std::static_pointer_cast<arrow::DoubleArray>(array);
+  }
+
+  return result;
+}
+
+std::shared_ptr<arrow::RecordBatch> ShuffleRecordBatch(
+    const std::shared_ptr<arrow::RecordBatch>& input_batch) {
+  auto fields = input_batch->schema()->fields();
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(fields.begin(), fields.end(), g);
+
+  std::vector<std::shared_ptr<arrow::Array>> new_columns;
+  new_columns.reserve(fields.size());
+  for (const auto& f : fields) {
+    new_columns.emplace_back(
+        input_batch->column(input_batch->schema()->GetFieldIndex(f->name())));
+  }
+
+  return arrow::RecordBatch::Make(arrow::schema(fields),
+                                  input_batch->num_rows(), new_columns);
 }
 
 }  // namespace secretflow::serving

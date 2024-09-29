@@ -39,17 +39,7 @@ Double::Matrix TableToMatrix(const std::shared_ptr<arrow::RecordBatch>& table) {
 
   // 遍历table的每一列，将数据映射到Eigen::Matrix中
   for (int i = 0; i < cols; ++i) {
-    const auto& col = table->column(i);
-    std::shared_ptr<arrow::Array> double_array = col;
-    if (col->type_id() != arrow::Type::DOUBLE) {
-      arrow::Datum double_array_datum;
-      SERVING_GET_ARROW_RESULT(
-          arrow::compute::Cast(
-              col, arrow::compute::CastOptions::Safe(arrow::float64())),
-          double_array_datum);
-      double_array = std::move(double_array_datum).make_array();
-    }
-
+    auto double_array = CastToDoubleArray(table->column(i));
     // index 0 is validity bitmap, real data start with 1
     auto data = double_array->data()->GetMutableValues<double>(1);
     SERVING_ENFORCE(data, errors::ErrorCode::LOGIC_ERROR,
@@ -116,12 +106,17 @@ void DotProduct::DoCompute(ComputeContext* ctx) {
   SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                   errors::ErrorCode::LOGIC_ERROR);
 
+  // 日志埋点，打印输入的数据表信息
+  SPDLOG_INFO("dot_product input: {}", ctx->inputs.front().front()->ToString());
+
   Double::ColVec score_vec;
   if (!no_feature_) {
     auto features = TableToMatrix(ctx->inputs.front().front());
     score_vec = features * weights_;
   } else {
     score_vec = Double::ColVec::Zero(ctx->inputs.front().front()->num_rows());
+    // 无特征
+    SPDLOG_INFO("dot_product no feature");
   }
 
   score_vec.array() += intercept_;
@@ -134,6 +129,8 @@ void DotProduct::DoCompute(ComputeContext* ctx) {
   }
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&array));
   ctx->output = MakeRecordBatch(output_schema_, score_vec.rows(), {array});
+  // 日志埋点输出信息
+  SPDLOG_INFO("dot_product output: {}", ctx->output->ToString());
 }
 
 void DotProduct::BuildInputSchema() {

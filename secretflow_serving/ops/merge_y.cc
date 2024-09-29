@@ -51,16 +51,20 @@ void MergeY::DoCompute(ComputeContext* ctx) {
   SERVING_ENFORCE(ctx->inputs.size() == 1, errors::ErrorCode::LOGIC_ERROR);
   SERVING_ENFORCE(ctx->inputs.front().size() >= 1,
                   errors::ErrorCode::LOGIC_ERROR);
-
+  // 日志埋点，打印输入的数据信息
+  SPDLOG_INFO("mergeY input: {}", ctx->inputs.front()[0]->ToString());
   // merge partial_y
   arrow::Datum incremented_datum(ctx->inputs.front()[0]->column(0));
   for (size_t i = 1; i < ctx->inputs.front().size(); ++i) {
     auto cur_array = ctx->inputs.front()[i]->column(0);
+    SPDLOG_INFO("array of party [{}]: {}", std::to_string(i),
+                cur_array->ToString());
     SERVING_GET_ARROW_RESULT(arrow::compute::Add(incremented_datum, cur_array),
                              incremented_datum);
   }
   auto merged_array = std::static_pointer_cast<arrow::DoubleArray>(
       std::move(incremented_datum).make_array());
+  SPDLOG_INFO("merged_array output: {}", merged_array->ToString());
 
   // apply link func
   arrow::DoubleBuilder builder;
@@ -75,6 +79,10 @@ void MergeY::DoCompute(ComputeContext* ctx) {
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&res_array));
   ctx->output =
       MakeRecordBatch(output_schema_, res_array->length(), {res_array});
+
+  // 日志埋点，打印输出
+  SPDLOG_INFO("yhat_scale : {};", yhat_scale_);
+  SPDLOG_INFO("mergeY output: {}", ctx->output->ToString());
 }
 
 void MergeY::BuildInputSchema() {

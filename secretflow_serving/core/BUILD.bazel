@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:serving.bzl", "serving_cc_library", "serving_cc_test")
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//bazel:serving.bzl", "serving_cc_library")
 
 package(default_visibility = ["//visibility:public"])
 

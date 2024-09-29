@@ -220,17 +220,17 @@ std::shared_ptr<arrow::RecordBatch> CSVExtractor::ExtractRows(
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "query datas in request are duplicated.");
 
-  SPDLOG_INFO("Get request schema: {}", schema->ToString());
-  SPDLOG_INFO("request ids: {} ", fmt::join(ids, ", "));
+  SPDLOG_DEBUG("Get request schema: {}", schema->ToString());
+  SPDLOG_DEBUG("request ids: {} ", fmt::join(ids, ", "));
 
   std::shared_ptr<arrow::Table> table = FetchTable(schema);
 
   auto filter = GetRowsFilter(id_column_, ids);
   auto order = GetRowsOrder(id_index_map_, ids);
-  SPDLOG_INFO("row order: {} ", fmt::join(order, ", "));
+  SPDLOG_DEBUG("row order: {} ", fmt::join(order, ", "));
 
   auto rows = ExtractRowsFromTable(table, filter);
-  SPDLOG_INFO("extract {} rows", rows->num_rows());
+  SPDLOG_DEBUG("extract {} rows", rows->num_rows());
   auto reordered_rows = ReorderRows(rows, order);
   return reordered_rows;
 }

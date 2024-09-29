@@ -139,10 +139,12 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
   BuildOutputSchema();
 
   // optional attr
-  std::string trace_content =
-      GetNodeBytesAttr(opts_.node_def, *opts_.op_def, "trace_content");
+  auto trace_content = GetNodeBytesAttr<std::string>(
+      opts_.node_def, *opts_.op_def, "trace_content");
   if (trace_content.empty()) {
     dummy_flag_ = true;
+    SPDLOG_INFO(
+        "arrow_processing: trace_content is empty,arrow_processing not work");
     return;
   }
   bool content_json_flag =
@@ -158,6 +160,9 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
 
   if (compute_trace_.func_traces().empty()) {
     dummy_flag_ = true;
+    SPDLOG_INFO(
+        "arrow_processing: compute_trace_.func_traces is "
+        "empty,arrow_processing not work");
     return;
   }
 
@@ -465,7 +470,8 @@ std::shared_ptr<arrow::RecordBatch> ArrowProcessing::ReplayCompute(
 }
 
 void ArrowProcessing::BuildInputSchema() {
-  input_schema_bytes_ = GetNodeBytesAttr(opts_.node_def, "input_schema_bytes");
+  input_schema_bytes_ =
+      GetNodeBytesAttr<std::string>(opts_.node_def, "input_schema_bytes");
   SERVING_ENFORCE(!input_schema_bytes_.empty(),
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "get empty `input_schema_bytes`");
@@ -478,7 +484,7 @@ void ArrowProcessing::BuildInputSchema() {
 
 void ArrowProcessing::BuildOutputSchema() {
   output_schema_bytes_ =
-      GetNodeBytesAttr(opts_.node_def, "output_schema_bytes");
+      GetNodeBytesAttr<std::string>(opts_.node_def, "output_schema_bytes");
   SERVING_ENFORCE(!output_schema_bytes_.empty(),
                   errors::ErrorCode::INVALID_ARGUMENT,
                   "get empty `output_schema_bytes`");

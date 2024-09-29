@@ -20,7 +20,6 @@
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
-#include "secretflow_serving/util/test_utils.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving::op {

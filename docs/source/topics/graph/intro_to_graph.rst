@@ -78,7 +78,7 @@ Secretflow Serving Library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since Secretflow-Serving Load models trained by `Secretflow <https://github.com/secretflow/secretflow>`_,
-Secretflow-Serving needs to export its :doc:`operators </topics/graph/operator_list>`. So
-`secretflow-serving-lib <https://pypi.org/project/secretflow-serving-lib/>`_ is a python library that
+Secretflow-Serving needs to export its :doc:`operators </topics/graph/operator_list>`. So 
+`secretflow-serving-lib <https://pypi.org/project/secretflow-serving-lib/>`_ is a python library that 
 provides interfaces to obtain Secretflow-Serving operators and export model files that Secretflow-Serving can load.
 For more details, please check :doc:`secretflow-serving-lib docs  </reference/modules>`.
