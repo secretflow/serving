@@ -43,6 +43,10 @@ rpc_data
 
 #python
 *.pyc
-serving.log
-sf_serving.tar.gz
-*.jar
+*egg-info
+build/
+dist/
+
+#docs
+_build/
+*.mo

@@ -15,9 +15,26 @@
 
 syntax = "proto3";
 
-import "secretflow_serving/protos/field.proto";
-
 package secretflow.serving;
+
+// Supported feature field type.
+enum FieldType {
+  // Placeholder for proto3 default value, do not use it.
+  UNKNOWN_FIELD_TYPE = 0;
+
+  // BOOL
+  FIELD_BOOL = 1;
+  // INT32
+  FIELD_INT32 = 2;
+  // INT64
+  FIELD_INT64 = 3;
+  // FLOAT
+  FIELD_FLOAT = 4;
+  // DOUBLE
+  FIELD_DOUBLE = 5;
+  // STRING
+  FIELD_STRING = 6;
+}
 
 // The value of a feature
 message FeatureValue {
@@ -49,10 +66,11 @@ message Feature {
   FeatureValue value = 2;
 }
 
-// The param for fetch features
+// The custom parameters for fetch features.
 message FeatureParam {
-  // The serialized datas for query features. Each one for query one row of
-  // features.
+  // Custom parameters data for querying feature values, the specific content
+  // format of which is determined by the feature datasource provider. Each one
+  // for query one row of features.
   repeated string query_datas = 1;
   // Optional. Represents the common part of the query datas.
   string query_context = 2;

@@ -34,6 +34,8 @@ serving_cc_library(
     deps = [
         ":propagator",
         "//secretflow_serving/ops",
+        "//secretflow_serving/util:thread_pool",
+        "//secretflow_serving/util:thread_safe_queue",
     ],
 )
 
@@ -49,62 +51,89 @@ serving_cc_test(
 
 serving_cc_library(
     name = "executable",
+    srcs = ["executable.cc"],
     hdrs = ["executable.h"],
     deps = [
         ":executor",
-        "@org_apache_arrow//:arrow",
     ],
 )
 
 serving_cc_library(
-    name = "executable_impl",
-    srcs = ["executable_impl.cc"],
-    hdrs = ["executable_impl.h"],
+    name = "model_info_processor",
+    srcs = ["model_info_processor.cc"],
+    hdrs = ["model_info_processor.h"],
     deps = [
-        ":executable",
-        ":executor",
+        "//secretflow_serving/apis:model_service_cc_proto",
+        "//secretflow_serving/core:exception",
+    ],
+)
+
+serving_cc_library(
+    name = "model_info_collector",
+    srcs = ["model_info_collector.cc"],
+    hdrs = ["model_info_collector.h"],
+    deps = [
+        ":model_info_processor",
+        "//secretflow_serving/apis:model_service_cc_proto",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/server/trace",
+        "//secretflow_serving/util:utils",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
+serving_cc_library(
+    name = "execute_context",
+    srcs = ["execute_context.cc"],
+    hdrs = ["execute_context.h"],
+    deps = [
+        "//secretflow_serving/apis:execution_service_cc_proto",
+        "//secretflow_serving/apis:prediction_service_cc_proto",
+        "//secretflow_serving/core:exception",
+        "//secretflow_serving/ops:graph",
+        "//secretflow_serving/server:execution_core",
+        "//secretflow_serving/server/trace",
+        "//secretflow_serving/util:utils",
+        "@com_github_brpc_brpc//:brpc",
     ],
 )
 
 serving_cc_library(
     name = "predictor",
+    srcs = ["predictor.cc"],
     hdrs = ["predictor.h"],
     deps = [
+        ":execute_context",
         "//secretflow_serving/apis:common_cc_proto",
-        "//secretflow_serving/apis:execution_service_cc_proto",
         "//secretflow_serving/apis:prediction_service_cc_proto",
         "//secretflow_serving/server:execution_core",
-    ],
-)
-
-serving_cc_library(
-    name = "predictor_impl",
-    srcs = ["predictor_impl.cc"],
-    hdrs = ["predictor_impl.h"],
-    deps = [
-        ":predictor",
-        "//secretflow_serving/core:exception",
         "//secretflow_serving/util:arrow_helper",
         "//secretflow_serving/util:utils",
         "@com_github_brpc_brpc//:brpc",
-        "@yacl//yacl/utils:elapsed_timer",
     ],
 )
 
 serving_cc_test(
-    name = "predictor_impl_test",
-    srcs = ["predictor_impl_test.cc"],
+    name = "predictor_test",
+    srcs = ["predictor_test.cc"],
     deps = [
-        ":predictor_impl",
+        ":predictor",
+    ],
+)
+
+serving_cc_test(
+    name = "execute_context_test",
+    srcs = ["execute_context_test.cc"],
+    deps = [
+        ":execute_context",
     ],
 )
 
 serving_cc_library(
-    name = "interface",
+    name = "loader",
     hdrs = ["loader.h"],
     deps = [
-        ":executable",
-        "//secretflow_serving/core:exception",
+        "//secretflow_serving/protos:bundle_cc_proto",
     ],
 )
 
@@ -113,10 +142,7 @@ serving_cc_library(
     srcs = ["model_loader.cc"],
     hdrs = ["model_loader.h"],
     deps = [
-        ":executable_impl",
-        ":interface",
-        ":predictor_impl",
-        "//secretflow_serving/protos:bundle_cc_proto",
+        ":loader",
         "//secretflow_serving/util:sys_util",
         "//secretflow_serving/util:utils",
     ],

@@ -1,0 +1,1279 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-04-09 17:44+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/reference/api.md:1
+msgid "SecretFlow-Serving API"
+msgstr ""
+
+#: ../../source/reference/api.md:3
+msgid "Table of Contents"
+msgstr ""
+
+#: ../../source/reference/api.md:4
+msgid "Services"
+msgstr ""
+
+#: ../../source/reference/api.md:14
+msgid "[ExecutionService](#executionservice)"
+msgstr ""
+
+#: ../../source/reference/api.md:20
+msgid "[metrics](#metrics)"
+msgstr ""
+
+#: ../../source/reference/api.md:26
+msgid "[ModelService](#modelservice)"
+msgstr ""
+
+#: ../../source/reference/api.md:32
+msgid "[PredictionService](#predictionservice)"
+msgstr ""
+
+#: ../../source/reference/api.md:43 ../../source/reference/api.md:203
+msgid "Messages"
+msgstr ""
+
+#: ../../source/reference/api.md:47
+msgid "[Header](#header)"
+msgstr ""
+
+#: ../../source/reference/api.md:48
+msgid "[Header.DataEntry](#header-dataentry)"
+msgstr ""
+
+#: ../../source/reference/api.md:49
+msgid "[ServiceSpec](#servicespec)"
+msgstr ""
+
+#: ../../source/reference/api.md:58
+msgid "[ExecuteRequest](#executerequest)"
+msgstr ""
+
+#: ../../source/reference/api.md:59
+msgid "[ExecuteResponse](#executeresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:60
+msgid "[ExecuteResult](#executeresult)"
+msgstr ""
+
+#: ../../source/reference/api.md:61
+msgid "[ExecutionTask](#executiontask)"
+msgstr ""
+
+#: ../../source/reference/api.md:62
+msgid "[FeatureSource](#featuresource)"
+msgstr ""
+
+#: ../../source/reference/api.md:63
+msgid "[IoData](#iodata)"
+msgstr ""
+
+#: ../../source/reference/api.md:64
+msgid "[NodeIo](#nodeio)"
+msgstr ""
+
+#: ../../source/reference/api.md:70
+msgid "[MetricsRequest](#metricsrequest)"
+msgstr ""
+
+#: ../../source/reference/api.md:71
+msgid "[MetricsResponse](#metricsresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:77
+msgid "[GetModelInfoRequest](#getmodelinforequest)"
+msgstr ""
+
+#: ../../source/reference/api.md:78
+msgid "[GetModelInfoResponse](#getmodelinforesponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:84
+msgid "[PredictRequest](#predictrequest)"
+msgstr ""
+
+#: ../../source/reference/api.md:85
+msgid "[PredictRequest.FsParamsEntry](#predictrequest-fsparamsentry)"
+msgstr ""
+
+#: ../../source/reference/api.md:86
+msgid "[PredictResponse](#predictresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:87
+msgid "[PredictResult](#predictresult)"
+msgstr ""
+
+#: ../../source/reference/api.md:88
+msgid "[Score](#score)"
+msgstr ""
+
+#: ../../source/reference/api.md:94
+msgid "[Status](#status)"
+msgstr ""
+
+#: ../../source/reference/api.md:100
+msgid "[Feature](#feature)"
+msgstr ""
+
+#: ../../source/reference/api.md:101
+msgid "[FeatureField](#featurefield)"
+msgstr ""
+
+#: ../../source/reference/api.md:102
+msgid "[FeatureParam](#featureparam)"
+msgstr ""
+
+#: ../../source/reference/api.md:103
+msgid "[FeatureValue](#featurevalue)"
+msgstr ""
+
+#: ../../source/reference/api.md:108 ../../source/reference/api.md:600
+msgid "Enums"
+msgstr ""
+
+#: ../../source/reference/api.md:115
+msgid "[ErrorCode](#errorcode)"
+msgstr ""
+
+#: ../../source/reference/api.md:121
+msgid "[FeatureSourceType](#featuresourcetype)"
+msgstr ""
+
+#: ../../source/reference/api.md:139
+msgid "[FieldType](#fieldtype)"
+msgstr ""
+
+#: ../../source/reference/api.md:143
+msgid "[Scalar Value Types](#scalar-value-types)"
+msgstr ""
+
+#: ../../source/reference/api.md:150
+msgid "ExecutionService"
+msgstr ""
+
+#: ../../source/reference/api.md:151
+msgid "ExecutionService provides access to run execution defined in the GraphDef."
+msgstr ""
+
+#: ../../source/reference/api.md:153
+msgid "Execute"
+msgstr ""
+
+#: ../../source/reference/api.md:155
+msgid ""
+"**rpc** Execute([ExecuteRequest](#executerequest))     "
+"[ExecuteResponse](#executeresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:162
+msgid "metrics"
+msgstr ""
+
+#: ../../source/reference/api.md:165
+msgid "default_method"
+msgstr ""
+
+#: ../../source/reference/api.md:167
+msgid ""
+"**rpc** default_method([MetricsRequest](#metricsrequest))     "
+"[MetricsResponse](#metricsresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:174
+msgid "ModelService"
+msgstr ""
+
+#: ../../source/reference/api.md:175
+msgid "ModelService provides operation ralated to models."
+msgstr ""
+
+#: ../../source/reference/api.md:177
+msgid "GetModelInfo"
+msgstr ""
+
+#: ../../source/reference/api.md:179
+msgid ""
+"**rpc** GetModelInfo([GetModelInfoRequest](#getmodelinforequest))     "
+"[GetModelInfoResponse](#getmodelinforesponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:186
+msgid "PredictionService"
+msgstr ""
+
+#: ../../source/reference/api.md:187
+msgid "PredictionService provides access to the serving model."
+msgstr ""
+
+#: ../../source/reference/api.md:189
+msgid "Predict"
+msgstr ""
+
+#: ../../source/reference/api.md:191
+msgid ""
+"**rpc** Predict([PredictRequest](#predictrequest))     "
+"[PredictResponse](#predictresponse)"
+msgstr ""
+
+#: ../../source/reference/api.md:194
+msgid "Predict."
+msgstr ""
+
+#: ../../source/reference/api.md:208
+msgid "Header"
+msgstr ""
+
+#: ../../source/reference/api.md:209
+msgid "Header containing custom data"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Field"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Description"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "data"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[map Header.DataEntry](#header-dataentry )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "none"
+msgstr ""
+
+#: ../../source/reference/api.md:220
+msgid "Header.DataEntry"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "key"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ string](#string )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "value"
+msgstr ""
+
+#: ../../source/reference/api.md:233
+msgid "ServiceSpec"
+msgstr ""
+
+#: ../../source/reference/api.md:234
+msgid "Metadata for an predict or execute request."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "id"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "The id of the model service."
+msgstr ""
+
+#: ../../source/reference/api.md:249
+msgid "ExecuteRequest"
+msgstr ""
+
+#: ../../source/reference/api.md:250
+msgid "Execute request containing one or more requests."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "header"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ Header](#header )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Custom data. The header will be passed to the downstream system which "
+"implement the feature service spi."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "requester_id"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Represents the id of the requesting party"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "service_spec"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ ServiceSpec](#servicespec )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Model service specification."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "session_id"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Represents the session of this execute."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "feature_source"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ FeatureSource](#featuresource )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "task"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ ExecutionTask](#executiontask )"
+msgstr ""
+
+#: ../../source/reference/api.md:266
+msgid "ExecuteResponse"
+msgstr ""
+
+#: ../../source/reference/api.md:267
+msgid "Execute response containing one or more responses."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Custom data. Passed by the downstream system which implement the feature "
+"service spi."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "status"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ Status](#status )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Staus of this response."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "result"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ ExecuteResult](#executeresult )"
+msgstr ""
+
+#: ../../source/reference/api.md:282
+msgid "ExecuteResult"
+msgstr ""
+
+#: ../../source/reference/api.md:283
+msgid "Execute result of the request task."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "execution_id"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Specified the execution id."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "nodes"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated NodeIo](#nodeio )"
+msgstr ""
+
+#: ../../source/reference/api.md:295
+msgid "ExecutionTask"
+msgstr ""
+
+#: ../../source/reference/api.md:296
+msgid "Execute request task."
+msgstr ""
+
+#: ../../source/reference/api.md:308
+msgid "FeatureSource"
+msgstr ""
+
+#: ../../source/reference/api.md:309
+msgid "Descriptive feature source"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ FeatureSourceType](#featuresourcetype )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Identifies the source type of the features"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "fs_param"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ secretflow.serving.FeatureParam](#featureparam )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Custom parameter for fetch features from feature service or other "
+"systems. Valid when `type==FeatureSourceType::FS_SERVICE`"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "predefineds"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated secretflow.serving.Feature](#feature )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Defined features. Valid when `type==FeatureSourceType::FS_PREDEFINED`"
+msgstr ""
+
+#: ../../source/reference/api.md:322
+msgid "IoData"
+msgstr ""
+
+#: ../../source/reference/api.md:323
+msgid "The serialized data of the node input/output."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "datas"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated bytes](#bytes )"
+msgstr ""
+
+#: ../../source/reference/api.md:334
+msgid "NodeIo"
+msgstr ""
+
+#: ../../source/reference/api.md:335
+msgid "Represents the node input/output data."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "name"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Node name."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "ios"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated IoData](#iodata )"
+msgstr ""
+
+#: ../../source/reference/api.md:349
+msgid "MetricsRequest"
+msgstr ""
+
+#: ../../source/reference/api.md:356
+msgid "MetricsResponse"
+msgstr ""
+
+#: ../../source/reference/api.md:365
+msgid "GetModelInfoRequest"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Custom data."
+msgstr ""
+
+#: ../../source/reference/api.md:378
+msgid "GetModelInfoResponse"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "model_info"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ secretflow.serving.ModelInfo](#modelinfo )"
+msgstr ""
+
+#: ../../source/reference/api.md:395
+msgid "PredictRequest"
+msgstr ""
+
+#: ../../source/reference/api.md:396
+msgid "Predict request containing one or more requests. examples:"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "fs_params"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[map PredictRequest.FsParamsEntry](#predictrequest-fsparamsentry )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"The params for fetch features. Note that this should include all the "
+"parties involved in the prediction. When using the feature service as the"
+" source of feature data, serving does not consume this parameter but "
+"instead passes it through to the feature service for consumption. Key: "
+"party's id. Value: params for fetch features."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "predefined_features"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Optional. If defined, the request party will no longer query for the "
+"feature but will use defined fetures in `predefined_features` for the "
+"prediction."
+msgstr ""
+
+#: ../../source/reference/api.md:439
+msgid "PredictRequest.FsParamsEntry"
+msgstr ""
+
+#: ../../source/reference/api.md:452
+msgid "PredictResponse"
+msgstr ""
+
+#: ../../source/reference/api.md:453
+msgid "Predict response containing one or more responses. examples:"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "results"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated PredictResult](#predictresult )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"List of the predict result. Returned in the same order as the request's "
+"feature query data."
+msgstr ""
+
+#: ../../source/reference/api.md:502
+msgid "PredictResult"
+msgstr ""
+
+#: ../../source/reference/api.md:503
+msgid "Result of single predict request."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "scores"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated Score](#score )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "According to the model, there may be one or multi scores."
+msgstr ""
+
+#: ../../source/reference/api.md:514
+msgid "Score"
+msgstr ""
+
+#: ../../source/reference/api.md:515
+msgid "Result of regression or one class of Classifications"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"The name of the score, it depends on the attribute configuration of the "
+"model."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ double](#double )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "The value of the score."
+msgstr ""
+
+#: ../../source/reference/api.md:529
+msgid "Status"
+msgstr ""
+
+#: ../../source/reference/api.md:530
+msgid "Represents the status of a request"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "code"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "The code of this status. Must be one of ErrorCode in error_code.proto"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "msg"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "The msg of this status."
+msgstr ""
+
+#: ../../source/reference/api.md:544
+msgid "Feature"
+msgstr ""
+
+#: ../../source/reference/api.md:545
+msgid "The definition of a feature"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "field"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ FeatureField](#featurefield )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ FeatureValue](#featurevalue )"
+msgstr ""
+
+#: ../../source/reference/api.md:557
+msgid "FeatureField"
+msgstr ""
+
+#: ../../source/reference/api.md:558
+msgid "The definition of a feature field."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Unique name of the feature"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[ FieldType](#fieldtype )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Field type of the feature"
+msgstr ""
+
+#: ../../source/reference/api.md:570
+msgid "FeatureParam"
+msgstr ""
+
+#: ../../source/reference/api.md:571
+msgid "The custom parameters for fetch features."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "query_datas"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated string](#string )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Custom parameters data for querying feature values, the specific content "
+"format of which is determined by the feature datasource provider. Each "
+"one for query one row of features."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "query_context"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Optional. Represents the common part of the query datas."
+msgstr ""
+
+#: ../../source/reference/api.md:583
+msgid "FeatureValue"
+msgstr ""
+
+#: ../../source/reference/api.md:584
+msgid "The value of a feature"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "i32s"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated int32](#int32 )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "int list"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "i64s"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated int64](#int64 )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "fs"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated float](#float )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "float list"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "ds"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated double](#double )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "ss"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "string list"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "bs"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "[repeated bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "bool list"
+msgstr ""
+
+#: ../../source/reference/api.md:606
+msgid "ErrorCode"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Name"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Number"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "UNKNOWN"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "0"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Placeholder for proto3 default value, do not use it"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "OK"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "1"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "UNEXPECTED_ERROR"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "2"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "INVALID_ARGUMENT"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "3"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "NETWORK_ERROR"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "4"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "NOT_FOUND"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "5"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Some requested entity (e.g., file or directory) was not found."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "NOT_IMPLEMENTED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "6"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "LOGIC_ERROR"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "7"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "SERIALIZE_FAILED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "8"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "DESERIALIZE_FAILED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "9"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "IO_ERROR"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "10"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "NOT_READY"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "11"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_UNAUTHENTICATED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "100"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_INVALID_ARGUMENT"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "101"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_DEADLINE_EXCEEDED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "102"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_NOT_FOUND"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "103"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_INTERNAL_ERROR"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "104"
+msgstr ""
+
+#: ../../source/reference/api.md:634
+msgid "FeatureSourceType"
+msgstr ""
+
+#: ../../source/reference/api.md:635
+msgid "Support feature source type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "UNKNOWN_FS_TYPE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_NONE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "No need features."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_SERVICE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Fetch features from feature service."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FS_PREDEFINED"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "The feature is defined in the request."
+msgstr ""
+
+#: ../../source/reference/api.md:657
+msgid "FieldType"
+msgstr ""
+
+#: ../../source/reference/api.md:658
+msgid "Supported feature field type."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "UNKNOWN_FIELD_TYPE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Placeholder for proto3 default value, do not use it."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_BOOL"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "BOOL"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_INT32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "INT32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_INT64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "INT64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_FLOAT"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FLOAT"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_DOUBLE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "DOUBLE"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "FIELD_STRING"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "STRING"
+msgstr ""
+
+#: ../../source/reference/api.md:674
+msgid "Scalar Value Types"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ".proto Type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Notes"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "C++ Type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Java Type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Python Type"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"double\" /></div><a name=\"double\" /> double"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "double"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "float"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"float\" /></div><a name=\"float\" /> float"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"int32\" /></div><a name=\"int32\" /> int32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint32 instead."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "int32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "int"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"int64\" /></div><a name=\"int64\" /> int64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Uses variable-length encoding. Inefficient for encoding negative numbers "
+"– if your field is likely to have negative values, use sint64 instead."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "int64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "long"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "int/long"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"uint32\" /></div><a name=\"uint32\" /> uint32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Uses variable-length encoding."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "uint32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"uint64\" /></div><a name=\"uint64\" /> uint64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "uint64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"sint32\" /></div><a name=\"sint32\" /> sint32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int32s."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"sint64\" /></div><a name=\"sint64\" /> sint64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Uses variable-length encoding. Signed int value. These more efficiently "
+"encode negative numbers than regular int64s."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"fixed32\" /></div><a name=\"fixed32\" /> fixed32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Always four bytes. More efficient than uint32 if values are often greater"
+" than 2^28."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"fixed64\" /></div><a name=\"fixed64\" /> fixed64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid ""
+"Always eight bytes. More efficient than uint64 if values are often "
+"greater than 2^56."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"sfixed32\" /></div><a name=\"sfixed32\" /> sfixed32"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Always four bytes."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"sfixed64\" /></div><a name=\"sfixed64\" /> sfixed64"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "Always eight bytes."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"bool\" /></div><a name=\"bool\" /> bool"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "bool"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "boolean"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"string\" /></div><a name=\"string\" /> string"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "A string must always contain UTF-8 encoded or 7-bit ASCII text."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "string"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "String"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "str/unicode"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "<div><h4 id=\"bytes\" /></div><a name=\"bytes\" /> bytes"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "May contain any arbitrary sequence of bytes."
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "ByteString"
+msgstr ""
+
+#: ../../source/reference/api.md
+msgid "str"
+msgstr ""

@@ -20,8 +20,10 @@ filegroup(
         "alice/glm-test.tar.gz",
         "alice/logging.config",
         "alice/serving.config",
+        "alice/trace.config",
         "bob/glm-test.tar.gz",
         "bob/logging.config",
         "bob/serving.config",
+        "bob/trace.config",
     ],
 )

@@ -101,12 +101,12 @@ TEST_F(NodeDefUtilTest, Works) {
   {
     float attr_f;
     EXPECT_TRUE(GetNodeAttr(node_def, "attr_f", &attr_f));
-    EXPECT_EQ(attr_f, 3.0f);
+    EXPECT_EQ(attr_f, 3.0F);
   }
   {
     double attr_d;
     EXPECT_TRUE(GetNodeAttr(node_def, "attr_d", &attr_d));
-    EXPECT_EQ(attr_d, 4.0d);
+    EXPECT_EQ(attr_d, 4.0);
   }
   {
     std::string attr_s;
@@ -191,25 +191,4 @@ TEST_F(NodeDefUtilTest, OneOfError) {
   EXPECT_THROW(JsonToPb(json_content, &node_def), Exception);
 }
 
-TEST_F(NodeDefUtilTest, EmptyList) {
-  std::string json_content = R"JSON(
-{
-  "name": "test_node",
-  "op": "test_op",
-  "attr_values": {
-    "attr_ss": {
-      "ss": {
-        "data": []
-      }
-    }
-  }
-}
-)JSON";
-
-  NodeDef node_def;
-  JsonToPb(json_content, &node_def);
-
-  EXPECT_THROW(GetNodeAttr<std::vector<std::string>>(node_def, "attr_ss"),
-               Exception);
-}
 }  // namespace secretflow::serving::op

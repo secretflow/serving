@@ -37,10 +37,10 @@ std::string FillHttpPrefix(const std::string& addr, bool ssl_enabled) {
 }
 }  // namespace
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, bool enable_lb,
     const brpc::ChannelOptions& opts) {
-  auto channel = std::make_shared<brpc::Channel>();
+  auto channel = std::make_unique<brpc::Channel>();
   std::string remote_url = endpoint;
   std::string load_balancer;
   if (enable_lb) {
@@ -57,7 +57,7 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
   return channel;
 }
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, const std::string& protocol, bool enable_lb,
     int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
     const TlsConfig* tls_config) {
@@ -67,17 +67,19 @@ std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     opts.timeout_ms = rpc_timeout_ms;
   }
   if (connect_timeout_ms > 0) {
-    opts.timeout_ms = connect_timeout_ms;
+    opts.connect_timeout_ms = connect_timeout_ms;
   }
   if (tls_config != nullptr) {
     opts.mutable_ssl_options()->client_cert.certificate =
         tls_config->certificate_path();
     opts.mutable_ssl_options()->client_cert.private_key =
         tls_config->private_key_path();
-    opts.mutable_ssl_options()->verify.ca_file_path =
-        tls_config->ca_file_path();
-    // use default verify depth
-    opts.mutable_ssl_options()->verify.verify_depth = 1;
+    if (!tls_config->ca_file_path().empty()) {
+      opts.mutable_ssl_options()->verify.ca_file_path =
+          tls_config->ca_file_path();
+      // use default verify depth
+      opts.mutable_ssl_options()->verify.verify_depth = 1;
+    }
   }
 
   return CreateBrpcChannel(endpoint, enable_lb, opts);

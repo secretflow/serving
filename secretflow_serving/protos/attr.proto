@@ -19,25 +19,42 @@ package secretflow.serving.op;
 
 // Supported attribute types.
 enum AttrType {
-  UNKNOWN_AT_TYEP = 0;
+  // Placeholder for proto3 default value, do not use it.
+  UNKNOWN_AT_TYPE = 0;
 
   // Atomic types
 
+  // INT32
   AT_INT32 = 1;
+  // INT64
   AT_INT64 = 2;
+  // FLOAT
   AT_FLOAT = 3;
+  // DOUBLE
   AT_DOUBLE = 4;
+  // STRING
   AT_STRING = 5;
+  // BOOL
   AT_BOOL = 6;
+  // BYTES
+  AT_BYTES = 7;
 
   // List types
 
+  // INT32 LIST
   AT_INT32_LIST = 11;
+  // INT64 LIST
   AT_INT64_LIST = 12;
+  // FLOAT LIST
   AT_FLOAT_LIST = 13;
+  // DOUBLE LIST
   AT_DOUBLE_LIST = 14;
+  // STRING LIST
   AT_STRING_LIST = 15;
+  // BOOL LIST
   AT_BOOL_LIST = 16;
+  // BYTES LIST
+  AT_BYTES_LIST = 17;
 }
 
 message Int32List {
@@ -64,6 +81,10 @@ message BoolList {
   repeated bool data = 11;
 }
 
+message BytesList {
+  repeated bytes data = 11;
+}
+
 // The value of an attribute
 message AttrValue {
   oneof value {
@@ -77,6 +98,8 @@ message AttrValue {
     string s = 5;
     // BOOL
     bool b = 6;
+    // BYTES
+    bytes by = 7;
 
     // Lists
 
@@ -90,6 +113,8 @@ message AttrValue {
     StringList ss = 15;
     // BOOLS
     BoolList bs = 16;
+    // BYTESS
+    BytesList bys = 17;
   }
 }
 

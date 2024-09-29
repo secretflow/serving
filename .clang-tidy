@@ -8,6 +8,8 @@ Checks: "abseil-cleanup-ctad,
   abseil-upgrade-duration-conversions
   bugprone-*,
   -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-narrowing-conversions, # too many false positives around `std::size_t`  vs. `*::difference_type`.
   google-build-using-namespace,
   google-explicit-constructor,
   google-global-names-in-headers,
@@ -17,11 +19,14 @@ Checks: "abseil-cleanup-ctad,
   misc-unused-using-decls,
   modernize-*,
   -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-return-braced-init-list, # can hurt readability
   -modernize-use-nodiscard,
   performance-*,
   readability-*,
   -readability-else-after-return,
   -readability-identifier-length,
+  -readability-function-cognitive-complexity,
   -readability-magic-numbers,
   -readability-named-parameter"
 
@@ -68,3 +73,6 @@ CheckOptions:
 
   - key: readability-identifier-naming.FunctionCase
     value: "CamelBack"
+
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: PtBufferView

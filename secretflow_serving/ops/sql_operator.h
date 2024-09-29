@@ -24,7 +24,8 @@ class SqlOperator : public OpKernel {
  public:
   explicit SqlOperator(OpKernelOptions opts);
 
-  void Compute(ComputeContext* ctx) override;
+  // 执行计算
+  void DoCompute(ComputeContext* ctx) override;
 
  protected:
   void BuildInputSchema() override;

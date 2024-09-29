@@ -1,0 +1,432 @@
+{
+  "name": "onehot",
+  "funcTraces": [
+    {
+      "name": "EFN_TB_COLUMN",
+      "inputs": [
+        {
+          "dataId": 0
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 1
+      }
+    },
+    {
+      "name": "equal",
+      "inputs": [
+        {
+          "dataId": 1
+        },
+        {
+          "customScalar": {
+            "i64": "3"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 2
+      }
+    },
+    {
+      "name": "equal",
+      "inputs": [
+        {
+          "dataId": 1
+        },
+        {
+          "customScalar": {
+            "i64": "2"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 3
+      }
+    },
+    {
+      "name": "equal",
+      "inputs": [
+        {
+          "dataId": 1
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 4
+      }
+    },
+    {
+      "name": "or",
+      "inputs": [
+        {
+          "dataId": 3
+        },
+        {
+          "dataId": 2
+        }
+      ],
+      "output": {
+        "dataId": 5
+      }
+    },
+    {
+      "name": "if_else",
+      "inputs": [
+        {
+          "dataId": 4
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 6
+      }
+    },
+    {
+      "name": "EFN_TB_REMOVE_COLUMN",
+      "inputs": [
+        {
+          "dataId": 0
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 7
+      }
+    },
+    {
+      "name": "if_else",
+      "inputs": [
+        {
+          "dataId": 5
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 8
+      }
+    },
+    {
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "dataId": 7
+        },
+        {
+          "customScalar": {
+            "i64": "2"
+          }
+        },
+        {
+          "customScalar": {
+            "s": "a_0"
+          }
+        },
+        {
+          "dataId": 6
+        }
+      ],
+      "output": {
+        "dataId": 9
+      }
+    },
+    {
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "dataId": 9
+        },
+        {
+          "customScalar": {
+            "i64": "3"
+          }
+        },
+        {
+          "customScalar": {
+            "s": "a_1"
+          }
+        },
+        {
+          "dataId": 8
+        }
+      ],
+      "output": {
+        "dataId": 10
+      }
+    },
+    {
+      "name": "EFN_TB_COLUMN",
+      "inputs": [
+        {
+          "dataId": 10
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 11
+      }
+    },
+    {
+      "name": "equal",
+      "inputs": [
+        {
+          "dataId": 11
+        },
+        {
+          "customScalar": {
+            "s": "m"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 12
+      }
+    },
+    {
+      "name": "equal",
+      "inputs": [
+        {
+          "dataId": 11
+        },
+        {
+          "customScalar": {
+            "s": "k"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 13
+      }
+    },
+    {
+      "name": "or",
+      "inputs": [
+        {
+          "dataId": 13
+        },
+        {
+          "dataId": 12
+        }
+      ],
+      "output": {
+        "dataId": 14
+      }
+    },
+    {
+      "name": "if_else",
+      "inputs": [
+        {
+          "dataId": 14
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 15
+      }
+    },
+    {
+      "name": "EFN_TB_REMOVE_COLUMN",
+      "inputs": [
+        {
+          "dataId": 10
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 16
+      }
+    },
+    {
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "dataId": 16
+        },
+        {
+          "customScalar": {
+            "i64": "3"
+          }
+        },
+        {
+          "customScalar": {
+            "s": "c_0"
+          }
+        },
+        {
+          "dataId": 15
+        }
+      ],
+      "output": {
+        "dataId": 17
+      }
+    },
+    {
+      "name": "EFN_TB_COLUMN",
+      "inputs": [
+        {
+          "dataId": 17
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 18
+      }
+    },
+    {
+      "name": "subtract",
+      "inputs": [
+        {
+          "dataId": 18
+        },
+        {
+          "customScalar": {
+            "d": 1.11
+          }
+        }
+      ],
+      "output": {
+        "dataId": 19
+      }
+    },
+    {
+      "name": "abs",
+      "inputs": [
+        {
+          "dataId": 19
+        }
+      ],
+      "output": {
+        "dataId": 20
+      }
+    },
+    {
+      "name": "less",
+      "inputs": [
+        {
+          "dataId": 20
+        },
+        {
+          "customScalar": {
+            "d": 1e-07
+          }
+        }
+      ],
+      "output": {
+        "dataId": 21
+      }
+    },
+    {
+      "name": "if_else",
+      "inputs": [
+        {
+          "dataId": 21
+        },
+        {
+          "customScalar": {
+            "i64": "1"
+          }
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 22
+      }
+    },
+    {
+      "name": "EFN_TB_REMOVE_COLUMN",
+      "inputs": [
+        {
+          "dataId": 17
+        },
+        {
+          "customScalar": {
+            "i64": "0"
+          }
+        }
+      ],
+      "output": {
+        "dataId": 23
+      }
+    },
+    {
+      "name": "EFN_TB_ADD_COLUMN",
+      "inputs": [
+        {
+          "dataId": 23
+        },
+        {
+          "customScalar": {
+            "i64": "3"
+          }
+        },
+        {
+          "customScalar": {
+            "s": "b_0"
+          }
+        },
+        {
+          "dataId": 22
+        }
+      ],
+      "output": {
+        "dataId": 24
+      }
+    }
+  ]
+}

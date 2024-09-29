@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
 #include <vector>
 
@@ -46,11 +45,13 @@ class Node final {
     return in_edges_;
   }
 
-  const std::shared_ptr<Edge>& out_edge() const { return out_edge_; }
+  const std::vector<std::shared_ptr<Edge>>& out_edges() const {
+    return out_edges_;
+  }
 
   void AddInEdge(const std::shared_ptr<Edge>& in_edge);
 
-  void SetOutEdge(const std::shared_ptr<Edge>& out_edge);
+  void AddOutEdge(const std::shared_ptr<Edge>& out_edge);
 
  private:
   const NodeDef node_def_;
@@ -58,7 +59,7 @@ class Node final {
   std::vector<std::string> input_nodes_;
 
   std::vector<std::shared_ptr<Edge>> in_edges_;
-  std::shared_ptr<Edge> out_edge_;
+  std::vector<std::shared_ptr<Edge>> out_edges_;
 };
 
 class Edge final {
@@ -68,11 +69,11 @@ class Edge final {
       : src_node_(src_node), dst_node_(dst_node), dst_input_id_(dst_input_id) {}
   ~Edge() = default;
 
-  const std::string& src_node() const { return src_node_; }
+  [[nodiscard]] const std::string& src_node() const { return src_node_; }
 
-  const std::string& dst_node() const { return dst_node_; }
+  [[nodiscard]] const std::string& dst_node() const { return dst_node_; }
 
-  size_t dst_input_id() const { return dst_input_id_; }
+  [[nodiscard]] size_t dst_input_id() const { return dst_input_id_; }
 
  private:
   const std::string src_node_;

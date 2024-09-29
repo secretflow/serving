@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/base-ci:latest as builder
-
-RUN yum install -y \
-    wget autoconf bison flex git protobuf-devel libnl3-devel \
-    libtool make pkg-config protobuf-compiler && yum clean all
-
-FROM secretflow/anolis8-python:3.8.15 as python
-
 FROM openanolis/anolisos:8.8
+
+ARG TARGETPLATFORM
+
+ENV TZ=Asia/Shanghai
 
 LABEL maintainer="secretflow-contact@service.alipay.com"
 
-COPY --from=python /root/miniconda3/envs/secretflow/bin/ /usr/local/bin/
-COPY --from=python /root/miniconda3/envs/secretflow/lib/ /usr/local/lib/
+RUN yum install -y protobuf libnl3 libgomp && yum clean all
 
-COPY sf_serving.tar.gz /root/sf_serving.tgz
+COPY ./$TARGETPLATFORM/sf_serving.tar.gz /root/sf_serving.tgz
+COPY ./$TARGETPLATFORM/logging.config /root/logging.config
 RUN tar -C /root -xzf /root/sf_serving.tgz
 
 # run as root for now

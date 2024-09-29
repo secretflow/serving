@@ -15,41 +15,42 @@
 # limitations under the License.
 #
 
-set -e
+set -eu
 
 RED='\033[0;31m'
 GREEN="\033[32m"
 NO_COLOR="\033[0m"
 
 show_help() {
-    echo "Usage: bash build.sh [OPTION]... -v {the_version}"
-    echo "  -v  --version"
-    echo "          the version to build with."
-    echo "  -l --latest"
-    echo "          tag this version as latest and push to docker repo."
+    echo "Usage: bash build.sh [OPTION]"
+    echo "  -v version"
+    echo "          specifies the image version. default use binary version"
+    echo "  -l"
+    echo "          tag this version as latest."
+    echo "  -p"
+    echo "          upload the builded image to a registry."
     echo
 }
 
-RELEASE_IMAGE=secretflow/release-ci:1.2
+MACHINE_TYPE=$(arch)
+HOST_PLATFORM=""
+RELEASE_IMAGE=""
+if [ "$MACHINE_TYPE" == "x86_64" ]; then
+  HOST_PLATFORM=linux/amd64
+  RELEASE_IMAGE=secretflow/release-ci:latest
+else
+  HOST_PLATFORM=linux/arm64
+  RELEASE_IMAGE=secretflow/release-ci-aarch64:latest
+fi
 
-CODE_PATH=$(cd .. && pwd)
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+CODE_PATH=$(cd "$(dirname "$0")" && cd .. && pwd)
 
 build_serving() {
     echo -e "${GREEN}Start build serving package...${NO_COLOR} ${CODE_PATH}"
 
     # prepare version information before build
-    version=$(grep "version" $SCRIPT_DIR/version.txt | awk -F'"' '{print $2}')
-    version+=$(date '+%Y%m%d-%H:%M:%S')
-    version+=".$(git rev-parse --short HEAD)"
-    echo "binary version: ${version}"
-    sed -i "s/SF_SERVING_VERSION/${version}/g" ${CODE_PATH}/secretflow_serving/server/version.h
-
     docker run --rm --mount type=bind,source="${CODE_PATH}",target=/home/admin/dev/ \
         -w /home/admin/dev \
-        --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
-        --cap-add=NET_ADMIN \
-        --privileged=true \
         --entrypoint "./build_package_entrypoint.sh" \
         ${RELEASE_IMAGE}
 
@@ -61,58 +62,64 @@ build_serving() {
     echo -e "${GREEN}Build serving package end${NO_COLOR}"
 }
 
-if [[ "$#" -lt 2 ]]; then
-    show_help
-    exit
-fi
-
-while [[ "$#" -ge 1 ]]; do
-    case $1 in
-    -v | --version)
-        VERSION="$2"
-        shift
-        if [[ "$#" -eq 0 ]]; then
-            echo "Version shall not be empty."
-            echo ""
-            show_help
-            exit 1
-        fi
-        shift
-        ;;
-    -l | --latest)
-        LATEST=1
-        shift
-        ;;
-    *)
-        echo "Unknown argument passed: $1"
+VERSION=""
+LATEST=0
+NEED_PUSH=0
+while getopts "v:pl" options; do
+  case "${options}" in
+  v)
+    VERSION=${OPTARG}
+    if [[ -z ${VERSION} ]]; then
+        VERSION=$(grep "version" $CODE_PATH/version.txt | awk -F'"' '{print $2}')
+        echo "Version shall not be empty."
         exit 1
-        ;;
-    esac
-done
-
-if [[ -z ${VERSION} ]]; then
-    echo "Please specify the version."
+    fi
+    ;;
+  l)
+    LATEST=1
+    ;;
+  p)
+    NEED_PUSH=1
+    ;;
+  *)
+    show_help
     exit 1
-fi
-
-IMAGE_TAG=secretflow/secretflow:${VERSION}
-LATEST_TAG=secretflow/secretflow:latest
+    ;;
+  esac
+done
 
 build_serving
 
+if [[ -z ${VERSION} ]]; then
+    VERSION=$(grep "version" $CODE_PATH/version.txt | awk -F'"' '{print $2}')
+    echo "use binary version($VERSION) as docker image tag"
+fi
+
+IMAGE_TAG=registry.cn-shanghai.aliyuncs.com/inscar-opensource-stack/serving:${VERSION}
+LATEST_TAG=registry.cn-shanghai.aliyuncs.com/inscar-opensource-stack/serving:latest
+
 # copy package
-cp ${CODE_PATH}/sf_serving.tar.gz ./
+mkdir -p ${HOST_PLATFORM}
+cp ${CODE_PATH}/sf_serving.tar.gz ./${HOST_PLATFORM}/
+cp ${CODE_PATH}/docker/logging.config ./${HOST_PLATFORM}/
 
 echo -e "Building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
-docker build . -f Dockerfile -t ${IMAGE_TAG}
+docker build --build-arg="TARGETPLATFORM=${HOST_PLATFORM}" . -f Dockerfile -t ${IMAGE_TAG}
 echo -e "Finish building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
-docker push ${IMAGE_TAG}
 
 if [[ LATEST -eq 1 ]]; then
-    echo -e "Tag and push ${GREEN}${LATEST_TAG}${NO_COLOR} ..."
+    echo -e "Tag ${GREEN}${LATEST_TAG}${NO_COLOR} ..."
     docker tag ${IMAGE_TAG} ${LATEST_TAG}
-    docker push ${LATEST_TAG}
+fi
+
+if [[ NEED_PUSH -eq 1 ]]; then
+    echo -e "Push ${GREEN}${IMAGE_TAG}${NO_COLOR}"
+    docker push ${IMAGE_TAG}
+    if [[ LATEST -eq 1 ]]; then
+      echo -e "Push ${GREEN}${LATEST_TAG}${NO_COLOR}"
+      docker push ${LATEST_TAG}
+    fi
 fi
 
 # clean up
-rm -f sf_serving.tar.gz
+rm -rf ./${HOST_PLATFORM}

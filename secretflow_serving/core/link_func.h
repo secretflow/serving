@@ -16,11 +16,19 @@
 
 #include <string>
 
+#include "secretflow_serving/protos/link_function.pb.h"
+
 namespace secretflow::serving {
 
-void ValidateLinkFuncType(const std::string& type);
+LinkFunctionType ParseLinkFuncType(const std::string& type);
 
 template <typename T>
-T ApplyLinkFunc(T x, const std::string& type);
+T ApplyLinkFunc(T x, LinkFunctionType type);
+
+template <typename T, typename... ARGS>
+T ApplyLinkFunc(T x, LinkFunctionType lf_type, ARGS&&... args);
+
+template <typename... ARGS>
+void CheckLinkFuncAragsValid(LinkFunctionType lf_type, ARGS&&... args);
 
 }  // namespace secretflow::serving

@@ -25,11 +25,11 @@
 
 namespace secretflow::serving {
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, bool enable_lb,
     const brpc::ChannelOptions& opts);
 
-std::shared_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
+std::unique_ptr<google::protobuf::RpcChannel> CreateBrpcChannel(
     const std::string& endpoint, const std::string& protocol, bool enable_lb,
     int32_t rpc_timeout_ms, int32_t connect_timeout_ms,
     const TlsConfig* tls_config);
