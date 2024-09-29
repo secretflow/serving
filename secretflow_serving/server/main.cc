@@ -18,16 +18,19 @@
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/core/logging.h"
+#include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/server/kuscia/config_parser.h"
 #include "secretflow_serving/server/server.h"
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/server/version.h"
 #include "secretflow_serving/util/utils.h"
 
 #include "secretflow_serving/config/serving_config.pb.h"
+#include "secretflow_serving/config/trace_config.pb.h"
 
 DEFINE_string(config_mode, "",
               "config mode for serving, default value will use the raw config "
-              "defined. optinal value: kuscia");
+              "defined. optional value: kuscia");
 DEFINE_string(serving_config_file, "",
               "read an ascii config protobuf from the supplied file name.");
 
@@ -36,11 +39,34 @@ DEFINE_string(
     logging_config_file, "",
     "read an ascii LoggingConfig protobuf from the supplied file name.");
 
+// trace config
+DEFINE_string(
+    trace_config_file, "",
+    "read an ascii TraceConfig protobuf from the supplied file name.");
+
 #define STRING_EMPTY_VALIDATOR(str_config)                                  \
   if (str_config.empty()) {                                                 \
     SERVING_THROW(secretflow::serving::errors::ErrorCode::INVALID_ARGUMENT, \
                   "{} get empty value", #str_config);                       \
   }
+
+void InitLogger() {
+  secretflow::serving::LoggingConfig log_config;
+  if (!FLAGS_logging_config_file.empty()) {
+    secretflow::serving::LoadPbFromJsonFile(FLAGS_logging_config_file,
+                                            &log_config);
+  }
+  secretflow::serving::SetupLogging(log_config);
+}
+
+void InitTracer() {
+  secretflow::serving::TraceConfig trace_log;
+  if (!FLAGS_trace_config_file.empty()) {
+    secretflow::serving::LoadPbFromJsonFile(FLAGS_trace_config_file,
+                                            &trace_log);
+  }
+  secretflow::serving::InitTracer(trace_log);
+}
 
 int main(int argc, char* argv[]) {
   // Initialize the symbolizer to get a human-readable stack trace
@@ -51,15 +77,24 @@ int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   try {
+    InitLogger();
+    InitTracer();
+
     SPDLOG_INFO("version: {}", SERVING_VERSION_STRING);
 
-    // init logger
-    secretflow::serving::LoggingConfig log_config;
-    if (!FLAGS_logging_config_file.empty()) {
-      secretflow::serving::LoadPbFromJsonFile(FLAGS_logging_config_file,
-                                              &log_config);
+    {
+      auto op_def_list =
+          secretflow::serving::op::OpFactory::GetInstance()->GetAllOps();
+      std::vector<std::string> op_names;
+      std::for_each(
+          op_def_list.begin(), op_def_list.end(),
+          [&](const std::shared_ptr<const secretflow::serving::op::OpDef>& o) {
+            op_names.emplace_back(o->name());
+          });
+
+      SPDLOG_INFO("op list: {}",
+                  fmt::join(op_names.begin(), op_names.end(), ", "));
     }
-    secretflow::serving::SetupLogging(log_config);
 
     STRING_EMPTY_VALIDATOR(FLAGS_serving_config_file);
 
@@ -92,7 +127,8 @@ int main(int argc, char* argv[]) {
     server.WaitForEnd();
   } catch (const secretflow::serving::Exception& e) {
     // TODO: custom status sink
-    SPDLOG_ERROR("server startup failed, code:{}, msg:{}", e.code(), e.what());
+    SPDLOG_ERROR("server startup failed, code: {}, msg: {}, stack: {}",
+                 e.code(), e.what(), e.stack_trace());
     return -1;
   } catch (const std::exception& e) {
     // TODO: custom status sink

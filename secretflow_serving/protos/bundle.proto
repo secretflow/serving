@@ -55,3 +55,12 @@ message ModelManifest {
   // The format type of the model bundle file.
   FileFormatType bundle_format = 2;
 }
+
+// Represents a secertflow model without private data.
+message ModelInfo {
+  string name = 1;
+
+  string desc = 2;
+
+  GraphView graph_view = 3;
+}

@@ -84,6 +84,8 @@ cc_library(
             "cpp/src/arrow/vendored/string_view.hpp",
             "cpp/src/arrow/vendored/variant.hpp",
             "cpp/src/arrow/vendored/base64.cpp",
+            "cpp/src/arrow/vendored/double-conversion/*.cc",
+            "cpp/src/arrow/vendored/double-conversion/*.h",
             "cpp/src/arrow/**/*.h",
             "cpp/src/parquet/**/*.h",
             "cpp/src/parquet/**/*.cc",

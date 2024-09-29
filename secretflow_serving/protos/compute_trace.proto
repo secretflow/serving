@@ -1,0 +1,111 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package secretflow.serving.compute;
+
+enum ExtendFunctionName {
+  // Placeholder for proto3 default value, do not use it
+  UNKOWN_EX_FUNCTION_NAME = 0;
+
+  // Get colunm from table(record_batch).
+  // see
+  // https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch6columnEi
+  EFN_TB_COLUMN = 1;
+  // Add colum to table(record_batch).
+  // see
+  // https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch9AddColumnEiNSt6stringERKNSt10shared_ptrI5ArrayEE
+  EFN_TB_ADD_COLUMN = 2;
+  // Remove colunm from table(record_batch).
+  // see
+  // https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch12RemoveColumnEi
+  EFN_TB_REMOVE_COLUMN = 3;
+  // Set colunm to table(record_batch).
+  // see
+  // https://arrow.apache.org/docs/cpp/api/table.html#_CPPv4NK5arrow11RecordBatch9SetColumnEiRKNSt10shared_ptrI5FieldEERKNSt10shared_ptrI5ArrayEE
+  EFN_TB_SET_COLUMN = 4;
+}
+
+// Represents a single value with a specific data type.
+message Scalar {
+  oneof value {
+    // For integer types with a length below 32 bits, due to the limitations of
+    // protobuf data types, we will extract the data and then convert it to the
+    // desired type.
+
+    // INT8.
+    int32 i8 = 1;
+    // UINT8
+    int32 ui8 = 2;
+    // INT16
+    int32 i16 = 3;
+    // UINT16
+    int32 ui16 = 4;
+
+    // INT32
+    int32 i32 = 5;
+    // UINT32
+    uint32 ui32 = 6;
+    // INT64
+    int64 i64 = 7;
+    // UINT64
+    uint64 ui64 = 8;
+
+    // FLOAT
+    float f = 9;
+    // DOUBLE
+    double d = 10;
+
+    // STRING
+    string s = 11;
+
+    // BOOL
+    bool b = 12;
+  }
+}
+
+message FunctionInput {
+  oneof value {
+    // '0' means root input data
+    int32 data_id = 1;
+    Scalar custom_scalar = 2;
+  }
+}
+
+message FunctionOutput {
+  int32 data_id = 1;
+}
+
+message FunctionTrace {
+  // The Function name.
+  string name = 1;
+
+  // The serialized function options.
+  bytes option_bytes = 2;
+
+  // Inputs of this function.
+  repeated FunctionInput inputs = 3;
+
+  // Output of this function.
+  FunctionOutput output = 4;
+}
+
+message ComputeTrace {
+  // The name of this Compute.
+  string name = 1;
+
+  repeated FunctionTrace func_traces = 2;
+}

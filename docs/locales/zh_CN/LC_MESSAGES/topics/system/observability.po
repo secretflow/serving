@@ -1,0 +1,449 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-25 12:42+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/topics/system/observability.rst:2
+msgid "SecretFlow-Serving System Observability"
+msgstr "SecretFlow-Serving 系统可观测性"
+
+#: ../../source/topics/system/observability.rst:4
+msgid ""
+"Secretflow-Serving currently supports two observation types: logs and "
+"metrics."
+msgstr "Secretflow-Serving 当前支持两种观测手段：日志和Metrics。"
+
+#: ../../source/topics/system/observability.rst:7
+msgid "Logs"
+msgstr "日志"
+
+#: ../../source/topics/system/observability.rst:9
+msgid ""
+"You can configure the log path, log level, etc. by specifying the "
+":ref:`LoggingConfig` when serving is started. You can also view the "
+":ref:`example <log_conf_file>`."
+msgstr ""
+"你可以在Serving启动的时候，通过 :ref:`LoggingConfig` 配置日志生成的路径，日志打印级别等。可以查看 :ref:`示例 "
+"<log_conf_file>`。"
+
+#: ../../source/topics/system/observability.rst:13
+msgid "Metrics"
+msgstr "Metrics"
+
+#: ../../source/topics/system/observability.rst:16
+#: ../../source/topics/system/observability.rst:190
+msgid "Format"
+msgstr "格式"
+
+#: ../../source/topics/system/observability.rst:18
+msgid ""
+"Secretflow-Serving uses the `Prometheus <https://prometheus.io/>`_ "
+"standard to generate metrics. The metric service is turned off by "
+"default, you may start metric service by specifying "
+"``metrics_exposer_port`` of :ref:`ServerConfig <SecretFlow-Serving "
+"Config>`. Then You can obtain the metrics by requesting "
+":ref:`MetricsService <metrics>` on this port. That is to say, Serving "
+"supports pull mode. You could use `The Prometheus monitoring system "
+"<https://prometheus.io/>`_ to collect metrics, or simply use ``curl`` "
+"like this:"
+msgstr ""
+"Secretflow-Serving 使用 `Prometheus <https://prometheus.io/>`_  "
+"格式来生成metrics。默认metrics服务是关闭的，你可以通过设置启动参数 :ref:`ServerConfig` 的 "
+"``metrics_exposer_port`` "
+"来打开metrics服务，然后你可以在这个端口上请求获取metrics数据。也就是说，Serving实现的是拉取模式。你可以使用 "
+"Prometheus来收集metrics，或者用 ``curl`` 工具像这样: "
+
+#: ../../source/topics/system/observability.rst:31
+msgid "Metric entries"
+msgstr "Metric条目"
+
+#: ../../source/topics/system/observability.rst:33
+msgid ""
+"Serving mainly records the number of interface requests and the request "
+"duration time for various services, with some additional labels, such as "
+"the error code, party_id, etc."
+msgstr "Serving主要记录各种服务请求的个数和持续时间，并附件一些label，比如说错误码，party_id等。"
+
+#: ../../source/topics/system/observability.rst:37
+msgid "The sevices of Secretflow-Serving are shown below:"
+msgstr "Secretflow-Serving的相关服务如下图："
+
+#: ../../source/topics/system/observability.rst:42
+msgid ""
+":ref:`PredictRequest` first goes to the :ref:`PredictionService`, and the"
+" :ref:`PredictionService` will then request the local ``ExecutionCore`` "
+"or the remote :ref:`ExecutionService` according to the different "
+":ref:`DispatchType`  in the Graph. If the :ref:`FeatureSourceType` of "
+"request is ``FS_SERVICE``, then the ``ExecutionCore`` will request the "
+":ref:`BatchFeatureService`."
+msgstr ""
+":ref:`PredictRequest` 首先会到达 :ref:`PredictionService` ，然后 "
+":ref:`PredictionService` 会根据Graph中的 :ref:`DispatchType` 来决定请求本地的 "
+"``ExecutionCore`` 还是远端的 :ref:`ExecutionService` 。如果请求中指定的 "
+":ref:`FeatureSourceType` 是 ``FS_SERVICE`` ，那么 ``ExecutionCore`` 将会请求 "
+":ref:`BatchFeatureService` 。"
+
+#: ../../source/topics/system/observability.rst:48
+msgid ""
+":ref:`GetModelInfoRequest` goes to :ref:`ModelService` to get model info."
+" :ref:`Model info <ModelInfo>` is public for all parties."
+msgstr ""
+":ref:`GetModelInfoRequest` 会通过 :ref:`ModelService` 来获取模型信息。 获取的 "
+":ref:`Model info<ModelInfo>` 对每一方来说都是公开信息。"
+
+#: ../../source/topics/system/observability.rst:50
+msgid "Metrics of Secretflow-Serving have the following parts:"
+msgstr "Secretflow-Serving的Metrics有以下几个部分"
+
+#: ../../source/topics/system/observability.rst:53
+msgid ""
+"Prometheus supports a multi-dimensional data model with time series data "
+"identified by metric name and key/value pairs, called labels. Secretflow-"
+"Serving metrics have some common labels:"
+msgstr ""
+"Prometheus支持多维度的数据模型，生成的时间序列数据可以由名字和键值对，也就是labels来唯一指定。Secretflow-"
+"Serving的metrics有一些共同的label:"
+
+#: ../../source/topics/system/observability.rst:56
+msgid "handler: the subject providing services"
+msgstr "handler: 和这个metrics相关的服务名"
+
+#: ../../source/topics/system/observability.rst:57
+msgid "action: operation name"
+msgstr "action: 和这个metrics相关的操作名称"
+
+#: ../../source/topics/system/observability.rst:58
+msgid "party id: ``self_id`` of :ref:`ClusterConfig`"
+msgstr "party id: :ref:`ClusterConfig` 中的 ``self_id``"
+
+#: ../../source/topics/system/observability.rst:59
+msgid "service_id: ``id`` of :ref:`ServingConfig`"
+msgstr "service_id: :ref:`ServingConfig` 中的 ``id``"
+
+#: ../../source/topics/system/observability.rst:61
+msgid ""
+"If you want to know what is ``Counter`` or ``Summary``, you could check "
+"out `this page <https://prometheus.io/docs/concepts/metric_types/>`_."
+msgstr ""
+"如果你想了解什么是 ``Counter`` 或者 ``Summary`` , 你可以查看 `这里 "
+"<https://prometheus.io/docs/concepts/metric_types/>`_."
+
+#: ../../source/topics/system/observability.rst:65
+msgid "Brpc metric"
+msgstr "Brpc相关的metrics"
+
+#: ../../source/topics/system/observability.rst:67
+msgid ""
+"Serving will dump brpc internal metrics in Prometheus format, refer to "
+"`issue <https://github.com/apache/brpc/issues/1322>`_."
+msgstr ""
+"Serving会用Prometheus的格式输出brpc内部的metrics, 参考 `issue "
+"<https://github.com/apache/brpc/issues/1322>`_."
+
+#: ../../source/topics/system/observability.rst:70
+msgid "MetricsService metrics"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:73
+#: ../../source/topics/system/observability.rst:87
+#: ../../source/topics/system/observability.rst:120
+#: ../../source/topics/system/observability.rst:145
+msgid "name"
+msgstr "name"
+
+#: ../../source/topics/system/observability.rst:73
+#: ../../source/topics/system/observability.rst:87
+#: ../../source/topics/system/observability.rst:120
+#: ../../source/topics/system/observability.rst:145
+msgid "type"
+msgstr "类型"
+
+#: ../../source/topics/system/observability.rst:73
+#: ../../source/topics/system/observability.rst:87
+#: ../../source/topics/system/observability.rst:120
+#: ../../source/topics/system/observability.rst:145
+msgid "desc"
+msgstr "说明"
+
+#: ../../source/topics/system/observability.rst:75
+msgid "exposer_transferred_bytes_total"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:75
+#: ../../source/topics/system/observability.rst:77
+#: ../../source/topics/system/observability.rst:89
+#: ../../source/topics/system/observability.rst:99
+#: ../../source/topics/system/observability.rst:122
+#: ../../source/topics/system/observability.rst:147
+msgid "Counter"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:75
+msgid "Transferred bytes to metrics services"
+msgstr "metrics services传输的字节数"
+
+#: ../../source/topics/system/observability.rst:77
+msgid "exposer_scrapes_total"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:77
+msgid "Number of times metrics were scraped"
+msgstr "metrics services收集的次数"
+
+#: ../../source/topics/system/observability.rst:79
+msgid "exposer_request_duration_milliseconds"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:79
+#: ../../source/topics/system/observability.rst:107
+#: ../../source/topics/system/observability.rst:132
+#: ../../source/topics/system/observability.rst:157
+msgid "Summary"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:79
+msgid ""
+"Summary of latencies of serving scrape requests, in milliseconds  with  "
+"0.5-quantile, 0.9-quantile, 0.99-quantile"
+msgstr "metrics收集请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
+
+#: ../../source/topics/system/observability.rst:84
+msgid "PredictionService metrics"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:87
+msgid "label"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:89
+msgid "prediction_request_count"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:89
+msgid "How many prediction service api requests are handled by this server."
+msgstr "预测请求处理个数"
+
+#: ../../source/topics/system/observability.rst:89
+#: ../../source/topics/system/observability.rst:99
+#: ../../source/topics/system/observability.rst:107
+msgid "handler: PredictionService"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:91
+#: ../../source/topics/system/observability.rst:101
+#: ../../source/topics/system/observability.rst:109
+#: ../../source/topics/system/observability.rst:124
+#: ../../source/topics/system/observability.rst:134
+#: ../../source/topics/system/observability.rst:149
+#: ../../source/topics/system/observability.rst:159
+msgid "service_id"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:93
+#: ../../source/topics/system/observability.rst:103
+#: ../../source/topics/system/observability.rst:111
+#: ../../source/topics/system/observability.rst:126
+#: ../../source/topics/system/observability.rst:136
+#: ../../source/topics/system/observability.rst:151
+#: ../../source/topics/system/observability.rst:161
+msgid "party_id"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:95
+#: ../../source/topics/system/observability.rst:105
+#: ../../source/topics/system/observability.rst:113
+#: ../../source/topics/system/observability.rst:128
+#: ../../source/topics/system/observability.rst:138
+#: ../../source/topics/system/observability.rst:153
+#: ../../source/topics/system/observability.rst:163
+msgid "action"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:97
+#: ../../source/topics/system/observability.rst:130
+#: ../../source/topics/system/observability.rst:155
+msgid "code: error code of response"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:99
+msgid "prediction_sample_count"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:99
+msgid "How many prediction samples are processed by this services."
+msgstr "预测样本处理个数"
+
+#: ../../source/topics/system/observability.rst:107
+msgid "prediction_request_duration_milliseconds"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:107
+msgid ""
+"Summary of prediction service api request duration in milliseconds with "
+"0.5-quantile, 0.9-quantile, 0.99-quantile"
+msgstr "metrics收集请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
+
+#: ../../source/topics/system/observability.rst:118
+msgid "ExecutionService metrics"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:120
+#: ../../source/topics/system/observability.rst:145
+msgid "labels"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:122
+msgid "execution_request_count"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:122
+#: ../../source/topics/system/observability.rst:147
+msgid "How many execution requests are handled by this server."
+msgstr "处理请求数"
+
+#: ../../source/topics/system/observability.rst:122
+#: ../../source/topics/system/observability.rst:132
+msgid "handler: ExecutionService"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:132
+msgid "execution_request_duration_milliseconds"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:132
+msgid ""
+"Summary of execution service api request duration in milliseconds  with  "
+"0.5-quantile, 0.9-quantile, 0.99-quantile"
+msgstr "execution service请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
+
+#: ../../source/topics/system/observability.rst:142
+msgid "ModelService metrics"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:147
+msgid "model_service_request_count"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:147
+#: ../../source/topics/system/observability.rst:157
+msgid "handler: ModelService"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:157
+msgid "model_service_request_duration_milliseconds"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:157
+msgid ""
+"Summary of model service api request duration in milliseconds  with  "
+"0.5-quantile, 0.9-quantile, 0.99-quantile"
+msgstr "model service请求处理时间的summary, 毫秒为单位，包括0.5，0.9，0.99分点"
+
+#: ../../source/topics/system/observability.rst:167
+msgid "Trace"
+msgstr ""
+
+#: ../../source/topics/system/observability.rst:169
+msgid ""
+"Secretflow-Serving supports `B3 Multiple Headers "
+"<https://github.com/openzipkin/b3-propagation?tab=readme-ov-file"
+"#multiple-headers>`_ trace propagation protocol and uses the "
+"`Opentelemetry <https://opentelemetry.io/>`_ standard to generate trace "
+"info. By default, trace information will not be exported, but Secretflow-"
+"Serving will still propagate trace information. If you want to export "
+"trace information, you can specifying ``trace_config_file`` option when "
+"starting SecretFlow-Serving. **However, exporting trace information may "
+"cause some performance degradation.**"
+msgstr ""
+"Secretflow-Serving支持 `B3 Multiple Headers "
+"<https://github.com/openzipkin/b3-propagation?tab=readme-ov-file"
+"#multiple-headers>`_ trace传播协议， 并使用 `Opentelemetry "
+"<https://opentelemetry.io/>`_  标准来生成trace信息。默认，trace信息是不会被导出的"
+"，但是Secretflow-Serving依然会传递trace信息。如果你想要导出trace信息，你可以在启动Secretflow-"
+"Serving时指定 ``trace_config_file`` 命令行选项。**但是，导出trace信息可能会造成一些性能损失。**"
+
+#: ../../source/topics/system/observability.rst:176
+msgid "Configure"
+msgstr "配置"
+
+#: ../../source/topics/system/observability.rst:178
+msgid ""
+"When starting SecretFlow-Serving, you can specify a config file according"
+" to :ref:`TraceConfig` in json format like this:"
+msgstr "当启动SecretFlow-Serving的时候，你可以指定一个JSON格式的配置文件，依据 :ref:`TraceConfig` ，如下："
+
+#: ../../source/topics/system/observability.rst:184
+msgid "You can also view the :ref:`example <trace_config_file>`."
+msgstr "也可以参考 :ref:`示例 <trace_config_file>`"
+
+#: ../../source/topics/system/observability.rst:186
+msgid ""
+"Currently SecretFlow-Serving supports export span info to a trace log "
+"file. You can specify a filename and other options in configuration."
+msgstr "当前SecretFlow-Serving支持将span信息导出到一个log文件里。你可以在配置里指定日志文件名可其他的参数。"
+
+#: ../../source/topics/system/observability.rst:192
+msgid ""
+"Every line of the trace log file is a `ResourceSpans <https://github.com"
+"/open-telemetry/opentelemetry-"
+"proto/blob/342e1d4c3a1fe43312823ffb53bd38327f263059/opentelemetry/proto/trace/v1/trace.proto#L48>`_"
+" in json format."
+msgstr ""
+"trace日志的每一行都是一个json格式的 `ResourceSpans <https://github.com/open-telemetry"
+"/opentelemetry-"
+"proto/blob/342e1d4c3a1fe43312823ffb53bd38327f263059/opentelemetry/proto/trace/v1/trace.proto#L48>`_"
+" 。"
+
+#: ../../source/topics/system/observability.rst:284
+msgid ""
+"Since ``TraceId`` and ``SpanId`` are defined as `bytes "
+"<https://protobuf.dev/programming-guides/proto3/#scalar>`_ in `proto file"
+" <https://github.com/open-telemetry/opentelemetry-"
+"proto/blob/342e1d4c3a1fe43312823ffb53bd38327f263059/opentelemetry/proto/trace/v1/trace.proto>`_,"
+" so if you want to view the real value, you need to do the following "
+"conversion:"
+msgstr ""
+"因为在对应的proto定义中，``TraceId`` 和 ``SpanId`` 等都定义成 `bytes "
+"<https://protobuf.dev/programming-guides/proto3/#scalar>`_ "
+"，所以你如果想查看真实的值，你需要做如下转换："
+
+#: ../../source/topics/system/observability.rst:295
+msgid "Attributes"
+msgstr "属性"
+
+#: ../../source/topics/system/observability.rst:297
+msgid ""
+"The spans generated by Serving contain some attributes. Some of them are "
+"filled according to the ``opentelemetry`` standard, which has some "
+"predefined `sematic conversions "
+"<https://opentelemetry.io/docs/specs/semconv/http/http-spans/>`_. Other "
+"Attributes such as ``span_info``, whose value is a instance of "
+":ref:`SpanInfo` in json format, and ``request_protocol`` represents the "
+"protocol of `brpc <https://brpc.apache.org/>`_ , you can refer to `client"
+" protocol "
+"<https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols>`_"
+" and `server protocol "
+"<https://github.com/apache/brpc/blob/master/docs/en/server.md#protocols>`_."
+msgstr ""
+"Serving生成的span有一些属性，其中一些属性是根据 ``opentelemetry`` 标准填充的，该标准有一些预定义的 `sematic"
+" conversions <https://opentelemetry.io/docs/specs/semconv/http/http-"
+"spans/>`_ 。其他属性如 ``span_info`` ，该属性的值是JSON格式的 :ref:`SpanInfo` "
+"，``request_protocol`` 的值表示底层 `brpc <https://brpc.apache.org/>`_  "
+"的协议，你可以参考 `client protocol "
+"<https://github.com/apache/brpc/blob/master/docs/en/client.md#protocols>`_"
+" 和 `server protocol "
+"<https://github.com/apache/brpc/blob/master/docs/en/server.md#protocols>`_."

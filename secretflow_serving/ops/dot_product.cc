@@ -16,10 +16,14 @@
 
 #include <set>
 
+#include "arrow/compute/api.h"
+
 #include "secretflow_serving/ops/node_def_util.h"
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
 #include "secretflow_serving/util/arrow_helper.h"
+
+#include "secretflow_serving/protos/data_type.pb.h"
 
 namespace secretflow::serving::op {
 
@@ -32,17 +36,16 @@ Double::Matrix TableToMatrix(const std::shared_ptr<arrow::RecordBatch>& table) {
 
   Double::Matrix matrix;
   matrix.resize(rows, cols);
-  Eigen::Map<Double::Matrix> map(matrix.data(), rows, cols);
 
   // 遍历table的每一列，将数据映射到Eigen::Matrix中
   for (int i = 0; i < cols; ++i) {
-    auto col = table->column(i);
+    auto double_array = CastToDoubleArray(table->column(i));
     // index 0 is validity bitmap, real data start with 1
-    auto data = col->data()->GetMutableValues<double>(1);
+    auto data = double_array->data()->GetMutableValues<double>(1);
     SERVING_ENFORCE(data, errors::ErrorCode::LOGIC_ERROR,
-                    "found unsupport field type");
+                    "found unsupported field type");
     Eigen::Map<Eigen::VectorXd> vec(data, rows);
-    map.col(i) = vec;
+    matrix.col(i) = vec;
   }
 
   return matrix;
@@ -51,50 +54,71 @@ Double::Matrix TableToMatrix(const std::shared_ptr<arrow::RecordBatch>& table) {
 }  // namespace
 
 DotProduct::DotProduct(OpKernelOptions opts) : OpKernel(std::move(opts)) {
-  output_col_name_ =
-      GetNodeAttr<std::string>(opts_.node->node_def(), "output_col_name");
-  // optional attr
-  GetNodeAttr(opts_.node->node_def(), "intercept", &intercept_);
+  SERVING_ENFORCE_EQ(opts_.node_def.op_version(), "0.0.2");
 
-  // feature
+  // feature name
+  feature_name_list_ =
+      GetNodeAttr<std::vector<std::string>>(opts_.node_def, "feature_names");
   std::set<std::string> f_name_set;
-  feature_name_list_ = GetNodeAttr<std::vector<std::string>>(
-      opts_.node->node_def(), "feature_names");
   for (auto& feature_name : feature_name_list_) {
     SERVING_ENFORCE(f_name_set.emplace(feature_name).second,
-                    errors::ErrorCode::LOGIC_ERROR);
+                    errors::ErrorCode::LOGIC_ERROR,
+                    "found duplicate feature name:{}", feature_name);
   }
-  auto feature_weight_list = GetNodeAttr<std::vector<double>>(
-      opts_.node->node_def(), "feature_weights");
+  // feature types
+  feature_type_list_ =
+      GetNodeAttr<std::vector<std::string>>(opts_.node_def, "input_types");
+  SERVING_ENFORCE_EQ(feature_name_list_.size(), feature_type_list_.size(),
+                     "attr:feature_names size={} does not match "
+                     "attr:input_types size={}, node:{}, op:{}",
+                     feature_name_list_.size(), feature_type_list_.size(),
+                     opts_.node_def.name(), opts_.node_def.op());
 
-  SERVING_ENFORCE(feature_name_list_.size() == feature_weight_list.size(),
-                  errors::ErrorCode::UNEXPECTED_ERROR,
-                  "attr:feature_names size={} does not match "
-                  "attr:feature_weights size={}, node:{}, op:{}",
-                  feature_name_list_.size(), feature_weight_list.size(),
-                  opts_.node->node_def().name(), opts_.node->node_def().op());
+  auto feature_weight_list =
+      GetNodeAttr<std::vector<double>>(opts_.node_def, "feature_weights");
+  SERVING_ENFORCE_EQ(feature_name_list_.size(), feature_weight_list.size(),
+                     "attr:feature_names size={} does not match "
+                     "attr:feature_weights size={}, node:{}, op:{}",
+                     feature_name_list_.size(), feature_weight_list.size(),
+                     opts_.node_def.name(), opts_.node_def.op());
 
-  weights_ = Double::ColVec::Zero(feature_weight_list.size());
-  for (size_t i = 0; i < feature_weight_list.size(); i++) {
-    weights_[i] = feature_weight_list[i];
+  if (feature_name_list_.empty()) {
+    no_feature_ = true;
+  } else {
+    weights_ = Double::ColVec::Zero(feature_weight_list.size());
+    for (size_t i = 0; i < feature_weight_list.size(); i++) {
+      weights_[i] = feature_weight_list[i];
+    }
   }
+
+  output_col_name_ =
+      GetNodeAttr<std::string>(opts_.node_def, "output_col_name");
+
+  // optional attr
+  intercept_ = GetNodeAttr<double>(opts_.node_def, *opts_.op_def, "intercept");
 
   BuildInputSchema();
   BuildOutputSchema();
 }
 
-void DotProduct::Compute(ComputeContext* ctx) {
-  SERVING_ENFORCE(ctx->inputs->size() == 1, errors::ErrorCode::LOGIC_ERROR);
-  SERVING_ENFORCE(ctx->inputs->front().size() == 1,
+void DotProduct::DoCompute(ComputeContext* ctx) {
+  SERVING_ENFORCE(ctx->inputs.size() == 1, errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(ctx->inputs.front().size() == 1,
                   errors::ErrorCode::LOGIC_ERROR);
 
-  auto input_table = ctx->inputs->front()[0];
-  SERVING_ENFORCE(input_table->schema()->Equals(input_schema_list_.front()),
-                  errors::ErrorCode::LOGIC_ERROR);
+  // 日志埋点，打印输入的数据表信息
+  SPDLOG_INFO("dot_product input: {}", ctx->inputs.front().front()->ToString());
 
-  auto features = TableToMatrix(input_table);
+  Double::ColVec score_vec;
+  if (!no_feature_) {
+    auto features = TableToMatrix(ctx->inputs.front().front());
+    score_vec = features * weights_;
+  } else {
+    score_vec = Double::ColVec::Zero(ctx->inputs.front().front()->num_rows());
+    // 无特征
+    SPDLOG_INFO("dot_product no feature");
+  }
 
-  Double::ColVec score_vec = features * weights_;
   score_vec.array() += intercept_;
 
   std::shared_ptr<arrow::Array> array;
@@ -105,20 +129,21 @@ void DotProduct::Compute(ComputeContext* ctx) {
   }
   SERVING_CHECK_ARROW_STATUS(builder.Finish(&array));
   ctx->output = MakeRecordBatch(output_schema_, score_vec.rows(), {array});
+  // 日志埋点输出信息
+  SPDLOG_INFO("dot_product output: {}", ctx->output->ToString());
 }
 
 void DotProduct::BuildInputSchema() {
   // build input schema
-  int inputs_size = opts_.node->GetOpDef()->inputs_size();
-  for (int i = 0; i < inputs_size; ++i) {
-    std::vector<std::shared_ptr<arrow::Field>> f_list;
-    for (const auto& f : feature_name_list_) {
-      f_list.emplace_back(arrow::field(f, arrow::float64()));
-    }
-    input_schema_list_.emplace_back(arrow::schema(std::move(f_list)));
-    // should only have 1 input
-    break;
+  std::vector<std::shared_ptr<arrow::Field>> fields;
+  for (size_t i = 0; i < feature_name_list_.size(); ++i) {
+    auto data_type = DataTypeToArrowDataType(feature_type_list_[i]);
+    SERVING_ENFORCE(
+        arrow::is_numeric(data_type->id()), errors::INVALID_ARGUMENT,
+        "feature type must be numeric, get:{}", feature_type_list_[i]);
+    fields.emplace_back(arrow::field(feature_name_list_[i], data_type));
   }
+  input_schema_list_.emplace_back(arrow::schema(std::move(fields)));
 }
 
 void DotProduct::BuildOutputSchema() {
@@ -128,13 +153,21 @@ void DotProduct::BuildOutputSchema() {
 }
 
 REGISTER_OP_KERNEL(DOT_PRODUCT, DotProduct)
-REGISTER_OP(DOT_PRODUCT, "0.0.1",
+REGISTER_OP(DOT_PRODUCT, "0.0.2",
             "Calculate the dot product of feature weights and values")
-    .StringAttr("feature_names", "", true, false)
-    .DoubleAttr("feature_weights", "", true, false)
-    .StringAttr("output_col_name", "", false, false)
-    .DoubleAttr("intercept", "", false, true, 0.0d)
-    .Input("features", "")
-    .Output("ys", "");
+    .StringAttr("feature_names", "List of feature names", true, false)
+    .DoubleAttr("feature_weights", "List of feature weights", true, false)
+    .StringAttr("input_types",
+                "List of input feature data types, Note that there is a loss "
+                "of precision when using `DT_FLOAT` type. Optional "
+                "value: DT_UINT8, "
+                "DT_INT8, DT_UINT16, DT_INT16, DT_UINT32, DT_INT32, DT_UINT64, "
+                "DT_INT64, DT_FLOAT, DT_DOUBLE",
+                true, false)
+    .StringAttr("output_col_name", "Column name of partial y", false, false)
+    .DoubleAttr("intercept", "Value of model intercept", false, true, 0.0)
+    .Input("features", "Input feature table")
+    .Output("partial_ys",
+            "The calculation results, they have a data type of `double`.");
 
 }  // namespace secretflow::serving::op

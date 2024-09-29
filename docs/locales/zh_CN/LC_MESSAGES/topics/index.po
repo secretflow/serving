@@ -1,0 +1,38 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SecretFlow-Serving
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SecretFlow-Serving \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-28 06:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../source/topics/index.rst:7
+msgid "system"
+msgstr "系统"
+
+#: ../../source/topics/index.rst:15
+msgid "deployment"
+msgstr "部署"
+
+#: ../../source/topics/index.rst:22
+msgid "graph"
+msgstr "模型图"
+
+#: ../../source/topics/index.rst:30 ../../source/topics/index.rst:36
+msgid "algorithm"
+msgstr "算法"
+
+#: ../../source/topics/index.rst:4
+msgid "Topics"
+msgstr "主题"

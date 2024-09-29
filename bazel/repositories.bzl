@@ -14,17 +14,13 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-SECRETFLOW_GIT = "https://github.com/secretflow"
 
-YACL_COMMIT_ID = "ebcc0a27e5cd511bc5f87e97f5695b0b8d07fc74"
-
-KUSCIA_COMMIT_ID = "fbc6e69433e6320e896f103f2360b17a3863784c"
 
 def sf_serving_deps():
     _bazel_platform()
     _bazel_rules_pkg()
+    _rules_proto_grpc()
 
     _com_github_nelhage_rules_boost()
     _com_github_facebook_zstd()
@@ -39,6 +35,9 @@ def sf_serving_deps():
     _com_github_jupp0r_prometheus_cpp()
     _org_apache_thrift()
     _org_apache_arrow()
+    _com_github_pybind11_bazel()
+    _com_github_pybind11()
+    _com_github_opentelemetry_cpp()
 
     # aws s3
     _com_aws_c_common()
@@ -46,22 +45,34 @@ def sf_serving_deps():
     _com_aws_checksums()
     _com_aws_sdk()
     _com_github_curl()
+    _kuscia()
+    _yacl()
+
+    _com_github_brpc_brpc()
 
     # sqlite
     _com_org_sqlite()
 
+def _yacl():
     maybe(
-        git_repository,
+        http_archive,
         name = "yacl",
-        commit = YACL_COMMIT_ID,
-        remote = "{}/yacl.git".format(SECRETFLOW_GIT),
+        urls = [
+            "https://github.com/secretflow/yacl/archive/refs/tags/0.4.5b2.tar.gz",
+        ],
+        strip_prefix = "yacl-0.4.5b2",
+        sha256 = "b3fb75d41a32b80145a3bb9d36b8c039a262191f1a2f037292c649344289b01b",
     )
 
+def _kuscia():
     maybe(
-        git_repository,
+        http_archive,
         name = "kuscia",
-        commit = KUSCIA_COMMIT_ID,
-        remote = "{}/kuscia.git".format(SECRETFLOW_GIT),
+        urls = [
+            "https://github.com/secretflow/kuscia/archive/refs/tags/v0.5.0b0.tar.gz",
+        ],
+        strip_prefix = "kuscia-0.5.0b0",
+        sha256 = "6db0a23dbaf4a1fc223acc51425daa1572126410fb583f3132b7a1ade985e934",
     )
 
 def _bazel_rules_pkg():
@@ -77,10 +88,10 @@ def _bazel_platform():
     http_archive(
         name = "platforms",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
-            "https://github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.8/platforms-0.0.8.tar.gz",
+            "https://github.com/bazelbuild/platforms/releases/download/0.0.8/platforms-0.0.8.tar.gz",
         ],
-        sha256 = "5308fc1d8865406a49427ba24a9ab53087f17f5266a7aabbfc28823f3916e1ca",
+        sha256 = "8150406605389ececb6da07cbcb509d5637a3ab9a24bc69b1101531367d89d74",
     )
 
 def _com_github_curl():
@@ -101,10 +112,10 @@ def _com_aws_c_common():
         http_archive,
         name = "com_aws_c_common",
         urls = [
-            "https://github.com/awslabs/aws-c-common/archive/v0.4.29.tar.gz",
+            "https://github.com/awslabs/aws-c-common/archive/v0.7.6.tar.gz",
         ],
-        sha256 = "01c2a58553a37b3aa5914d9e0bf7bf14507ff4937bc5872a678892ca20fcae1f",
-        strip_prefix = "aws-c-common-0.4.29",
+        sha256 = "2253bddca034108266f983f60a76a704e7dc71a94700ee2d8411da74adbaa62d",
+        strip_prefix = "aws-c-common-0.7.6",
         build_file = "@sf_serving//bazel:aws_c_common.BUILD",
     )
 
@@ -113,10 +124,10 @@ def _com_aws_c_event_stream():
         http_archive,
         name = "com_aws_c_event_stream",
         urls = [
-            "https://github.com/awslabs/aws-c-event-stream/archive/v0.1.4.tar.gz",
+            "https://github.com/awslabs/aws-c-event-stream/archive/v0.1.5.tar.gz",
         ],
-        sha256 = "31d880d1c868d3f3df1e1f4b45e56ac73724a4dc3449d04d47fc0746f6f077b6",
-        strip_prefix = "aws-c-event-stream-0.1.4",
+        sha256 = "f1b423a487b5d6dca118bfc0d0c6cc596dc476b282258a3228e73a8f730422d4",
+        strip_prefix = "aws-c-event-stream-0.1.5",
         build_file = "@sf_serving//bazel:aws_c_event_stream.BUILD",
     )
 
@@ -161,8 +172,20 @@ def _com_github_jupp0r_prometheus_cpp():
         http_archive,
         name = "com_github_jupp0r_prometheus_cpp",
         strip_prefix = "prometheus-cpp-1.1.0",
+        sha256 = "397544fe91e183029120b4eebcfab24ed9ec833d15850aae78fd5db19062d13a",
         urls = [
             "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.1.0.tar.gz",
+        ],
+    )
+
+def _com_github_opentelemetry_cpp():
+    maybe(
+        http_archive,
+        name = "io_opentelemetry_cpp",
+        strip_prefix = "opentelemetry-cpp-1.14.2",
+        sha256 = "c7e7801c9f6228751cdb9dd4724d0f04777ed53f524c8828e73bf4c9f894e0bd",
+        urls = [
+            "https://github.com/open-telemetry/opentelemetry-cpp/archive/refs/tags/v1.14.2.tar.gz",
         ],
     )
 
@@ -195,11 +218,11 @@ def _com_google_double_conversion():
     maybe(
         http_archive,
         name = "com_google_double_conversion",
-        sha256 = "a63ecb93182134ba4293fd5f22d6e08ca417caafa244afaa751cbfddf6415b13",
-        strip_prefix = "double-conversion-3.1.5",
+        sha256 = "04ec44461850abbf33824da84978043b22554896b552c5fd11a9c5ae4b4d296e",
+        strip_prefix = "double-conversion-3.3.0",
         build_file = "@sf_serving//bazel:double_conversion.BUILD",
         urls = [
-            "https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz",
+            "https://github.com/google/double-conversion/archive/refs/tags/v3.3.0.tar.gz",
         ],
     )
 
@@ -217,13 +240,15 @@ def _com_github_xtensor_xsimd():
     )
 
 def _com_github_nelhage_rules_boost():
-    # use boost 1.77
-    RULES_BOOST_COMMIT = "d104cb7beba996d67ae5826be07aab2d9ca0ee38"
+    # use boost 1.83
+    RULES_BOOST_COMMIT = "cfa585b1b5843993b70aa52707266dc23b3282d0"
     maybe(
         http_archive,
         name = "com_github_nelhage_rules_boost",
-        sha256 = "5b7dbeadf66ae330d660359115f518d012082feec26402af26a7c540f6d0af9f",
+        sha256 = "a7c42df432fae9db0587ff778d84f9dc46519d67a984eff8c79ae35e45f277c1",
         strip_prefix = "rules_boost-%s" % RULES_BOOST_COMMIT,
+        patch_args = ["-p1"],
+        patches = ["@sf_serving//bazel:patches/rules_boost.patch"],
         urls = [
             "https://github.com/nelhage/rules_boost/archive/%s.tar.gz" % RULES_BOOST_COMMIT,
         ],
@@ -234,11 +259,11 @@ def _com_github_facebook_zstd():
         http_archive,
         name = "com_github_facebook_zstd",
         build_file = "@sf_serving//bazel:zstd.BUILD",
-        strip_prefix = "zstd-1.5.0",
-        sha256 = "5194fbfa781fcf45b98c5e849651aa7b3b0a008c6b72d4a0db760f3002291e94",
+        strip_prefix = "zstd-1.5.6",
+        sha256 = "8c29e06cf42aacc1eafc4077ae2ec6c6fcb96a626157e0593d5e82a34fd403c1",
         type = ".tar.gz",
         urls = [
-            "https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz",
+            "https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-1.5.6.tar.gz",
         ],
     )
 
@@ -259,10 +284,10 @@ def _com_github_google_brotli():
         http_archive,
         name = "brotli",
         build_file = "@sf_serving//bazel:brotli.BUILD",
-        sha256 = "f9e8d81d0405ba66d181529af42a3354f838c939095ff99930da6aa9cdf6fe46",
-        strip_prefix = "brotli-1.0.9",
+        sha256 = "e720a6ca29428b803f4ad165371771f5398faba397edf6778837a18599ea13ff",
+        strip_prefix = "brotli-1.1.0",
         urls = [
-            "https://github.com/google/brotli/archive/refs/tags/v1.0.9.tar.gz",
+            "https://github.com/google/brotli/archive/refs/tags/v1.1.0.tar.gz",
         ],
     )
 
@@ -294,11 +319,63 @@ def _org_apache_arrow():
     maybe(
         http_archive,
         name = "org_apache_arrow",
-        sha256 = "f01b76a42ceb30409e7b1953ef64379297dd0c08502547cae6aaafd2c4a4d92e",
-        strip_prefix = "arrow-apache-arrow-12.0.1",
+        sha256 = "07cdb4da6795487c800526b2865c150ab7d80b8512a31793e6a7147c8ccd270f",
+        strip_prefix = "arrow-apache-arrow-14.0.2",
         build_file = "@sf_serving//bazel:arrow.BUILD",
         urls = [
-            "https://github.com/apache/arrow/archive/refs/tags/apache-arrow-12.0.1.tar.gz",
+            "https://github.com/apache/arrow/archive/refs/tags/apache-arrow-14.0.2.tar.gz",
+        ],
+    )
+
+def _com_github_pybind11_bazel():
+    maybe(
+        http_archive,
+        name = "pybind11_bazel",
+        sha256 = "2d3316d89b581966fc11eab9aa9320276baee95c8233c7a8efc7158623a48de0",
+        strip_prefix = "pybind11_bazel-ff261d2e9190955d0830040b20ea59ab9dbe66c8",
+        urls = [
+            "https://github.com/pybind/pybind11_bazel/archive/ff261d2e9190955d0830040b20ea59ab9dbe66c8.zip",
+        ],
+    )
+
+def _com_github_pybind11():
+    maybe(
+        http_archive,
+        name = "pybind11",
+        build_file = "@pybind11_bazel//:pybind11.BUILD",
+        sha256 = "d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c",
+        strip_prefix = "pybind11-2.11.1",
+        urls = [
+            "https://github.com/pybind/pybind11/archive/refs/tags/v2.11.1.tar.gz",
+        ],
+    )
+
+def _rules_proto_grpc():
+    http_archive(
+        name = "rules_proto_grpc",
+        sha256 = "928e4205f701b7798ce32f3d2171c1918b363e9a600390a25c876f075f1efc0a",
+        strip_prefix = "rules_proto_grpc-4.4.0",
+        urls = [
+            "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/4.4.0/rules_proto_grpc-4.4.0.tar.gz",
+        ],
+    )
+
+# serving not use brpc x-bd-xxx trace header, so drop the patch of yacl
+# add for brpc compile
+def _com_github_brpc_brpc():
+    maybe(
+        http_archive,
+        name = "com_github_brpc_brpc",
+        sha256 = "85856da0216773e1296834116f69f9e80007b7ff421db3be5c9d1890ecfaea74",
+        strip_prefix = "brpc-1.9.0",
+        type = "tar.gz",
+        patch_args = ["-p1"],
+        patches = [
+            "@yacl//bazel:patches/brpc_m1.patch",
+            "@sf_serving//bazel:patches/brpc.patch",
+        ],
+        urls = [
+            "https://github.com/apache/brpc/archive/refs/tags/1.9.0.tar.gz",
         ],
     )
 

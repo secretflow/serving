@@ -14,32 +14,202 @@
 
 #include "secretflow_serving/framework/executor.h"
 
+#include <utility>
+
 #include "secretflow_serving/ops/op_factory.h"
 #include "secretflow_serving/ops/op_kernel_factory.h"
+#include "secretflow_serving/util/thread_pool.h"
+#include "secretflow_serving/util/thread_safe_queue.h"
 
 namespace secretflow::serving {
+
+class RunContext {
+ public:
+  explicit RunContext(size_t expect_result_count)
+      : expect_result_count_(expect_result_count) {}
+
+  void AddResult(std::string node_name,
+                 std::shared_ptr<arrow::RecordBatch> table) {
+    std::lock_guard lock(results_mtx_);
+    results_.emplace_back(std::move(node_name), std::move(table));
+    if (IsFinish()) {
+      Stop();
+    }
+  }
+
+  bool IsFinish() const { return expect_result_count_ == results_.size(); }
+
+  void WaitFinish() {
+    std::unique_lock lock(results_mtx_);
+    results_cv_.wait(lock, [this] { return stop_flag_ || IsFinish(); });
+  }
+
+  std::vector<NodeOutput> GetResults() {
+    std::lock_guard lock(results_mtx_);
+    return results_;
+  }
+
+  void Stop() {
+    stop_flag_ = true;
+    results_cv_.notify_all();
+  }
+
+ private:
+  size_t expect_result_count_;
+
+  mutable std::mutex results_mtx_;
+  std::condition_variable results_cv_;
+  std::atomic<bool> stop_flag_{false};
+
+  std::vector<NodeOutput> results_;
+};
+
+class ExecuteScheduler : public std::enable_shared_from_this<ExecuteScheduler> {
+ public:
+  class ExecuteOpTask : public ThreadPool::Task {
+   public:
+    ExecuteOpTask(std::string node_name,
+                  std::shared_ptr<ExecuteScheduler> sched)
+        : node_name_(std::move(node_name)), sched_(std::move(sched)) {}
+
+    const char* Name() override { return "ExecuteOpTask"; }
+
+    void Exec() override { sched_->ExecuteNode(node_name_); }
+
+    void OnException(std::exception_ptr e) noexcept override {
+      sched_->SetTaskException(e);
+    }
+
+   private:
+    const std::string node_name_;
+    std::shared_ptr<ExecuteScheduler> sched_;
+  };
+
+  ExecuteScheduler(
+      const std::shared_ptr<std::unordered_map<std::string, NodeItem>>&
+          node_items,
+      std::shared_ptr<Execution> execution, ThreadPool* thread_pool)
+      : node_items_(node_items),
+        execution_(std::move(execution)),
+        context_(execution_->GetExitNodeNum()),
+        thread_pool_(thread_pool),
+        propagator_(execution_->nodes()),
+        sched_count_(0) {}
+
+  void ExecuteNode(const std::string& node_name) {
+    if (stop_flag_.load()) {
+      return;
+    }
+
+    auto* frame = propagator_.GetFrame(node_name);
+    auto iter = node_items_->find(node_name);
+    SERVING_ENFORCE(iter != node_items_->end(),
+                    errors::ErrorCode::UNEXPECTED_ERROR);
+    const auto& node_item = iter->second;
+    node_item.op_kernel->Compute(&(frame->compute_ctx));
+    sched_count_++;
+
+    if (execution_->IsExitNode(node_item.node->node_def().name())) {
+      context_.AddResult(node_item.node->node_def().name(),
+                         frame->compute_ctx.output);
+    }
+
+    CompleteOutEdge(node_item.node->out_edges(), frame->compute_ctx.output);
+  }
+
+  void Schedule(std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+    for (const auto& node : execution_->GetEntryNodes()) {
+      auto iter = inputs.find(node->node_def().name());
+      SERVING_ENFORCE(iter != inputs.end(), errors::ErrorCode::INVALID_ARGUMENT,
+                      "can not found inputs for node:{}",
+                      node->node_def().name());
+      auto* frame = propagator_.GetFrame(node->GetName());
+      frame->compute_ctx.inputs = std::move(iter->second);
+
+      SubmitTask(node->node_def().name());
+    }
+
+    context_.WaitFinish();
+  }
+
+  void SetTaskException(std::exception_ptr& e) noexcept {
+    bool expect_flag = false;
+    // store the first exception
+    if (stop_flag_.compare_exchange_strong(expect_flag, true)) {
+      task_exception_ = e;
+      context_.Stop();
+    }
+  }
+
+  std::exception_ptr GetTaskException() { return task_exception_; }
+
+  uint64_t GetSchedCount() { return sched_count_.load(); }
+
+  std::vector<NodeOutput> GetResults() { return context_.GetResults(); }
+
+ private:
+  void CompleteOutEdge(const std::vector<std::shared_ptr<Edge>>& edges,
+                       std::shared_ptr<arrow::RecordBatch>& output) {
+    for (const auto& edge : edges) {
+      std::shared_ptr<Node> dst_node;
+      if (!execution_->TryGetNode(edge->dst_node(), &dst_node)) {
+        continue;
+      }
+
+      auto* child_frame = propagator_.GetFrame(dst_node->GetName());
+      child_frame->compute_ctx.inputs[edge->dst_input_id()].emplace_back(
+          output);
+
+      if (child_frame->pending_count.fetch_sub(1) == 1) {
+        if (edges.size() > 1) {
+          SubmitTask(dst_node->GetName());
+        } else {
+          ExecuteNode(dst_node->GetName());
+        }
+      }
+    }
+  }
+
+  void SubmitTask(const std::string& node_name) {
+    if (stop_flag_.load()) {
+      return;
+    }
+    thread_pool_->SubmitTask(
+        std::make_unique<ExecuteOpTask>(node_name, shared_from_this()));
+  }
+
+ private:
+  const std::shared_ptr<std::unordered_map<std::string, NodeItem>>& node_items_;
+  std::shared_ptr<Execution> execution_;
+
+  RunContext context_;
+  ThreadPool* thread_pool_;
+
+  Propagator propagator_;
+  std::atomic<uint64_t> sched_count_{0};
+  std::atomic<bool> stop_flag_{false};
+  std::exception_ptr task_exception_;
+};
 
 Executor::Executor(const std::shared_ptr<Execution>& execution)
     : execution_(execution) {
   // create op_kernel
-  auto nodes = execution_->nodes();
-  for (const auto& [node_name, node] : nodes) {
-    op::OpKernelOptions ctx{node};
+  node_items_ = std::make_shared<std::unordered_map<std::string, NodeItem>>();
 
-    auto item = std::make_shared<NodeItem>();
-    item->node = node;
-    item->op_kernel =
-        op::OpKernelFactory::GetInstance()->Create(std::move(ctx));
-    node_items_.emplace(node_name, item);
+  for (const auto& [node_name, node] : execution_->nodes()) {
+    op::OpKernelOptions ctx{node->node_def(), node->GetOpDef()};
+    NodeItem item{node,
+                  op::OpKernelFactory::GetInstance()->Create(std::move(ctx))};
+    node_items_->emplace(node_name, std::move(item));
   }
 
   // get input schema
   const auto& entry_nodes = execution_->GetEntryNodes();
   for (const auto& node : entry_nodes) {
     const auto& node_name = node->node_def().name();
-    auto iter = node_items_.find(node_name);
-    SERVING_ENFORCE(iter != node_items_.end(), errors::ErrorCode::LOGIC_ERROR);
-    const auto& input_schema = iter->second->op_kernel->GetAllInputSchema();
+    auto iter = node_items_->find(node_name);
+    SERVING_ENFORCE(iter != node_items_->end(), errors::ErrorCode::LOGIC_ERROR);
+    const auto& input_schema = iter->second.op_kernel->GetAllInputSchema();
     entry_node_names_.emplace_back(node_name);
     input_schema_map_.emplace(node_name, input_schema);
   }
@@ -47,90 +217,56 @@ Executor::Executor(const std::shared_ptr<Execution>& execution)
   if (execution_->IsEntry()) {
     // build feature schema from entry execution
     auto iter = input_schema_map_.begin();
-    const auto& fisrt_input_schema_list = iter->second;
-    SERVING_ENFORCE(fisrt_input_schema_list.size() == 1,
+    const auto& first_input_schema_list = iter->second;
+    SERVING_ENFORCE(first_input_schema_list.size() == 1,
                     errors::ErrorCode::LOGIC_ERROR);
-    const auto& target_schema = fisrt_input_schema_list.front();
+    const auto& target_schema = first_input_schema_list.front();
     ++iter;
     for (; iter != input_schema_map_.end(); ++iter) {
-      SERVING_ENFORCE(iter->second.size() == 1, errors::ErrorCode::LOGIC_ERROR);
+      SERVING_ENFORCE_EQ(iter->second.size(), 1U,
+                         "entry nodes should have only one input table");
       const auto& schema = iter->second.front();
-      SERVING_ENFORCE(schema->Equals(target_schema),
-                      errors::ErrorCode::LOGIC_ERROR,
-                      "found entry nodes input schema not equals");
-      // TODO: consider support entry nodes schema have same fields but
-      // different ordered
+
+      SERVING_ENFORCE_EQ(
+          target_schema->num_fields(), schema->num_fields(),
+          "entry nodes should have same shape inputs, expect: {}, found: {}",
+          target_schema->num_fields(), schema->num_fields());
+      CheckReferenceFields(schema, target_schema,
+                           fmt::format("entry nodes should have same input "
+                                       "schema, found node:{} mismatch",
+                                       iter->first));
     }
     input_feature_schema_ = target_schema;
   }
 }
 
-std::shared_ptr<std::vector<NodeOutput>> Executor::Run(
+std::vector<NodeOutput> Executor::Run(
     std::shared_ptr<arrow::RecordBatch>& features) {
   SERVING_ENFORCE(execution_->IsEntry(), errors::ErrorCode::LOGIC_ERROR);
-  auto inputs = std::make_shared<
-      std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>();
-  for (size_t i = 0; i < entry_node_names_.size(); ++i) {
-    auto op_inputs = std::make_shared<op::OpComputeInputs>();
+  auto inputs = std::unordered_map<std::string, op::OpComputeInputs>();
+  for (const auto& entry_node_name : entry_node_names_) {
+    op::OpComputeInputs op_inputs;
     std::vector<std::shared_ptr<arrow::RecordBatch>> record_list = {features};
-    op_inputs->emplace_back(std::move(record_list));
-    inputs->emplace(entry_node_names_[i], std::move(op_inputs));
+    op_inputs.emplace_back(std::move(record_list));
+    inputs.emplace(entry_node_name, std::move(op_inputs));
   }
   return Run(inputs);
 }
 
-std::shared_ptr<std::vector<NodeOutput>> Executor::Run(
-    std::shared_ptr<
-        std::map<std::string, std::shared_ptr<op::OpComputeInputs>>>& inputs) {
-  auto results = std::make_shared<std::vector<NodeOutput>>();
-  Propagator propagator;
+std::vector<NodeOutput> Executor::Run(
+    std::unordered_map<std::string, op::OpComputeInputs>& inputs) {
+  auto sched = std::make_shared<ExecuteScheduler>(node_items_, execution_,
+                                                  ThreadPool::GetInstance());
 
-  // get entry nodes
-  std::deque<std::shared_ptr<NodeItem>> ready_nodes;
-  const auto& entry_nodes = execution_->GetEntryNodes();
-  for (const auto& node : entry_nodes) {
-    const auto& node_name = node->node_def().name();
-    ready_nodes.emplace_back(node_items_.find(node_name)->second);
-    auto frame = propagator.CreateFrame(node);
-    auto in_iter = inputs->find(node_name);
-    SERVING_ENFORCE(in_iter != inputs->end(),
-                    errors::ErrorCode::INVALID_ARGUMENT,
-                    "can not found inputs for node:{}", node_name);
-    frame->compute_ctx.inputs = in_iter->second;
+  sched->Schedule(inputs);
+
+  auto task_exception = sched->GetTaskException();
+  if (task_exception) {
+    SPDLOG_ERROR("Execution {} run with exception.", execution_->id());
+    std::rethrow_exception(task_exception);
   }
-
-  // schedule ready
-  // TODO: support multi-thread run
-  size_t scheduled_count = 0;
-  while (!ready_nodes.empty()) {
-    auto n = ready_nodes.front();
-    ready_nodes.pop_front();
-
-    auto frame = propagator.GetFrame(n->node->node_def().name());
-
-    n->op_kernel->Compute(&(frame->compute_ctx));
-    ++scheduled_count;
-
-    if (execution_->IsExitNode(n->node->node_def().name())) {
-      NodeOutput node_output{n->node->node_def().name(),
-                             frame->compute_ctx.output};
-      results->emplace_back(std::move(node_output));
-    } else {
-      auto dst_node_name = n->node->out_edge()->dst_node();
-      auto dst_node = execution_->GetNode(dst_node_name);
-      auto child_frame = propagator.FindOrCreateChildFrame(frame, dst_node);
-      child_frame->compute_ctx.inputs->at(
-          n->node->out_edge()->dst_input_id()) = {frame->compute_ctx.output};
-      child_frame->pending_count--;
-      if (child_frame->pending_count == 0) {
-        ready_nodes.push_back(
-            node_items_.find(dst_node->node_def().name())->second);
-      }
-    }
-  }
-
-  SERVING_ENFORCE_EQ(scheduled_count, execution_->nodes().size());
-  return results;
+  SERVING_ENFORCE_EQ(sched->GetSchedCount(), execution_->nodes().size());
+  return sched->GetResults();
 }
 
 }  // namespace secretflow::serving

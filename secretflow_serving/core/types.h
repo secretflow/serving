@@ -20,18 +20,13 @@ namespace secretflow::serving {
 
 template <typename T>
 struct TypeTrait {
-  typedef T Scalar;
-  typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-  typedef Eigen::Matrix<T, Eigen::Dynamic, 1> ColVec;
-  typedef Eigen::Matrix<T, 1, Eigen::Dynamic> RowVec;
+  using Scalar = T;
+  using Matrix = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  using ColVec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+  using RowVec = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 };
 
-typedef TypeTrait<float> Float;
-typedef TypeTrait<double> Double;
-
-enum class AlgorithmType {
-  kRegression,
-  kClassification,
-};
+using Float = TypeTrait<float>;
+using Double = TypeTrait<double>;
 
 }  // namespace secretflow::serving

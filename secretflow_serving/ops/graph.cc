@@ -28,7 +28,7 @@ namespace {
 // BFS, out_node ---> in_node
 void NodeTraversal(
     std::unordered_map<std::string, std::shared_ptr<Node>>* visited,
-    const std::map<std::string, std::shared_ptr<Node>>& nodes) {
+    const std::unordered_map<std::string, std::shared_ptr<Node>>& nodes) {
   std::deque<std::shared_ptr<Node>> queue;
   std::unordered_set<std::shared_ptr<Edge>> visited_edges;
   for (const auto& pair : *visited) {
@@ -36,7 +36,7 @@ void NodeTraversal(
   }
 
   while (!queue.empty()) {
-    const auto& n = queue.front();
+    auto n = queue.front();
     queue.pop_front();
     const auto& in_edges = n->in_edges();
     for (const auto& e : in_edges) {
@@ -56,8 +56,9 @@ void NodeTraversal(
 
 }  // namespace
 
-Execution::Execution(size_t id, ExecutionDef execution_def,
-                     std::map<std::string, std::shared_ptr<Node>> nodes)
+Execution::Execution(
+    size_t id, ExecutionDef execution_def,
+    std::unordered_map<std::string, std::shared_ptr<Node>> nodes)
     : id_(id),
       execution_def_(std::move(execution_def)),
       nodes_(std::move(nodes)),
@@ -65,14 +66,17 @@ Execution::Execution(size_t id, ExecutionDef execution_def,
       is_exit_(false) {
   // get execution exit nodes & entry nodes
   for (const auto& [node_name, node] : nodes_) {
-    const auto& dst_edge = node->out_edge();
+    const auto& dst_edges = node->out_edges();
     const auto& in_edges = node->in_edges();
     // find exit nodes
-    if (dst_edge == nullptr) {
+    if (dst_edges.empty()) {
       exit_node_names_.emplace(node_name);
       is_exit_ = true;
     } else {
-      if (nodes_.find(dst_edge->dst_node()) == nodes_.end()) {
+      if (std::any_of(dst_edges.begin(), dst_edges.end(),
+                      [&](const auto& edge) {
+                        return nodes_.find(edge->dst_node()) == nodes_.end();
+                      })) {
         exit_node_names_.emplace(node_name);
       }
     }
@@ -106,8 +110,19 @@ bool Execution::IsExitNode(const std::string& node_name) const {
 
 const std::shared_ptr<Node>& Execution::GetNode(const std::string& name) const {
   auto iter = nodes_.find(name);
-  SERVING_ENFORCE(iter != nodes_.end(), errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(iter != nodes_.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "can not find {} in execution {}", name, id_);
   return iter->second;
+}
+
+bool Execution::TryGetNode(const std::string& name,
+                           std::shared_ptr<Node>* node) const {
+  auto iter = nodes_.find(name);
+  if (iter == nodes_.end()) {
+    return false;
+  }
+  *node = iter->second;
+  return true;
 }
 
 void Execution::CheckNodesReachability() {
@@ -137,6 +152,17 @@ Graph::Graph(GraphDef graph_def) : def_(std::move(graph_def)) {
   // TODO: consider not storing def_ to avoiding multiple copies of node_defs
   // and execution_defs
 
+  graph_view_.set_version(def_.version());
+  for (const auto& node : def_.node_list()) {
+    NodeView view;
+    *(view.mutable_name()) = node.name();
+    *(view.mutable_op()) = node.op();
+    *(view.mutable_op_version()) = node.op_version();
+    *(view.mutable_parents()) = node.parents();
+    graph_view_.mutable_node_list()->Add(std::move(view));
+  }
+  *(graph_view_.mutable_execution_list()) = def_.execution_list();
+
   // create nodes
   for (int i = 0; i < def_.node_list_size(); ++i) {
     const auto node_name = def_.node_list(i).name();
@@ -163,7 +189,7 @@ Graph::Graph(GraphDef graph_def) : def_(std::move(graph_def)) {
                       "can not found input node:{} for node:{}", input_nodes[i],
                       name);
       auto edge = std::make_shared<Edge>(n_iter->first, name, i);
-      n_iter->second->SetOutEdge(edge);
+      n_iter->second->AddOutEdge(edge);
       node->AddInEdge(edge);
       edges_.emplace_back(edge);
     }
@@ -172,14 +198,13 @@ Graph::Graph(GraphDef graph_def) : def_(std::move(graph_def)) {
   // find exit node
   size_t exit_node_count = 0;
   for (const auto& pair : nodes_) {
-    if (pair.second->out_edge() == nullptr) {
+    if (pair.second->out_edges().empty()) {
       exit_node_ = pair.second;
       ++exit_node_count;
     }
   }
   SERVING_ENFORCE(!entry_nodes_.empty(), errors::ErrorCode::LOGIC_ERROR,
-                  "can not found any entry node, please check graph def.",
-                  exit_node_count);
+                  "can not found any entry node, please check graph def.");
   SERVING_ENFORCE(exit_node_count == 1, errors::ErrorCode::LOGIC_ERROR,
                   "found {} exit nodes, expect only 1 in graph",
                   exit_node_count);
@@ -217,12 +242,12 @@ void Graph::CheckNodesReachability() {
 }
 
 void Graph::CheckEdgeValidate() {
-  std::map<std::string, std::shared_ptr<op::OpKernel>> kernel_map;
+  std::unordered_map<std::string, std::shared_ptr<op::OpKernel>> kernel_map;
   const auto get_kernel_func =
       [&](const std::shared_ptr<Node>& n) -> std::shared_ptr<op::OpKernel> {
     auto iter = kernel_map.find(n->GetName());
     if (iter == kernel_map.end()) {
-      op::OpKernelOptions ctx{n};
+      op::OpKernelOptions ctx{n->node_def(), n->GetOpDef()};
       auto kernel = op::OpKernelFactory::GetInstance()->Create(std::move(ctx));
       kernel_map.emplace(n->GetName(), kernel);
       return kernel;
@@ -238,33 +263,24 @@ void Graph::CheckEdgeValidate() {
     const auto& src_schema = src_kernel->GetOutputSchema();
     const auto& dst_schema = dst_kernel->GetInputSchema(e->dst_input_id());
 
-    SERVING_ENFORCE(src_schema->num_fields() == dst_schema->num_fields(),
-                    errors::ErrorCode::LOGIC_ERROR,
-                    "node({}) output schema does not fit node({}) input "
-                    "schema, size: {}-{}",
-                    e->src_node(), e->dst_node(), src_schema->num_fields(),
-                    dst_schema->num_fields());
-    for (int i = 0; i < src_schema->num_fields(); ++i) {
-      const auto& src_f = src_schema->field(i);
-      auto dst_f = dst_schema->GetFieldByName(src_f->name());
-      SERVING_ENFORCE(dst_f, errors::ErrorCode::LOGIC_ERROR,
-                      "node({}) output schema does not fit node({}) input "
-                      "schema, missed field:{}",
-                      e->src_node(), e->dst_node(), src_f->name());
-      SERVING_ENFORCE(src_f->Equals(dst_f), errors::ErrorCode::LOGIC_ERROR,
-                      "node({}) output schema does not fit node({}) input "
-                      "schema, field:{} not equal");
-    }
+    // Check the dst_schema is a subset of the src_schema
+    CheckReferenceFields(
+        src_schema, dst_schema,
+        fmt::format("edge schema check failed, src: {}, dst: {}", e->src_node(),
+                    e->dst_node()));
   }
 }
 
 void Graph::BuildExecution() {
   std::unordered_set<std::string> node_name_set;
   const auto& execution_def_list = def_.execution_list();
-  SERVING_ENFORCE(execution_def_list.size() > 0,
-                  errors::ErrorCode::LOGIC_ERROR);
+  SERVING_ENFORCE(!execution_def_list.empty(), errors::ErrorCode::LOGIC_ERROR,
+                  "no execution in graph");
   for (int i = 0; i < execution_def_list.size(); ++i) {
-    std::map<std::string, std::shared_ptr<Node>> nodes;
+    std::unordered_map<std::string, std::shared_ptr<Node>> nodes;
+    SERVING_ENFORCE(!execution_def_list[i].nodes().empty(),
+                    errors::ErrorCode::LOGIC_ERROR, "no node in execution:{}",
+                    i);
     for (const auto& n_name : execution_def_list[i].nodes()) {
       auto n_iter = nodes_.find(n_name);
       SERVING_ENFORCE(n_iter != nodes_.end(), errors::ErrorCode::LOGIC_ERROR,
@@ -284,24 +300,50 @@ void Graph::BuildExecution() {
 }
 
 void Graph::CheckExecutionValidate() {
-  // TODO: remove limit
-  SERVING_ENFORCE(executions_.size() == 2, errors::ErrorCode::LOGIC_ERROR,
-                  "graph must contain 2 executions.");
+  SERVING_ENFORCE(executions_.size() >= 2, errors::ErrorCode::LOGIC_ERROR,
+                  "graph must contain 2 executions at least.");
+
+  auto prev_dispatch_type =
+      DispatchType::DispatchType_INT_MAX_SENTINEL_DO_NOT_USE_;
 
   for (const auto& e : executions_) {
+    SERVING_ENFORCE(e->GetDispatchType() != prev_dispatch_type,
+                    errors::ErrorCode::LOGIC_ERROR,
+                    "The dispatch types of two adjacent executions cannot be "
+                    "the same, cur exeution id {}, type: {}",
+                    e->id(), DispatchType_Name(e->GetDispatchType()));
+
     if (e->IsEntry()) {
       SERVING_ENFORCE(e->GetDispatchType() == DispatchType::DP_ALL,
                       errors::ErrorCode::LOGIC_ERROR);
     }
     if (e->IsExit()) {
-      // TODO: allow DP_SPECIFIED
-      SERVING_ENFORCE(e->GetDispatchType() == DispatchType::DP_ANYONE,
+      SERVING_ENFORCE(e->GetDispatchType() != DispatchType::DP_ALL,
                       errors::ErrorCode::LOGIC_ERROR);
       SERVING_ENFORCE(e->GetExitNodeNum() == 1, errors::ErrorCode::LOGIC_ERROR);
       SERVING_ENFORCE(e->IsExitNode(exit_node_->GetName()),
                       errors::ErrorCode::LOGIC_ERROR);
     }
+    // if previous execution is DP_ALL, first op should be mergeable
+    if (prev_dispatch_type == DispatchType::DP_ALL) {
+      for (auto& node : e->GetEntryNodes()) {
+        SERVING_ENFORCE(node->GetOpDef()->tag().mergeable(),
+                        errors::ErrorCode::LOGIC_ERROR,
+                        "previous execution is DP_ALL, but first op({}) is not "
+                        "mergeable.",
+                        node->GetName());
+      }
+    }
+
+    prev_dispatch_type = e->GetDispatchType();
   }
+}
+
+const std::shared_ptr<Node>& Graph::GetNode(const std::string& name) const {
+  auto iter = nodes_.find(name);
+  SERVING_ENFORCE(iter != nodes_.end(), errors::ErrorCode::LOGIC_ERROR,
+                  "can not find node({}) in graph", name);
+  return iter->second;
 }
 
 }  // namespace secretflow::serving
