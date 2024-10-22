@@ -14,6 +14,7 @@
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
+#include "fmt/ranges.h"
 #include "gflags/gflags.h"
 
 #include "secretflow_serving/core/exception.h"

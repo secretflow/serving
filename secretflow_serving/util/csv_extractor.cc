@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "arrow/compute/api.h"
+#include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"

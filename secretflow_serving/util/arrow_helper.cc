@@ -21,6 +21,7 @@
 #include "arrow/compute/api.h"
 #include "arrow/io/api.h"
 #include "arrow/ipc/api.h"
+#include "fmt/ranges.h"
 
 #include "secretflow_serving/core/exception.h"
 #include "secretflow_serving/util/utils.h"

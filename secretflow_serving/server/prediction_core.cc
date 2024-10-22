@@ -14,6 +14,7 @@
 
 #include "secretflow_serving/server/prediction_core.h"
 
+#include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/util/utils.h"

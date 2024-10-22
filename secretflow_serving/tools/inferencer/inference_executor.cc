@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/tools/inferencer/control_service_impl.h"
