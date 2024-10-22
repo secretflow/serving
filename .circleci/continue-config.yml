@@ -51,13 +51,13 @@ commands:
           name: "build"
           command: |
             sh ./build_wheel_entrypoint.sh
-            bazel build <<parameters.bazel_targets>> -c opt --jobs 16
+            bazel build <<parameters.bazel_targets>> -c opt --jobs 12
       - run:
           name: "test"
           command: |
             set +e
             declare -i test_status
-            bazel test <<parameters.bazel_targets>> -c opt --jobs 16 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test <<parameters.bazel_targets>> -c opt --jobs 12 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
