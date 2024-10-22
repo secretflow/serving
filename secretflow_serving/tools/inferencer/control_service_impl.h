@@ -23,7 +23,7 @@ namespace secretflow::serving::tools {
 // 预测 - 服务入口
 class InferenceControlServiceImpl : public InferenceControlService {
  public:
-  InferenceControlServiceImpl(const std::string& requester_id, int32_t row_num);
+  InferenceControlServiceImpl(const std::string& requester_id, int64_t row_num);
 
   void Push(::google::protobuf::RpcController* controller,
             const ControlRequest* request, ControlResponse* response,
@@ -42,7 +42,7 @@ class InferenceControlServiceImpl : public InferenceControlService {
 
   const std::string requester_id_;
 
-  const int32_t row_num_;
+  const int64_t row_num_;
 
   bool ready_flag_ = false;
 

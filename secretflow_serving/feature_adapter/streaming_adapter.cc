@@ -30,15 +30,6 @@ namespace {
 
 const char* kUnSetMagicToken = "__UNSET_MAGIC_TOKEN__";
 
-void CheckIdsEqual(const FeatureAdapter::Request& request,
-                   const std::shared_ptr<arrow::Array>& id_array) {
-  SERVING_ENFORCE_EQ(id_array->length(), request.fs_param->query_datas_size(),
-                     "id_array length mismatch with query_datas_size.");
-  auto str_array = std::static_pointer_cast<arrow::StringArray>(id_array);
-  for (int i = 0; i < request.fs_param->query_datas_size(); ++i) {
-    SERVING_ENFORCE_EQ(request.fs_param->query_datas(i), str_array->Value(i));
-  }
-}
 }  // namespace
 
 StreamingAdapter::StreamingAdapter(
@@ -46,6 +37,7 @@ StreamingAdapter::StreamingAdapter(
     const std::string& party_id,
     const std::shared_ptr<const arrow::Schema>& feature_schema)
     : FeatureAdapter(spec, service_id, party_id, feature_schema),
+      cur_offset_(0),
       last_context_token_(kUnSetMagicToken) {
   SERVING_ENFORCE(
       FLAGS_inferencer_mode, errors::ErrorCode::LOGIC_ERROR,
@@ -84,8 +76,6 @@ void StreamingAdapter::OnFetchFeature(const Request& request,
     // The retry request attempts to retrieve previously read data, possibly
     // due to an exception in some other logic.
     response->features = last_batch_;
-    CheckIdsEqual(request, response->features->GetColumnByName(
-                               spec_.streaming_opts().id_name()));
     return;
   }
   // cleanup cache
@@ -143,8 +133,6 @@ void StreamingAdapter::OnFetchFeature(const Request& request,
   } else {
     response->features = std::move(batches[0]);
   }
-  CheckIdsEqual(request, response->features->GetColumnByName(
-                             spec_.streaming_opts().id_name()));
   // cache current result.
   last_batch_ = response->features;
   last_context_token_ = request.fs_param->query_context();

@@ -156,17 +156,6 @@ id,x1,x2,x3,x4
         MakeRecordBatch(model_schema_with_id, 1, {x1, x2, x3, x4});
     CheckRecordBatchEqual(expect_features, response.features);
   }
-
-  // exception request
-  fs_params.clear_query_datas();
-  fs_params.add_query_datas("0");
-  fs_params.set_query_context("test_contex_1");
-  ASSERT_THROW(adapter->FetchFeature(request, &response), Exception);
-
-  fs_params.clear_query_datas();
-  fs_params.add_query_datas("3");
-  fs_params.set_query_context("test_contex_2");
-  ASSERT_THROW(adapter->FetchFeature(request, &response), Exception);
 }
 
 struct StreamingModeParam {
@@ -205,14 +194,12 @@ TEST_P(StreamingAdapterStreamingModeTest, Works) {
   auto req_reader = csv::BuildStreamingReader(
       tmpfile.fname(), {{"id", arrow::utf8()}}, req_reader_opts);
   std::shared_ptr<arrow::RecordBatch> batch;
-  size_t idx = 0;
   while (true) {
-    ++idx;
     SERVING_CHECK_ARROW_STATUS(req_reader->ReadNext(&batch));
     if (batch == nullptr) {
       break;
     }
-    std::cout << "req batch length: " << batch->num_rows() << std::endl;
+    std::cout << "req batch length: " << batch->num_rows() << '\n';
 
     auto id_array =
         std::static_pointer_cast<arrow::StringArray>(batch->column(0));

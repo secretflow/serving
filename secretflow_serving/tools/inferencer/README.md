@@ -5,13 +5,13 @@
 ### Alice
 
 ```bash
-bazel-bin/secretflow_serving/tools/inferencer/inferencer --serving_config_file=secretflow_serving/tools/inferencer/example/alice/serving.config --inference_config_file=secretflow_serving/tools/inferencer/example/alice/inference.config
+bazel-bin/secretflow_serving/tools/inferencer/inferencer --serving_config_file=secretflow_serving/tools/inferencer/example/normal/alice/serving.config --inference_config_file=secretflow_serving/tools/inferencer/example/normal/alice/inference.config
 ```
 
 ### Bob
 
 ```bash
-bazel-bin/secretflow_serving/tools/inferencer/inferencer --serving_config_file=secretflow_serving/tools/inferencer/example/bob/serving.config --inference_config_file=secretflow_serving/tools/inferencer/example/bob/inference.config
+bazel-bin/secretflow_serving/tools/inferencer/inferencer --serving_config_file=secretflow_serving/tools/inferencer/example/normal/bob/serving.config --inference_config_file=secretflow_serving/tools/inferencer/example/normal/bob/inference.config
 ```
 
 ## Python

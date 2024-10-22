@@ -24,7 +24,7 @@
 namespace secretflow::serving::tools {
 
 InferenceControlServiceImpl::InferenceControlServiceImpl(
-    const std::string& requester_id, int32_t row_num)
+    const std::string& requester_id, int64_t row_num)
     : requester_id_(requester_id), row_num_(row_num) {}
 
 void InferenceControlServiceImpl::ReadyToServe() {

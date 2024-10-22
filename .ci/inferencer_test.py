@@ -16,26 +16,11 @@
 from importlib import resources
 import asyncio
 import os
+import pandas as pd
+import numpy as np
 
 current_file_path = os.path.abspath(__file__)
 code_dir = os.path.dirname(os.path.dirname(current_file_path))
-
-alice_serving_config_file_path = os.path.join(
-    code_dir,
-    "secretflow_serving/tools/inferencer/example/alice/serving.config",
-)
-alice_inference_config_file_path = os.path.join(
-    code_dir,
-    "secretflow_serving/tools/inferencer/example/alice/inference.config",
-)
-bob_serving_config_file_path = os.path.join(
-    code_dir,
-    "secretflow_serving/tools/inferencer/example/bob/serving.config",
-)
-bob_inference_config_file_path = os.path.join(
-    code_dir,
-    "secretflow_serving/tools/inferencer/example/bob/inference.config",
-)
 
 
 async def run_process(command):
@@ -53,19 +38,21 @@ async def run_process(command):
         )
 
 
-async def main():
+async def run_inferencer_example(exmaple_dir: str, result_path: str, target_path: str):
+    print(f"====begin example: {exmaple_dir}=====")
+
     with resources.path(
         'secretflow_serving.tools.inferencer', 'inferencer'
     ) as tool_path:
         alice_command = [
             str(tool_path),
-            f'--serving_config_file={alice_serving_config_file_path}',
-            f'--inference_config_file={alice_inference_config_file_path}',
+            f'--serving_config_file={exmaple_dir}/alice/serving.config',
+            f'--inference_config_file={exmaple_dir}/alice/inference.config',
         ]
         bob_command = [
             str(tool_path),
-            f'--serving_config_file={bob_serving_config_file_path}',
-            f'--inference_config_file={bob_inference_config_file_path}',
+            f'--serving_config_file={exmaple_dir}/bob/serving.config',
+            f'--inference_config_file={exmaple_dir}/bob/inference.config',
         ]
         commands = [alice_command, bob_command]
 
@@ -73,6 +60,33 @@ async def main():
 
     await asyncio.gather(*tasks)
 
+    result_df = pd.read_csv(result_path)
+    target_df = pd.read_csv(target_path)
+
+    score_col = result_df['score']
+    pred_col = target_df['pred']
+
+    assert len(score_col) == len(pred_col)
+
+    are_close = np.isclose(score_col, pred_col, atol=0.0001)
+
+    for i, match in enumerate(are_close):
+        assert match, f"row {i} mismatch: {score_col[i]} != {pred_col[i]}"
+
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(
+        run_inferencer_example(
+            "secretflow_serving/tools/inferencer/example/normal",
+            "tmp/alice/score.csv",
+            ".ci/test_data/bin_onehot_glm/predict.csv",
+        )
+    )
+
+    asyncio.run(
+        run_inferencer_example(
+            "secretflow_serving/tools/inferencer/example/one_party_no_feature",
+            "tmp/bob/score.csv",
+            ".ci/test_data/bin_onehot_glm_alice_no_feature/predict.csv",
+        )
+    )

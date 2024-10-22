@@ -66,7 +66,7 @@ class InferenceExecutor {
 
   std::shared_ptr<PredictionCore> prediction_core_;
 
-  int32_t row_num_;
+  int64_t row_num_ = -1;
 
   std::thread keepalive_thread_;
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-01 16:51+0800\n"
+"POT-Creation-Date: 2024-10-14 11:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -64,8 +64,8 @@ msgid ""
 "via `HTTPS`. Please check :ref:`mTLS Configuration <TlsConfig>` for "
 "details."
 msgstr ""
-"本示例的SecretFlow-Serving 通过 `HTTP` 协议提供服务。然而对于生产环境，建议使用 `mTLS` 加固各个通信链路，并通过 `HTTPS` 访问服务。请查看 "
-":ref:`mTLS 配置 <TlsConfig>` 获取详细信息。"
+"本示例的SecretFlow-Serving 通过 `HTTP` 协议提供服务。然而对于生产环境，建议使用 `mTLS` 加固各个通信链路，并通过"
+" `HTTPS` 访问服务。请查看 :ref:`mTLS 配置 <TlsConfig>` 获取详细信息。"
 
 #: ../../source/topics/deployment/deployment.rst:18
 msgid ""
@@ -75,7 +75,9 @@ msgid ""
 "Communication Configuration <ClusterConfig>`, and :ref:`SPI Communication"
 " Configuration <HttpOptions>`."
 msgstr ""
-"SecretFlow-Serving 支持不同的通信链路配置不同的 `mTLS` 配置，可查看 :ref:`服务端配置 <ServingConfig>`、:ref:`集群通信配置 <ClusterConfig>`、:ref:`SPI配置 <HttpOptions>` 获取详细信息"
+"SecretFlow-Serving 支持不同的通信链路配置不同的 `mTLS` 配置，可查看 :ref:`服务端配置 "
+"<ServingConfig>`、:ref:`集群通信配置 <ClusterConfig>`、:ref:`SPI配置 <HttpOptions>`"
+" 获取详细信息"
 
 #: ../../source/topics/deployment/deployment.rst:21
 msgid "Step 1: Deploy SecretFlow-Serving"
@@ -275,25 +277,35 @@ msgstr ""
 msgid "``trace_config_file`` line is optional."
 msgstr "``trace_config_file`` 这一行是可选的。"
 
-#: ../../source/topics/deployment/deployment.rst:188
+#: ../../source/topics/deployment/deployment.rst:185
+msgid ""
+"You can also use mirrors at Alibaba Cloud: ``secretflow-registry.cn-"
+"hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-"
+"registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:[tag]``"
+msgstr ""
+"你也可以使用阿里云上的镜像：``secretflow-registry.cn-"
+"hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-"
+"registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:[tag]``"
+
+#: ../../source/topics/deployment/deployment.rst:189
 msgid "Step 2: Start Serving Service"
 msgstr "步骤 2：启动 Serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:190
+#: ../../source/topics/deployment/deployment.rst:191
 msgid ""
 "The file your workspace should be as follows, ``trace.config`` is "
 "optional:"
 msgstr "您工作区的文件应如下所示，``trace.config`` 是可选的："
 
-#: ../../source/topics/deployment/deployment.rst:200
+#: ../../source/topics/deployment/deployment.rst:201
 msgid "Then you can start serving service by running docker compose up."
 msgstr "然后您可以运行 docker compose up 来启动 serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:207
+#: ../../source/topics/deployment/deployment.rst:208
 msgid "You can use docker logs to check whether serving works well"
 msgstr "您可以使用 docker logs 检查 serving 是否正常工作"
 
-#: ../../source/topics/deployment/deployment.rst:213
+#: ../../source/topics/deployment/deployment.rst:214
 msgid ""
 "Now, ``Alice`` serving is listening on ``9010``, you can confirm if the "
 "service is ready by accessing the ``/health`` endpoint."
@@ -301,17 +313,17 @@ msgstr ""
 "现在 ``Alice`` 的 serving 服务监听了 ``9010`` 端口，您可以通过访问 ``/health`` "
 "接口来检测服务是否已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:219
+#: ../../source/topics/deployment/deployment.rst:220
 msgid ""
 "When the endpoint returns a status code of ``200``, it means that the "
 "service is ready."
 msgstr "若接口返回状态码 ``200`` 则标志服务已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:222
+#: ../../source/topics/deployment/deployment.rst:223
 msgid "Step 3: Predict Test"
 msgstr "步骤 3：预测测试"
 
-#: ../../source/topics/deployment/deployment.rst:224
+#: ../../source/topics/deployment/deployment.rst:225
 msgid ""
 "Based on the capabilities of `Brpc "
 "<https://brpc.apache.org/docs/server/>`_, serving supports accessing "
@@ -321,7 +333,7 @@ msgstr ""
 "得益于 `Brpc <https://brpc.apache.org/docs/server/>`_ 的能力，serving "
 "能够支持通过多种协议进行访问。这里我们通过发送一个 HTTP 的预测请求来测试服务。"
 
-#: ../../source/topics/deployment/deployment.rst:226
+#: ../../source/topics/deployment/deployment.rst:227
 msgid ""
 "You can read :ref:`SecretFlow-Serving API <PredictionService>` for more "
 "information about serving APIs."
