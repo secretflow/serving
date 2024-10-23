@@ -17,6 +17,7 @@
 #include <set>
 #include <utility>
 
+#include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 
 #include "secretflow_serving/core/exception.h"

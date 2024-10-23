@@ -50,6 +50,8 @@ commands:
       - run:
           name: "build"
           command: |
+            export BAZEL_MAX_JOBS=16
+
             sh ./build_wheel_entrypoint.sh
             bazel build <<parameters.bazel_targets>> -c opt --jobs 16
       - run:

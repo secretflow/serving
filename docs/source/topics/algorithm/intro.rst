@@ -74,5 +74,5 @@ The TREE_MERGE operator is executed on the party with the weight of the leaf nod
 Each tree corresponds to a TREE_SELECT operator and a TREE_MERGE operator.
 The aggregation of multiple trees is completed by TREE_ENSEMBLE_PREDICT, and like the linear model, the results can also be calculated by sigmoid. The calculation method of sigmoid here is consistent with the approximation method used during training. The result of TREE_ENSEMBLE_PREDICT is the prediction result.
 
-.. image:: /imgs/sgb_calc.png
+.. image:: /imgs/sgb_calc.jpg
     :alt: Vertical Tree Model Calculation

@@ -182,6 +182,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 
   * ``__ALICE_PORT__``  is the published port on the host machine which is used for SecretFlow-Serving service to listen on, you need to replace it with an accessible port number. In this case, we have designated it as ``9010`` for ``Alice``, ``9011`` for ``Bob``.
   * ``trace_config_file`` line is optional.
+  * You can also use mirrors at Alibaba Cloud: ``secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:[tag]``
 
 
 Step 2: Start Serving Service

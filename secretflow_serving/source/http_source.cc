@@ -18,6 +18,7 @@
 
 #include "brpc/controller.h"
 #include "brpc/uri.h"
+#include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 #include "yacl/utils/elapsed_timer.h"
 

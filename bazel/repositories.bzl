@@ -33,6 +33,8 @@ def sf_serving_deps():
     _com_aws_checksums()
     _com_aws_sdk()
 
+    _com_github_intel_ipp()
+
     _heu()
     _dataproxy()
 
@@ -207,5 +209,21 @@ def _com_github_brpc_brpc():
         ],
         urls = [
             "https://github.com/apache/brpc/archive/refs/tags/1.9.0.tar.gz",
+        ],
+    )
+
+def _com_github_intel_ipp():
+    maybe(
+        http_archive,
+        name = "com_github_intel_ipp",
+        sha256 = "d70f42832337775edb022ca8ac1ac418f272e791ec147778ef7942aede414cdc",
+        strip_prefix = "cryptography-primitives-ippcp_2021.8",
+        build_file = "@sf_serving//bazel:ipp.BUILD",
+        patch_args = ["-p1"],
+        patches = [
+            "@sf_serving//bazel:patches/ippcp.patch",
+        ],
+        urls = [
+            "https://github.com/intel/ipp-crypto/archive/refs/tags/ippcp_2021.8.tar.gz",
         ],
     )

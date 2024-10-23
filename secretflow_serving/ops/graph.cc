@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include "secretflow_serving/ops/op_kernel_factory.h"
 
