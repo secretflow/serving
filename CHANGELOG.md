@@ -11,6 +11,12 @@
 
 > please add your unreleased change here.
 
+## 20241023 - 0.7.0b0
+
+- [Feature] support phe linear model predict
+- [Feature] Kusica CM is supported for configuration rendering
+- [Feature] Inferencer tool
+
 ## 20240820 - 0.6.0b0
 
 - [Feature] enhanced Retry Strategy
