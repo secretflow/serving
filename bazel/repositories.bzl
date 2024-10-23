@@ -33,6 +33,8 @@ def sf_serving_deps():
     _com_aws_checksums()
     _com_aws_sdk()
 
+    _com_github_intel_ipp()
+
     _heu()
     _dataproxy()
 
@@ -51,10 +53,10 @@ def _heu():
         http_archive,
         name = "com_alipay_sf_heu",
         urls = [
-            "https://github.com/secretflow/heu/archive/refs/tags/0.6.0.dev20241015.tar.gz",
+            "https://github.com/secretflow/heu/archive/refs/tags/v0.5.1b0.tar.gz",
         ],
-        strip_prefix = "heu-0.6.0.dev20241015",
-        sha256 = "c28a914aa3da4238a2a0550310c1e8bbe8079d82f4a00f59b807a82f7468b4ad",
+        strip_prefix = "heu-0.5.1b0",
+        sha256 = "26e81b55b2d4f734977f8d5e1ba672c20287f2971dcb5d7f3fa46295e2882012",
     )
 
 def _bazel_rules_pkg():
@@ -207,5 +209,21 @@ def _com_github_brpc_brpc():
         ],
         urls = [
             "https://github.com/apache/brpc/archive/refs/tags/1.9.0.tar.gz",
+        ],
+    )
+
+def _com_github_intel_ipp():
+    maybe(
+        http_archive,
+        name = "com_github_intel_ipp",
+        sha256 = "d70f42832337775edb022ca8ac1ac418f272e791ec147778ef7942aede414cdc",
+        strip_prefix = "cryptography-primitives-ippcp_2021.8",
+        build_file = "@sf_serving//bazel:ipp.BUILD",
+        patch_args = ["-p1"],
+        patches = [
+            "@sf_serving//bazel:patches/ippcp.patch",
+        ],
+        urls = [
+            "https://github.com/intel/ipp-crypto/archive/refs/tags/ippcp_2021.8.tar.gz",
         ],
     )
