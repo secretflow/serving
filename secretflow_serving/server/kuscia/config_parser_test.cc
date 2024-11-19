@@ -166,6 +166,46 @@ TEST_F(KusciaConfigParserTest, DPWorks) {
   EXPECT_EQ(dp_tls_config.ca_file_path(), "ca.crt");
 }
 
+TEST_F(KusciaConfigParserTest, PredictorParties) {
+  // enable alice
+  // alice
+  {
+    butil::TempFile tmpfile;
+    tmpfile.save(1 + R"JSON(
+{
+  "serving_id": "kd-1",
+  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceSha256\":\"3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522\",\"sourcePath\":\"alice-1234\",\"sourceType\":\"ST_DP\",\"dpSourceMeta\":{\"dmHost\":\"127.0.0.1:8071\",\"tls_config\":{\"certificatePath\":\"kusciaapi-server.crt\",\"privateKeyPath\":\"kusciaapi-server.key\",\"caFilePath\":\"ca.crt\"}}},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"alice_ep\"}},\"channelDesc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceSha256\":\"330192f3a51f9498dd882478bfe08a06501e2ed4aa2543a0fb586180925eb309\",\"sourcePath\":\"alice-1234\",\"sourceType\":\"ST_DP\"},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"bob_ep\"}},\"channelDesc\":{\"protocol\":\"http\"}}},\"predictorParties\":[\"alice\"]}",
+  "cluster_def": "{\"parties\":[{\"name\":\"alice\",\"role\":\"\",\"services\":[{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.alice.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.alice.svc:53510\"]},{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.alice.svc:53511\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.alice.svc\"]}]},{\"name\":\"bob\",\"role\":\"\",\"services\":[{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.bob.svc:53511\"]},{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.bob.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.bob.svc:53510\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.bob.svc\"]}]}],\"selfPartyIdx\":0,\"selfEndpointIdx\":0}",
+  "allocated_ports": "{\"ports\":[{\"name\":\"service\",\"port\":53509,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"communication\",\"port\":53508,\"scope\":\"Cluster\",\"protocol\":\"HTTP\"},{\"name\":\"internal\",\"port\":53510,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"brpc-builtin\",\"port\":53511,\"scope\":\"Domain\",\"protocol\":\"HTTP\"}]}"
+}
+)JSON");
+
+    KusciaConfigParser config_parser(tmpfile.fname());
+    auto server_config = config_parser.server_config();
+    EXPECT_EQ("0.0.0.0", server_config.host());
+    EXPECT_EQ(53509, server_config.service_port());
+    EXPECT_EQ(53508, server_config.communication_port());
+  }
+  // bob
+  {
+    butil::TempFile tmpfile;
+    tmpfile.save(1 + R"JSON(
+{
+  "serving_id": "kd-1",
+  "input_config": "{\"partyConfigs\":{\"alice\":{\"serverConfig\":{\"featureMapping\":{\"v24\":\"x24\",\"v22\":\"x22\",\"v21\":\"x21\",\"v25\":\"x25\",\"v23\":\"x23\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/alice\",\"sourceSha256\":\"3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522\",\"sourcePath\":\"alice-1234\",\"sourceType\":\"ST_DP\",\"dpSourceMeta\":{\"dmHost\":\"127.0.0.1:8071\",\"tls_config\":{\"certificatePath\":\"kusciaapi-server.crt\",\"privateKeyPath\":\"kusciaapi-server.key\",\"caFilePath\":\"ca.crt\"}}},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"alice_ep\"}},\"channelDesc\":{\"protocol\":\"http\"}},\"bob\":{\"serverConfig\":{\"featureMapping\":{\"v6\":\"x6\",\"v7\":\"x7\",\"v8\":\"x8\",\"v9\":\"x9\",\"v10\":\"x10\"}},\"modelConfig\":{\"modelId\":\"glm-test-1\",\"basePath\":\"/tmp/bob\",\"sourceSha256\":\"330192f3a51f9498dd882478bfe08a06501e2ed4aa2543a0fb586180925eb309\",\"sourcePath\":\"alice-1234\",\"sourceType\":\"ST_DP\"},\"featureSourceConfig\":{\"httpOpts\":{\"endpoint\":\"bob_ep\"}},\"channelDesc\":{\"protocol\":\"http\"}}},\"predictorParties\":[\"alice\"]}",
+  "cluster_def": "{\"parties\":[{\"name\":\"alice\",\"role\":\"\",\"services\":[{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.alice.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.alice.svc:53510\"]},{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.alice.svc:53511\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.alice.svc\"]}]},{\"name\":\"bob\",\"role\":\"\",\"services\":[{\"portName\":\"brpc-builtin\",\"endpoints\":[\"kd-1-brpc-builtin.bob.svc:53511\"]},{\"portName\":\"service\",\"endpoints\":[\"kd-1-service.bob.svc:53508\"]},{\"portName\":\"internal\",\"endpoints\":[\"kd-1-internal.bob.svc:53510\"]},{\"portName\":\"communication\",\"endpoints\":[\"kd-1-communication.bob.svc\"]}]}],\"selfPartyIdx\":1,\"selfEndpointIdx\":0}",
+  "allocated_ports": "{\"ports\":[{\"name\":\"service\",\"port\":53509,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"communication\",\"port\":53508,\"scope\":\"Cluster\",\"protocol\":\"HTTP\"},{\"name\":\"internal\",\"port\":53510,\"scope\":\"Domain\",\"protocol\":\"HTTP\"},{\"name\":\"brpc-builtin\",\"port\":53511,\"scope\":\"Domain\",\"protocol\":\"HTTP\"}]}"
+}
+)JSON");
+
+    KusciaConfigParser config_parser(tmpfile.fname());
+    auto server_config = config_parser.server_config();
+    EXPECT_EQ("0.0.0.0", server_config.host());
+    EXPECT_EQ(0, server_config.service_port());
+    EXPECT_EQ(53508, server_config.communication_port());
+  }
+}
+
 // TODO: exception case
 
 }  // namespace secretflow::serving::kuscia

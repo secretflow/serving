@@ -25,10 +25,10 @@ serving_cc_library(
         ":arrow_processing",
         ":dot_product",
         ":merge_y",
-        "//secretflow_serving/ops/phe_linear:phe_2p_decrypt_peer_y",
-        "//secretflow_serving/ops/phe_linear:phe_2p_dot_product",
-        "//secretflow_serving/ops/phe_linear:phe_2p_merge_y",
-        "//secretflow_serving/ops/phe_linear:phe_2p_reduce",
+        "//secretflow_serving/ops/he/linear:phe_2p_decrypt_peer_y",
+        "//secretflow_serving/ops/he/linear:phe_2p_dot_product",
+        "//secretflow_serving/ops/he/linear:phe_2p_merge_y",
+        "//secretflow_serving/ops/he/linear:phe_2p_reduce",
     ],
 )
 

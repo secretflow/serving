@@ -105,25 +105,42 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
                        "too few cluster party config to run serving.");
   }
 
-  {
-    // parse input config
-    SERVING_ENFORCE(doc[kInputConfigKey].IsString(),
-                    errors::ErrorCode::INVALID_ARGUMENT);
-    std::string input_config_str = {doc[kInputConfigKey].GetString(),
-                                    doc[kInputConfigKey].GetStringLength()};
+  // parse input config
+  SERVING_ENFORCE(doc[kInputConfigKey].IsString(),
+                  errors::ErrorCode::INVALID_ARGUMENT);
+  std::string input_config_str = {doc[kInputConfigKey].GetString(),
+                                  doc[kInputConfigKey].GetStringLength()};
 
-    KusciaServingConfig serving_config;
-    JsonToPb(input_config_str, &serving_config);
-    auto iter = serving_config.party_configs().find(self_party_id);
-    SERVING_ENFORCE(iter != serving_config.party_configs().end(),
-                    errors::ErrorCode::INVALID_ARGUMENT);
-    const auto& party_config = iter->second;
-    server_config_ = party_config.server_config();
-    model_config_ = party_config.model_config();
-    if (party_config.has_feature_source_config()) {
-      feature_config_ = party_config.feature_source_config();
+  KusciaServingConfig serving_config;
+  JsonToPb(input_config_str, &serving_config);
+  auto iter = serving_config.party_configs().find(self_party_id);
+  SERVING_ENFORCE(iter != serving_config.party_configs().end(),
+                  errors::ErrorCode::INVALID_ARGUMENT);
+  const auto& party_config = iter->second;
+  server_config_ = party_config.server_config();
+  model_config_ = party_config.model_config();
+  if (party_config.has_feature_source_config()) {
+    feature_config_ = party_config.feature_source_config();
+  }
+  *cluster_config_.mutable_channel_desc() = party_config.channel_desc();
+
+  // determine whether to listen for predictive services
+  bool enable_pred_svc =
+      serving_config.predictor_parties().empty() ? true : false;
+  for (const auto& p_id : serving_config.predictor_parties()) {
+    bool flag = false;
+    for (const auto& p_desc : cluster_config_.parties()) {
+      if (p_desc.id() == p_id) {
+        flag = true;
+        break;
+      }
     }
-    *cluster_config_.mutable_channel_desc() = party_config.channel_desc();
+    SERVING_ENFORCE(flag, errors::ErrorCode::INVALID_ARGUMENT,
+                    "invalid predictor party: {}", p_id);
+
+    if (p_id == self_party_id) {
+      enable_pred_svc = true;
+    }
   }
 
   {
@@ -138,7 +155,7 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
     JsonToPb(allocated_ports_str, &allocated_ports);
     server_config_.set_host("0.0.0.0");
     for (const auto& p : allocated_ports.ports()) {
-      if (p.name() == "service") {
+      if (enable_pred_svc && p.name() == "service") {
         server_config_.set_service_port(p.port());
       }
       if (p.name() == "communication") {
@@ -154,8 +171,10 @@ KusciaConfigParser::KusciaConfigParser(const std::string& config_file) {
 
     SERVING_ENFORCE_NE(server_config_.communication_port(), 0,
                        "get empty communication port.");
-    SERVING_ENFORCE_NE(server_config_.service_port(), 0,
-                       "get empty service port.");
+    if (enable_pred_svc) {
+      SERVING_ENFORCE_NE(server_config_.service_port(), 0,
+                         "get empty service port.");
+    }
   }
 
   // load oss config

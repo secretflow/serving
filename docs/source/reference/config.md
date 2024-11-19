@@ -47,6 +47,7 @@
     - [FeatureSourceConfig](#featuresourceconfig)
     - [HttpOptions](#httpoptions)
     - [MockOptions](#mockoptions)
+    - [StreamingOptions](#streamingoptions)
 
 
 
@@ -225,6 +226,8 @@ Options of a csv feature source.
 | ----- | ---- | ----------- |
 | file_path | [ string](#string ) | Input file path, specifies where to load data Note that this will load all of the data into memory at once |
 | id_name | [ string](#string ) | Id column name, associated with FeatureParam::query_datas Query datas is a subset of id column |
+| streaming_mode | [ bool](#bool ) | Optional. Only for Inferencer tool use. Defatult: false |
+| block_size | [ int32](#int32 ) | Optional. Valid only if `streaming_mode=true`. This determines the size(byte) of each read batch. |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -239,6 +242,7 @@ Config for a feature source
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) options.mock_opts | [ MockOptions](#mockoptions ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) options.http_opts | [ HttpOptions](#httpoptions ) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) options.csv_opts | [ CsvOptions](#csvoptions ) | none |
+| [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) options.streaming_opts | [ StreamingOptions](#streamingoptions ) | none |
  <!-- end Fields -->
  <!-- end HasFields -->
 
@@ -272,6 +276,21 @@ for the desired features.
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | type | [ MockDataType](#mockdatatype ) | default MDT_FIXED |
+ <!-- end Fields -->
+ <!-- end HasFields -->
+
+
+
+### StreamingOptions
+Only for Inferencer tool use.
+
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| file_path | [ string](#string ) | Input file path, specifies where to load data |
+| file_format | [ string](#string ) | Input file format. Optional value: CSV Default: CSV |
+| id_name | [ string](#string ) | Id column name, associated with FeatureParam::query_datas Query datas is a subset of id column |
+| block_size | [ int32](#int32 ) | Optional. This determines the size(byte) of each read batch. |
  <!-- end Fields -->
  <!-- end HasFields -->
  <!-- end messages -->
@@ -436,7 +455,7 @@ S3 protocol.
 | feature_mapping | [map ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry ) | Optional. Feature name mapping rules. Key: source or predefined feature name. Value: model feature name. |
 | tls_config | [ TlsConfig](#tlsconfig ) | Whether to enable tls for server |
 | host | [ string](#string ) | e.g. 192.168.2.51 |
-| service_port | [ int32](#int32 ) | The port used for model inference. |
+| service_port | [ int32](#int32 ) | The port used for model predict service. Default: disable service |
 | communication_port | [ int32](#int32 ) | The port used for communication between parties serving. |
 | brpc_builtin_service_port | [ int32](#int32 ) | Brpc builtin service listen port. Default: disable service |
 | metrics_exposer_port | [ int32](#int32 ) | `/metrics` service listen port. Default: disable service |

@@ -38,7 +38,13 @@ async def run_process(command):
         )
 
 
-async def run_inferencer_example(exmaple_dir: str, result_path: str, target_path: str):
+async def run_inferencer_example(
+    exmaple_dir: str,
+    result_path: str,
+    target_path: str,
+    target_col_name: str,
+    epsilon=0.0001,
+):
     print(f"====begin example: {exmaple_dir}=====")
 
     with resources.path(
@@ -64,11 +70,11 @@ async def run_inferencer_example(exmaple_dir: str, result_path: str, target_path
     target_df = pd.read_csv(target_path)
 
     score_col = result_df['score']
-    pred_col = target_df['pred']
+    pred_col = target_df[target_col_name]
 
     assert len(score_col) == len(pred_col)
 
-    are_close = np.isclose(score_col, pred_col, atol=0.0001)
+    are_close = np.isclose(score_col, pred_col, atol=epsilon)
 
     for i, match in enumerate(are_close):
         assert match, f"row {i} mismatch: {score_col[i]} != {pred_col[i]}"
@@ -79,7 +85,9 @@ if __name__ == '__main__':
         run_inferencer_example(
             "secretflow_serving/tools/inferencer/example/normal",
             "tmp/alice/score.csv",
-            ".ci/test_data/bin_onehot_glm/predict.csv",
+            ".ci/test_data/glm/predict.csv",
+            "pred_y",
+            0.01,
         )
     )
 
@@ -87,6 +95,7 @@ if __name__ == '__main__':
         run_inferencer_example(
             "secretflow_serving/tools/inferencer/example/one_party_no_feature",
             "tmp/bob/score.csv",
-            ".ci/test_data/bin_onehot_glm_alice_no_feature/predict.csv",
+            ".ci/test_data/fetures_in_one_party/sgd/predict.csv",
+            "pred",
         )
     )

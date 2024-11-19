@@ -33,4 +33,8 @@ message KusciaServingConfig {
   // Key: Party id
   // Value: Party config
   map<string, PartyConfig> party_configs = 1;
+
+  // Indicate which parties can initiate the prediction
+  // Default: All
+  repeated string predictor_parties = 2;
 }
