@@ -61,6 +61,9 @@ Create a file called ``serving.config`` in your workspace and paste the followin
         "v25": "x25",
         "v23": "x23"
       },
+      "host": "0.0.0.0",
+      "servicePort": "9010",
+      "communicationPort": "9110",
       "metricsExposerPort": 10306,
       "brpcBuiltinServicePort": 10307
     },
@@ -68,7 +71,7 @@ Create a file called ``serving.config`` in your workspace and paste the followin
       "modelId": "glm-test",
       "basePath": "./data",
       "sourcePath": "./glm-test.tar.gz",
-      "sourceSha256": "3b6a3b76a8d5bbf0e45b83f2d44772a0a6aa9a15bf382cee22cbdc8f59d55522",
+      "sourceSha256": "c6308af488bcd6c54a48a145af17aa209dec463b5cb44d83c6b58195818c10a0",
       "sourceType": "ST_FILE"
     },
     "clusterConf": {
@@ -76,15 +79,15 @@ Create a file called ``serving.config`` in your workspace and paste the followin
       "parties": [
         {
           "id": "alice",
-          "address": "0.0.0.0:9010"
+          "address": "0.0.0.0:9110"
         },
         {
           "id": "bob",
-          "address": "0.0.0.0:9011"
+          "address": "0.0.0.0:9111"
         }
       ],
-      "channel_desc": {
-        "protocol": "baidu_std"
+      "channelDesc": {
+        "protocol": "http"
       }
     },
     "featureSourceConf": {
@@ -99,7 +102,7 @@ See :ref:`Serving Config <ServingConfig>` for more config information
   * The above configuration is referenced from `alice-serving-config <https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_.
   * For ``Bob``, you should refer to `bob-serving-config <https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_ .
   * **Note** `mockOpts` is configured here for a mock feature data source, which will provide simulated feature data to support the model prediction process. In actual use, please provide feature data in the form of a feature service by implementing the :ref:`SecretFlow-Serving Feature Service SPI <BatchFeatureService>`.
-  * **Note** You can modify the retry strategy for communication between parties by modifying `retry_policy_config` field of :ref:`channel_desc <ChannelDesc>`, you can refer to :ref:`here <RetryPolicyConfig>`.
+  * **Note** You can modify the retry strategy for communication between parties by modifying `retry_policy_config` field of :ref:`channelDesc <ChannelDesc>`, you can refer to :ref:`here <RetryPolicyConfig>`.
   * **Note** If your :ref:`feature source <FeatureSourceConfig>` is from :ref:`http <HttpOptions>`, you can modify the retry strategy of feature fetching by modifying `retry_policy_config` field of :ref:`http_opts <HttpOptions>`, please refer to :ref:`here <RetryPolicyConfig>`.
 
 .. _log_conf_file:

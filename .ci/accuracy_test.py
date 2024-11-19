@@ -372,32 +372,20 @@ class AccuracyTestCase(ProcRunGuard):
 
 if __name__ == "__main__":
     AccuracyTestCase(
-        service_id="bin_onehot_glm",
+        service_id="glm",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/bin_onehot_glm',
+        case_dir='.ci/test_data/glm',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
-        score_col_name='pred',
-    ).exec()
+        score_col_name='pred_y',
+    ).exec(0.1)
 
     AccuracyTestCase(
-        service_id="bin_onehot_glm_alice_no_feature",
+        service_id="sgb",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/bin_onehot_glm_alice_no_feature',
-        package_name='s_model.tar.gz',
-        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
-        expect_csv_name='predict.csv',
-        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
-        score_col_name='pred',
-        use_oss=True,
-    ).exec()
-
-    AccuracyTestCase(
-        service_id="bin_sgb",
-        parties=['alice', 'bob'],
-        case_dir='.ci/test_data/bin_sgb',
+        case_dir='.ci/test_data/sgb',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -406,9 +394,9 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="bin_sgb_alice_no_feature",
+        service_id="sgb_fetures_in_one_party",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/bin_sgb_alice_no_feature',
+        case_dir='.ci/test_data/fetures_in_one_party/sgb',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -428,9 +416,9 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="xgb_alice_no_feature",
+        service_id="xgb_fetures_in_one_party",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/xgb_alice_no_feature',
+        case_dir='.ci/test_data/fetures_in_one_party/xgb',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -450,9 +438,9 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="sgd_alice_no_feature",
+        service_id="sgd_fetures_in_one_party",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/sgd_alice_no_feature',
+        case_dir='.ci/test_data/fetures_in_one_party/sgd',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -461,9 +449,9 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="phe_sgd",
+        service_id="ou_sgd",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/phe_sgd',
+        case_dir='.ci/test_data/ou_sgd',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -472,9 +460,9 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="phe_sgd_no_feature",
+        service_id="ou_sgd_fetures_in_one_party",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/phe_sgd_no_feature',
+        case_dir='.ci/test_data/fetures_in_one_party/ou_sgd',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
@@ -483,12 +471,12 @@ if __name__ == "__main__":
     ).exec()
 
     AccuracyTestCase(
-        service_id="phe_glm",
+        service_id="ou_glm",
         parties=['alice', 'bob'],
-        case_dir='.ci/test_data/phe_glm',
+        case_dir='.ci/test_data/ou_glm',
         package_name='s_model.tar.gz',
         input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
         expect_csv_name='predict.csv',
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
-        score_col_name='predict_score',
+        score_col_name='pred_y',
     ).exec(0.1)
