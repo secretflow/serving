@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-14 17:42+0800\n"
+"POT-Creation-Date: 2024-11-20 15:13+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr ""
 msgid "Services"
 msgstr ""
 
-#: ../../source/reference/config.md:34 ../../source/reference/config.md:168
+#: ../../source/reference/config.md:34 ../../source/reference/config.md:169
 msgid "Messages"
 msgstr ""
 
@@ -61,99 +61,103 @@ msgstr ""
 msgid "[MockOptions](#mockoptions)"
 msgstr ""
 
-#: ../../source/reference/config.md:55
+#: ../../source/reference/config.md:50
+msgid "[StreamingOptions](#streamingoptions)"
+msgstr ""
+
+#: ../../source/reference/config.md:56
 msgid "[LoggingConfig](#loggingconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:61
+#: ../../source/reference/config.md:62
 msgid "[DPSourceMeta](#dpsourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:62
+#: ../../source/reference/config.md:63
 msgid "[FileSourceMeta](#filesourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:63
+#: ../../source/reference/config.md:64
 msgid "[HttpSourceMeta](#httpsourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:64
+#: ../../source/reference/config.md:65
 msgid "[ModelConfig](#modelconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:65
+#: ../../source/reference/config.md:66
 msgid "[OSSSourceMeta](#osssourcemeta)"
 msgstr ""
 
-#: ../../source/reference/config.md:71
+#: ../../source/reference/config.md:72
 msgid "[ExponentialBackOffConfig](#exponentialbackoffconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:72
+#: ../../source/reference/config.md:73
 msgid "[FixedBackOffConfig](#fixedbackoffconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:73
+#: ../../source/reference/config.md:74
 msgid "[RandomBackOffConfig](#randombackoffconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:74
+#: ../../source/reference/config.md:75
 msgid "[RetryPolicyConfig](#retrypolicyconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:80
+#: ../../source/reference/config.md:81
 msgid "[ServerConfig](#serverconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:81
+#: ../../source/reference/config.md:82
 msgid "[ServerConfig.FeatureMappingEntry](#serverconfig-featuremappingentry)"
 msgstr ""
 
-#: ../../source/reference/config.md:87
+#: ../../source/reference/config.md:88
 msgid "[ServingConfig](#servingconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:93
+#: ../../source/reference/config.md:94
 msgid "[TlsConfig](#tlsconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:99
+#: ../../source/reference/config.md:100
 msgid "[TraceConfig](#traceconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:100
+#: ../../source/reference/config.md:101
 msgid "[TraceLogConfig](#tracelogconfig)"
 msgstr ""
 
-#: ../../source/reference/config.md:105 ../../source/reference/config.md:527
+#: ../../source/reference/config.md:106 ../../source/reference/config.md:546
 msgid "Enums"
 msgstr ""
 
-#: ../../source/reference/config.md:112
+#: ../../source/reference/config.md:113
 msgid "[MockDataType](#mockdatatype)"
 msgstr ""
 
-#: ../../source/reference/config.md:118
+#: ../../source/reference/config.md:119
 msgid "[LogLevel](#loglevel)"
 msgstr ""
 
-#: ../../source/reference/config.md:124
+#: ../../source/reference/config.md:125
 msgid "[SourceType](#sourcetype)"
 msgstr ""
 
-#: ../../source/reference/config.md:130
+#: ../../source/reference/config.md:131
 msgid "[RetryPolicyBackOffMode](#retrypolicybackoffmode)"
 msgstr ""
 
-#: ../../source/reference/config.md:146
+#: ../../source/reference/config.md:147
 msgid "[Scalar Value Types](#scalar-value-types)"
 msgstr ""
 
-#: ../../source/reference/config.md:173
+#: ../../source/reference/config.md:174
 msgid "ChannelDesc"
 msgstr ""
 
-#: ../../source/reference/config.md:174
+#: ../../source/reference/config.md:175
 msgid "Description for channels between joined parties"
 msgstr ""
 
@@ -246,11 +250,11 @@ msgstr ""
 msgid "retry policy config"
 msgstr ""
 
-#: ../../source/reference/config.md:191
+#: ../../source/reference/config.md:192
 msgid "ClusterConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:192
+#: ../../source/reference/config.md:193
 msgid "Runtime config for a serving cluster"
 msgstr ""
 
@@ -278,11 +282,11 @@ msgstr ""
 msgid "[ ChannelDesc](#channeldesc )"
 msgstr ""
 
-#: ../../source/reference/config.md:205
+#: ../../source/reference/config.md:206
 msgid "PartyDesc"
 msgstr ""
 
-#: ../../source/reference/config.md:206
+#: ../../source/reference/config.md:207
 msgid "Description for a joined party"
 msgstr ""
 
@@ -302,11 +306,11 @@ msgstr ""
 msgid "e.g. 127.0.0.1:9001 commucation adress between paries."
 msgstr ""
 
-#: ../../source/reference/config.md:220
+#: ../../source/reference/config.md:221
 msgid "CsvOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:221
+#: ../../source/reference/config.md:222
 msgid "Options of a csv feature source."
 msgstr ""
 
@@ -330,11 +334,33 @@ msgid ""
 "a subset of id column"
 msgstr ""
 
-#: ../../source/reference/config.md:233
+#: ../../source/reference/config.md
+msgid "streaming_mode"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ bool](#bool )"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Optional. Only for Inferencer tool use. Defatult: false"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "block_size"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid ""
+"Optional. Valid only if `streaming_mode=true`. This determines the "
+"size(byte) of each read batch."
+msgstr ""
+
+#: ../../source/reference/config.md:236
 msgid "FeatureSourceConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:234
+#: ../../source/reference/config.md:237
 msgid "Config for a feature source"
 msgstr ""
 
@@ -368,11 +394,21 @@ msgstr ""
 msgid "[ CsvOptions](#csvoptions )"
 msgstr ""
 
-#: ../../source/reference/config.md:247
+#: ../../source/reference/config.md
+msgid ""
+"[**oneof**](https://developers.google.com/protocol-"
+"buffers/docs/proto3#oneof) options.streaming_opts"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "[ StreamingOptions](#streamingoptions )"
+msgstr ""
+
+#: ../../source/reference/config.md:251
 msgid "HttpOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:248
+#: ../../source/reference/config.md:252
 msgid ""
 "Options for a http feature source which should implement the feature "
 "service spi. The defined of spi can be found in "
@@ -385,10 +421,6 @@ msgstr ""
 
 #: ../../source/reference/config.md
 msgid "enable_lb"
-msgstr ""
-
-#: ../../source/reference/config.md
-msgid "[ bool](#bool )"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -409,11 +441,11 @@ msgstr ""
 msgid "Retry policy config."
 msgstr ""
 
-#: ../../source/reference/config.md:266
+#: ../../source/reference/config.md:270
 msgid "MockOptions"
 msgstr ""
 
-#: ../../source/reference/config.md:267
+#: ../../source/reference/config.md:271
 msgid ""
 "Options for a mock feature source. Mock feature source will generates "
 "values(random or fixed, according to type) for the desired features."
@@ -431,11 +463,35 @@ msgstr ""
 msgid "default MDT_FIXED"
 msgstr ""
 
-#: ../../source/reference/config.md:282
+#: ../../source/reference/config.md:284
+msgid "StreamingOptions"
+msgstr ""
+
+#: ../../source/reference/config.md:285
+msgid "Only for Inferencer tool use."
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Input file path, specifies where to load data"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "file_format"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Input file format. Optional value: CSV Default: CSV"
+msgstr ""
+
+#: ../../source/reference/config.md
+msgid "Optional. This determines the size(byte) of each read batch."
+msgstr ""
+
+#: ../../source/reference/config.md:301
 msgid "LoggingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:283
+#: ../../source/reference/config.md:302
 msgid "Serving log config options"
 msgstr ""
 
@@ -475,7 +531,7 @@ msgstr ""
 msgid "default value: 10"
 msgstr ""
 
-#: ../../source/reference/config.md:299
+#: ../../source/reference/config.md:318
 msgid "DPSourceMeta"
 msgstr ""
 
@@ -487,15 +543,15 @@ msgstr ""
 msgid "datamesh host."
 msgstr ""
 
-#: ../../source/reference/config.md:312
+#: ../../source/reference/config.md:331
 msgid "FileSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:313
+#: ../../source/reference/config.md:332
 msgid "empty by design"
 msgstr ""
 
-#: ../../source/reference/config.md:319
+#: ../../source/reference/config.md:338
 msgid "HttpSourceMeta"
 msgstr ""
 
@@ -511,11 +567,11 @@ msgid ""
 "1000 (ms)"
 msgstr ""
 
-#: ../../source/reference/config.md:333
+#: ../../source/reference/config.md:352
 msgid "ModelConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:334
+#: ../../source/reference/config.md:353
 msgid "Config for serving model"
 msgstr ""
 
@@ -601,11 +657,11 @@ msgstr ""
 msgid "[ DPSourceMeta](#dpsourcemeta )"
 msgstr ""
 
-#: ../../source/reference/config.md:353
+#: ../../source/reference/config.md:372
 msgid "OSSSourceMeta"
 msgstr ""
 
-#: ../../source/reference/config.md:354
+#: ../../source/reference/config.md:373
 msgid ""
 "Options for a Oss model source. Serving accesses data services using the "
 "AWS S3 protocol."
@@ -642,7 +698,7 @@ msgstr ""
 msgid "bucket"
 msgstr ""
 
-#: ../../source/reference/config.md:372
+#: ../../source/reference/config.md:391
 msgid "ExponentialBackOffConfig"
 msgstr ""
 
@@ -662,7 +718,7 @@ msgstr ""
 msgid "The backoff time increase factor, should be greater than 1, default 2."
 msgstr ""
 
-#: ../../source/reference/config.md:385
+#: ../../source/reference/config.md:404
 msgid "FixedBackOffConfig"
 msgstr ""
 
@@ -674,7 +730,7 @@ msgstr ""
 msgid "The backoff time between each retry, in milliseconds, default 10ms."
 msgstr ""
 
-#: ../../source/reference/config.md:397
+#: ../../source/reference/config.md:416
 msgid "RandomBackOffConfig"
 msgstr ""
 
@@ -694,7 +750,7 @@ msgstr ""
 msgid "The maximum backoff time in milliseconds, default 50ms."
 msgstr ""
 
-#: ../../source/reference/config.md:410
+#: ../../source/reference/config.md:429
 msgid "RetryPolicyConfig"
 msgstr ""
 
@@ -779,7 +835,7 @@ msgstr ""
 msgid "The random backoff time config."
 msgstr ""
 
-#: ../../source/reference/config.md:430
+#: ../../source/reference/config.md:449
 msgid "ServerConfig"
 msgstr ""
 
@@ -814,7 +870,7 @@ msgid "service_port"
 msgstr ""
 
 #: ../../source/reference/config.md
-msgid "The port used for model inference."
+msgid "The port used for model predict service. Default: disable service"
 msgstr ""
 
 #: ../../source/reference/config.md
@@ -871,7 +927,7 @@ msgid ""
 "use default value. Default: #cpu-cores"
 msgstr ""
 
-#: ../../source/reference/config.md:451
+#: ../../source/reference/config.md:470
 msgid "ServerConfig.FeatureMappingEntry"
 msgstr ""
 
@@ -883,11 +939,11 @@ msgstr ""
 msgid "value"
 msgstr ""
 
-#: ../../source/reference/config.md:466
+#: ../../source/reference/config.md:485
 msgid "ServingConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:467
+#: ../../source/reference/config.md:486
 msgid "Related config of serving"
 msgstr ""
 
@@ -927,7 +983,7 @@ msgstr ""
 msgid "[ FeatureSourceConfig](#featuresourceconfig )"
 msgstr ""
 
-#: ../../source/reference/config.md:484
+#: ../../source/reference/config.md:503
 msgid "TlsConfig"
 msgstr ""
 
@@ -957,11 +1013,11 @@ msgid ""
 "the verification"
 msgstr ""
 
-#: ../../source/reference/config.md:500
+#: ../../source/reference/config.md:519
 msgid "TraceConfig"
 msgstr ""
 
-#: ../../source/reference/config.md:501
+#: ../../source/reference/config.md:520
 msgid "Serving trace config options"
 msgstr ""
 
@@ -985,7 +1041,7 @@ msgstr ""
 msgid "if trace_log_enable is true, use this log config to dump trace info"
 msgstr ""
 
-#: ../../source/reference/config.md:513
+#: ../../source/reference/config.md:532
 msgid "TraceLogConfig"
 msgstr ""
 
@@ -1005,7 +1061,7 @@ msgstr ""
 msgid "max_trace_log_file_count"
 msgstr ""
 
-#: ../../source/reference/config.md:533
+#: ../../source/reference/config.md:552
 msgid "MockDataType"
 msgstr ""
 
@@ -1053,11 +1109,11 @@ msgstr ""
 msgid "fixed value for each feature"
 msgstr ""
 
-#: ../../source/reference/config.md:547
+#: ../../source/reference/config.md:566
 msgid "LogLevel"
 msgstr ""
 
-#: ../../source/reference/config.md:548
+#: ../../source/reference/config.md:567
 msgid "Serving log level"
 msgstr ""
 
@@ -1105,11 +1161,11 @@ msgstr ""
 msgid "error"
 msgstr ""
 
-#: ../../source/reference/config.md:563
+#: ../../source/reference/config.md:582
 msgid "SourceType"
 msgstr ""
 
-#: ../../source/reference/config.md:564
+#: ../../source/reference/config.md:583
 msgid "Supported model source type"
 msgstr ""
 
@@ -1149,7 +1205,7 @@ msgstr ""
 msgid "DataProxy source"
 msgstr ""
 
-#: ../../source/reference/config.md:579
+#: ../../source/reference/config.md:598
 msgid "RetryPolicyBackOffMode"
 msgstr ""
 
@@ -1185,7 +1241,7 @@ msgstr ""
 msgid "Retry with random backoff."
 msgstr ""
 
-#: ../../source/reference/config.md:601
+#: ../../source/reference/config.md:620
 msgid "Scalar Value Types"
 msgstr ""
 
