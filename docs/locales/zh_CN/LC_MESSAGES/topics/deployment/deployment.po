@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SecretFlow-Serving \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-15 19:42+0800\n"
+"POT-Creation-Date: 2024-11-20 15:13+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -114,42 +114,43 @@ msgstr ""
 "<https://www.secretflow.org.cn/zh_CN/docs/secretflow/component/comp_list#model_export>`_"
 " "
 
-#: ../../source/topics/deployment/deployment.rst:44
+#: ../../source/topics/deployment/deployment.rst:45
 msgid "For ``Bob`` should use model file `serving/examples/bob/glm-test.tar.gz`."
 msgstr "对 ``Bob`` 来说可以使用 `serving/examples/bob/glm-test.tar.gz` 模型包。"
 
-#: ../../source/topics/deployment/deployment.rst:48
+#: ../../source/topics/deployment/deployment.rst:49
 msgid "1.2 Create Serving config file"
 msgstr "1.2 创建 Serving 配置文件"
 
-#: ../../source/topics/deployment/deployment.rst:50
+#: ../../source/topics/deployment/deployment.rst:56
 msgid ""
-"Create a file called ``serving.config`` in your workspace and paste the "
-"following code in:"
-msgstr "在您的工作空间目录下创建一个名为 ``serving.config`` 的文件，并将下面的内容添加到其的内容中："
+"Create a file called ``serving.config`` in the ``conf`` directory within "
+"your workspace and paste the following code in:"
+msgstr "在您的工作空间下的 ``conf`` 目录下创建一个名为 ``serving.config`` 的文件，并将下面的内容添加到其的内容中："
 
-#: ../../source/topics/deployment/deployment.rst:98
+#: ../../source/topics/deployment/deployment.rst:104
 msgid "See :ref:`Serving Config <ServingConfig>` for more config information"
 msgstr "请参考 :ref:`Serving Config <ServingConfig>` 来获取更多信息。"
 
-#: ../../source/topics/deployment/deployment.rst:102
+#: ../../source/topics/deployment/deployment.rst:108
+msgid ""
+"For Alice, ``__ALICE_URL__`` can be simply configured to "
+"``0.0.0.0:9110``, ``__BOB_URL__`` is the url "
+"(eg:http://192.168.11.34:9111) where bob's serving ``communicationPort`` "
+"is listen on, you need to replace it with bob's serving url."
+msgstr ""
+"对于Alice，``__ALICE_URL`` 可简单配置到 ``0.0.0.0:9110``, ``__BOB_URL__`` 则需要替换成bob的serving的 ``communicationPort`` 端口所监听的地址url(eg:http://192.168.11.34:9111)"
+
+#: ../../source/topics/deployment/deployment.rst:109
 msgid ""
 "The above configuration is referenced from `alice-serving-config "
 "<https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_."
+" Please adjust the configuration items according to your actual scenario."
 msgstr ""
 "以上配置内容参考自 `alice-serving-config "
-"<https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_。"
+"<https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_。 请根据您的实际场景更变配置项。"
 
-#: ../../source/topics/deployment/deployment.rst:103
-msgid ""
-"For ``Bob``, you should refer to `bob-serving-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_"
-" ."
-msgstr ""
-"对于 ``Bob`` ，可以参考 `bob-serving-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/serving.config>`_。"
-
-#: ../../source/topics/deployment/deployment.rst:104
+#: ../../source/topics/deployment/deployment.rst:110
 msgid ""
 "**Note** `mockOpts` is configured here for a mock feature data source, "
 "which will provide simulated feature data to support the model prediction"
@@ -160,74 +161,46 @@ msgstr ""
 "**注意** `mockOpts` 在这里是表示配置了仿真特征数据源来支持模型预测。在实际使用中，推荐通过实现 :ref:`SecretFlow-"
 "Serving Feature Service SPI <BatchFeatureService>` 来提供特征数据。"
 
-#: ../../source/topics/deployment/deployment.rst:105
-msgid ""
-"**Note** You can modify the retry strategy for communication between "
-"parties by modifying `retry_policy_config` field of :ref:`channelDesc "
-"<ChannelDesc>`, you can refer to :ref:`here <RetryPolicyConfig>`."
-msgstr ""
-"**注意** 你可以通过修改 :ref:`channelDesc <ChannelDesc>` 的 `retry_policy_config` "
-"字段来修改 `party` 间通信的重试策略，可以参考 :ref:`这里 <RetryPolicyConfig>` 。 "
-
-#: ../../source/topics/deployment/deployment.rst:106
-msgid ""
-"**Note** If your :ref:`feature source <FeatureSourceConfig>` is from "
-":ref:`http <HttpOptions>`, you can modify the retry strategy of feature "
-"fetching by modifying `retry_policy_config` field of :ref:`http_opts "
-"<HttpOptions>`, please refer to :ref:`here <RetryPolicyConfig>`."
-msgstr ""
-"**注意** 如果你的 :ref:`feature source <FeatureSourceConfig>` 是从 :ref:`http "
-"<HttpOptions>` 获取的， 你可以修改 :ref:`http_opts <HttpOptions>` 的 "
-"`retry_policy_config` 字段来修改特征获取的重试策略，参考 :ref:`这里 <RetryPolicyConfig>` 。"
-
-#: ../../source/topics/deployment/deployment.rst:111
+#: ../../source/topics/deployment/deployment.rst:115
 msgid "1.3 Create logging config file"
 msgstr "1.3 创建 logging 配置文件"
 
-#: ../../source/topics/deployment/deployment.rst:113
+#: ../../source/topics/deployment/deployment.rst:117
 msgid ""
-"Create a file called ``logging.config`` in your workspace and paste the "
-"following code in:"
-msgstr "在您的工作空间目录下创建一个名为 ``logging.config`` 的文件，并将下面的内容添加到其的内容中："
+"Create a file called ``logging.config`` in the ``conf`` directory within "
+"your workspace and paste the following code in:"
+msgstr "在您的工作空间的 ``conf`` 目录下创建一个名为 ``logging.config`` 的文件，并将下面的内容添加到其的内容中："
 
-#: ../../source/topics/deployment/deployment.rst:124
+#: ../../source/topics/deployment/deployment.rst:128
 msgid ""
 "See :ref:`Logging Config <LoggingConfig>` for more logging config "
 "information."
 msgstr "请参考 :ref:`Logging Config  <LoggingConfig>` 获得更多关于 logging 配置的信息。"
 
-#: ../../source/topics/deployment/deployment.rst:128
+#: ../../source/topics/deployment/deployment.rst:132
 msgid ""
 "The above configuration is referenced from `alice-logging-config "
 "<https://github.com/secretflow/serving/blob/main/examples/alice/logging.config>`_."
+" Please adjust the configuration items according to your actual scenario."
 msgstr ""
 "以上配置内容参考自 `alice-logging-config "
-"<https://github.com/secretflow/serving/blob/main/examples/alice/logging.config>`_。"
+"<https://github.com/secretflow/serving/blob/main/examples/alice/logging.config>`_。 请根据您的实际场景更变配置项。"
 
-#: ../../source/topics/deployment/deployment.rst:130
-msgid ""
-"For ``Bob``, you should refer to `bob-logging-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_"
-" ."
-msgstr ""
-"对于 ``Bob`` ，可以参考 `bob-logging-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/logging.config>`_。"
-
-#: ../../source/topics/deployment/deployment.rst:135
+#: ../../source/topics/deployment/deployment.rst:137
 msgid "1.4 Create trace config file"
 msgstr "1.4 创建 trace 配置文件"
 
-#: ../../source/topics/deployment/deployment.rst:137
+#: ../../source/topics/deployment/deployment.rst:139
 msgid ""
 "This configuration is optional, and **may cause some performance "
 "degradation**, please use it with caution. To record trace info, you can "
-"create a file called ``trace.config`` in your workspace and paste the "
-"following code in:"
+"create a file called ``trace.config`` in the ``conf`` directory within "
+"your workspace and paste the following code in:"
 msgstr ""
-"该配置是可选的，如果打开该配置，可能会 **造成一些性能下降** ，请谨慎使用。要记录trace信息，你可以创建 ``trace.config``"
+"该配置是可选的，如果打开该配置，可能会 **造成一些性能下降** ，请谨慎使用。要记录trace信息，在您的工作空间的 ``conf`` 目录下创建 ``trace.config``"
 " 文件，将如下代码粘贴到新创建的文件里："
 
-#: ../../source/topics/deployment/deployment.rst:149
+#: ../../source/topics/deployment/deployment.rst:151
 msgid ""
 "See :ref:`Trace Config <TraceConfig>` and :ref:`Trace Introduction "
 "<Trace>` for more trace config information."
@@ -235,22 +208,14 @@ msgstr ""
 "请参考 :ref:`Trace Config <ServingConfig>` 和 :ref:`Trace Introduction "
 "<Trace>` 来获取更多trace配置相关的信息。"
 
-#: ../../source/topics/deployment/deployment.rst:153
+#: ../../source/topics/deployment/deployment.rst:155
 msgid ""
 "The above configuration is referenced from `alice-trace-config "
 "<https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_."
+" Please adjust the configuration items according to your actual scenario."
 msgstr ""
 "以上配置内容参考自 `alice-trace-config "
-"<https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_。"
-
-#: ../../source/topics/deployment/deployment.rst:155
-msgid ""
-"For ``Bob``, you should refer to `bob-trace-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/trace.config>`_"
-" ."
-msgstr ""
-"对于 ``Bob`` ，可以参考 `bob-trace-config "
-"<https://github.com/secretflow/serving/blob/main/examples/bob/trace.config>`_。"
+"<https://github.com/secretflow/serving/blob/main/examples/alice/trace.config>`_。 请根据您的实际场景更变配置项。"
 
 #: ../../source/topics/deployment/deployment.rst:159
 msgid "1.5 Create docker-compose file"
@@ -262,22 +227,33 @@ msgid ""
 "the following code in:"
 msgstr "在您的工作空间目录下创建一个名为 ``docker-compose.yaml`` 文件并将下列内容添加到其中："
 
-#: ../../source/topics/deployment/deployment.rst:186
+#: ../../source/topics/deployment/deployment.rst:184
 msgid ""
-"``__ALICE_PORT__``  is the published port on the host machine which is "
-"used for SecretFlow-Serving service to listen on, you need to replace it "
-"with an accessible port number. In this case, we have designated it as "
-"``9010`` for ``Alice``, ``9011`` for ``Bob``."
+"``__SVC_PORT__``  is the published port on the host machine which is used"
+" for SecretFlow-Serving prediction service to listen on, you need to "
+"replace it with an accessible port number. In this case, we designate it "
+"as ``9010`` for ``Alice``, ``9011`` for ``Bob``."
 msgstr ""
-"``__ALICE_PORT__`` 是 Alice 的 SecretFlow-Serving "
-"服务在宿主机上的监听端口，您需要用一个可访问的端口号替换它，这里为 ``Alice`` 设置 ``9010``，为 ``Bob`` 设置 "
+"``__SVC_PORT__`` 是 Alice 的 SecretFlow-Serving "
+"的预测服务在宿主机上的监听端口，您需要用一个可访问的端口号替换它，这里我们为 ``Alice`` 设置 ``9010``，为 ``Bob`` 设置 "
 "``9011``。"
 
-#: ../../source/topics/deployment/deployment.rst:187
+#: ../../source/topics/deployment/deployment.rst:185
+msgid ""
+"``__COM_PORT__``  is the published port on the host machine which is used"
+" for SecretFlow-Serving communication services to listen on, you need to "
+"replace it with an accessible port number. In this case, we designate it "
+"as ``9110`` for ``Alice``, ``9111`` for ``Bob``."
+msgstr ""
+"``__COM_PORT__`` 是 Alice 的 SecretFlow-Serving "
+"的通信计算服务在宿主机上的监听端口，您需要用一个可访问的端口号替换它，这里我们为 ``Alice`` 设置 ``9110``，为 ``Bob`` 设置 "
+"``9111``。"
+
+#: ../../source/topics/deployment/deployment.rst:186
 msgid "``trace_config_file`` line is optional."
 msgstr "``trace_config_file`` 这一行是可选的。"
 
-#: ../../source/topics/deployment/deployment.rst:188
+#: ../../source/topics/deployment/deployment.rst:187
 msgid ""
 "You can also use mirrors at Alibaba Cloud: ``secretflow-registry.cn-"
 "hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-"
@@ -287,43 +263,57 @@ msgstr ""
 "hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-"
 "registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:[tag]``"
 
-#: ../../source/topics/deployment/deployment.rst:192
+#: ../../source/topics/deployment/deployment.rst:191
 msgid "Step 2: Start Serving Service"
 msgstr "步骤 2：启动 Serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:194
+#: ../../source/topics/deployment/deployment.rst:193
+msgid ""
+"Here, we'll use starting Alice's service as an example. Similarly, you "
+"will also need to start the services for the other prediction "
+"participants."
+msgstr "这里我们以启动alice的服务为例，同样的你也需要启动其他预测参与方的服务。"
+
+#: ../../source/topics/deployment/deployment.rst:195
 msgid ""
 "The file your workspace should be as follows, ``trace.config`` is "
 "optional:"
 msgstr "您工作区的文件应如下所示，``trace.config`` 是可选的："
 
-#: ../../source/topics/deployment/deployment.rst:204
+#: ../../source/topics/deployment/deployment.rst:207
 msgid "Then you can start serving service by running docker compose up."
 msgstr "然后您可以运行 docker compose up 来启动 serving 服务"
 
-#: ../../source/topics/deployment/deployment.rst:211
+#: ../../source/topics/deployment/deployment.rst:214
 msgid "You can use docker logs to check whether serving works well"
 msgstr "您可以使用 docker logs 检查 serving 是否正常工作"
 
-#: ../../source/topics/deployment/deployment.rst:217
+#: ../../source/topics/deployment/deployment.rst:220
 msgid ""
-"Now, ``Alice`` serving is listening on ``9010``, you can confirm if the "
-"service is ready by accessing the ``/health`` endpoint."
+"Now, ``Alice`` prediction serving is listening on ``9010``, you can "
+"confirm if the service is ready by accessing the ``/health`` endpoint."
 msgstr ""
-"现在 ``Alice`` 的 serving 服务监听了 ``9010`` 端口，您可以通过访问 ``/health`` "
+"现在 ``Alice`` 的 serving 预测服务监听了 ``9010`` 端口，您可以通过访问 ``/health`` "
 "接口来检测服务是否已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:223
+#: ../../source/topics/deployment/deployment.rst:226
 msgid ""
 "When the endpoint returns a status code of ``200``, it means that the "
 "service is ready."
 msgstr "若接口返回状态码 ``200`` 则标志服务已经准备完成。"
 
-#: ../../source/topics/deployment/deployment.rst:226
+#: ../../source/topics/deployment/deployment.rst:230
+msgid ""
+"The Secretflow-Serving cluster can start providing model prediction "
+"services only after all participants' services have been started and are "
+"ready."
+msgstr "实际需要所有参与方的服务都已启动并且准备就绪后，Secretflow-Serving 集群才能开始提供模型预测服务"
+
+#: ../../source/topics/deployment/deployment.rst:233
 msgid "Step 3: Predict Test"
 msgstr "步骤 3：预测测试"
 
-#: ../../source/topics/deployment/deployment.rst:228
+#: ../../source/topics/deployment/deployment.rst:235
 msgid ""
 "Based on the capabilities of `Brpc "
 "<https://brpc.apache.org/docs/server/>`_, serving supports accessing "
@@ -333,7 +323,7 @@ msgstr ""
 "得益于 `Brpc <https://brpc.apache.org/docs/server/>`_ 的能力，serving "
 "能够支持通过多种协议进行访问。这里我们通过发送一个 HTTP 的预测请求来测试服务。"
 
-#: ../../source/topics/deployment/deployment.rst:230
+#: ../../source/topics/deployment/deployment.rst:237
 msgid ""
 "You can read :ref:`SecretFlow-Serving API <PredictionService>` for more "
 "information about serving APIs."
