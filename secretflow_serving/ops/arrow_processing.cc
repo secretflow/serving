@@ -170,7 +170,8 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
       "the last compute function({}) is not returnable", end_func.name());
   result_id_ = end_func.output().data_id();
 
-  int num_fields = input_schema_list_.front()->num_fields();
+  std::map<int, int> table_field_num_map = {
+      {0, input_schema_list_.front()->num_fields()}};
   std::map<int32_t, arrow::Datum::Kind> data_id_map = {
       {0, arrow::Datum::Kind::RECORD_BATCH}};
 
@@ -184,6 +185,7 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
       // check ext func inputs type valid
       SERVING_ENFORCE(input_kinds[0] == arrow::Datum::Kind::RECORD_BATCH,
                       errors::ErrorCode::LOGIC_ERROR);
+      auto num_fields = table_field_num_map[func.inputs()[0].data_id()];
       if (ex_func_name == compute::ExtendFunctionName::EFN_TB_COLUMN ||
           ex_func_name == compute::ExtendFunctionName::EFN_TB_REMOVE_COLUMN) {
         // std::shared_ptr<Array> column(int) const
@@ -260,6 +262,9 @@ ArrowProcessing::ArrowProcessing(OpKernelOptions opts)
           data_id_map.emplace(func.output().data_id(), output_kind).second,
           errors::ErrorCode::LOGIC_ERROR, "found duplicate data_id: {}",
           func.output().data_id());
+      if (output_kind == arrow::Datum::Kind::RECORD_BATCH) {
+        table_field_num_map.emplace(func.output().data_id(), num_fields);
+      }
 
       switch (ex_func_name) {
         case compute::ExtendFunctionName::EFN_TB_COLUMN: {

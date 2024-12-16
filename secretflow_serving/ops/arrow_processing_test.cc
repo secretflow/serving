@@ -467,7 +467,183 @@ INSTANTIATE_TEST_SUITE_P(
               {R"JSON([1.234, 2.78864, 3.1415926])JSON"},
               {arrow::field("x1", arrow::float64())},
               {R"JSON([1.234, 2.78864, 3.1415926])JSON"},
-              {arrow::field("x1", arrow::float64())}}));
+              {arrow::field("x1", arrow::float64())}},
+        /*remove first*/
+        Param{true,
+              {R"JSON({
+		"name": "EFN_TB_REMOVE_COLUMN",
+		"inputs": [{
+			"dataId": 0
+		}, {
+			"customScalar": {
+				"i64": "0"
+			}
+		}],
+		"output": {
+			"dataId": 1
+		}
+	})JSON",
+               R"JSON({
+		"name": "EFN_TB_COLUMN",
+		"inputs": [{
+			"dataId": 0
+		}, {
+			"customScalar": {
+				"i64": "0"
+			}
+		}],
+		"output": {
+			"dataId": 2
+		}
+	})JSON",
+               R"JSON({
+		"name": "subtract",
+		"inputs": [{
+			"dataId": 2
+		}, {
+			"customScalar": {
+				"d": -0.51819918217641925
+			}
+		}],
+		"output": {
+			"dataId": 3
+		}
+	})JSON",
+               R"JSON({
+		"name": "subtract",
+		"inputs": [{
+			"dataId": 2
+		}, {
+			"customScalar": {
+				"d": 1.9297598961851565
+			}
+		}],
+		"output": {
+			"dataId": 4
+		}
+	})JSON",
+               R"JSON({
+		"name": "abs",
+		"inputs": [{
+			"dataId": 3
+		}],
+		"output": {
+			"dataId": 5
+		}
+	})JSON",
+               R"JSON({
+		"name": "abs",
+		"inputs": [{
+			"dataId": 4
+		}],
+		"output": {
+			"dataId": 6
+		}
+	})JSON",
+               R"JSON({
+		"name": "less",
+		"inputs": [{
+			"dataId": 5
+		}, {
+			"customScalar": {
+				"d": 1e-07
+			}
+		}],
+		"output": {
+			"dataId": 7
+		}
+	})JSON",
+               R"JSON({
+		"name": "less",
+		"inputs": [{
+			"dataId": 6
+		}, {
+			"customScalar": {
+				"d": 1e-07
+			}
+		}],
+		"output": {
+			"dataId": 8
+		}
+	})JSON",
+               R"JSON({
+		"name": "if_else",
+		"inputs": [{
+			"dataId": 7
+		}, {
+			"customScalar": {
+				"f": 1
+			}
+		}, {
+			"customScalar": {
+				"f": 0
+			}
+		}],
+		"output": {
+			"dataId": 9
+		}
+	})JSON",
+               R"JSON({
+		"name": "if_else",
+		"inputs": [{
+			"dataId": 8
+		}, {
+			"customScalar": {
+				"f": 1
+			}
+		}, {
+			"customScalar": {
+				"f": 0
+			}
+		}],
+		"output": {
+			"dataId": 10
+		}
+	})JSON",
+               R"JSON({
+		"name": "EFN_TB_ADD_COLUMN",
+		"inputs": [{
+			"dataId": 1
+		}, {
+			"customScalar": {
+				"i64": "0"
+			}
+		}, {
+			"customScalar": {
+				"s": "contact_unknown_0"
+			}
+		}, {
+			"dataId": 10
+		}],
+		"output": {
+			"dataId": 11
+		}
+	})JSON",
+               R"JSON({
+		"name": "EFN_TB_ADD_COLUMN",
+		"inputs": [{
+			"dataId": 11
+		}, {
+			"customScalar": {
+				"i64": "1"
+			}
+		}, {
+			"customScalar": {
+				"s": "contact_unknown_1"
+			}
+		}, {
+			"dataId": 9
+		}],
+		"output": {
+			"dataId": 12
+		}
+	})JSON"},
+              {},
+              {R"JSON([2])JSON"},
+              {arrow::field("contact_unknown", arrow::float64())},
+              {R"JSON([0])JSON", R"JSON([0])JSON"},
+              {arrow::field("contact_unknown_0", arrow::float32()),
+               arrow::field("contact_unknown_1", arrow::float32())}}));
 
 class ArrowProcessingExceptionTest : public ::testing::TestWithParam<Param> {
  protected:
