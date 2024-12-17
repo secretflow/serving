@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import io
+import logging
 import tarfile
 from itertools import chain
 from typing import Any, Dict, List
@@ -23,7 +24,7 @@ from google.protobuf import json_format
 from . import libserving  # type: ignore
 from .api import get_op
 from .attr_pb2 import AttrType, AttrValue
-from .bundle_pb2 import FileFormatType, ModelBundle, ModelInfo, ModelManifest
+from .bundle_pb2 import FileFormatType, ModelBundle, ModelManifest
 from .graph_pb2 import (
     DispatchType,
     ExecutionDef,
@@ -33,7 +34,6 @@ from .graph_pb2 import (
     RuntimeConfig,
     HeConfig,
 )
-from .op_pb2 import OpDef
 
 
 def construct_attr_value(attr_type: AttrType, value) -> AttrValue:
@@ -245,9 +245,11 @@ class GraphBuilder:
 
     def build_proto(self) -> GraphDef:
         '''Get the GraphDef include all nodes and executions'''
-        graph_def_str = libserving.graph_validator_impl(
-            self.graph.proto().SerializeToString()
-        )
+        graph_def_str = self.graph.proto().SerializeToString()
+
+        logging.info(f"check serving graph: {graph_def_str}")
+        libserving.graph_validator_impl(graph_def_str)
+
         graph = GraphDef()
         graph.ParseFromString(graph_def_str)
         return graph
