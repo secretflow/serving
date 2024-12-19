@@ -53,10 +53,10 @@ def _heu():
         http_archive,
         name = "com_alipay_sf_heu",
         urls = [
-            "https://github.com/secretflow/heu/archive/refs/tags/0.6.0.dev20241106.tar.gz",
+            "https://github.com/secretflow/heu/archive/refs/tags/v0.5.2b0.tar.gz",
         ],
-        strip_prefix = "heu-0.6.0.dev20241106",
-        sha256 = "498a73bace6c85bf8c2f2663101d71584bec62eb213acdebc04dbbe11a4460cc",
+        strip_prefix = "heu-0.5.2b0",
+        sha256 = "152309975a6bb655ef6f33cd14cd85fc81a8bb1aabc168f3b8ea545a56e2a088",
     )
 
 def _bazel_rules_pkg():
