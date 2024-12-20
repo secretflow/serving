@@ -189,10 +189,10 @@ def _com_github_pybind11():
 def _rules_proto_grpc():
     http_archive(
         name = "rules_proto_grpc",
-        sha256 = "928e4205f701b7798ce32f3d2171c1918b363e9a600390a25c876f075f1efc0a",
-        strip_prefix = "rules_proto_grpc-4.4.0",
+        sha256 = "38a51a3183dffa5323bbf07b7d5473fa1f06707cf59607888f36cb735ab39cd8",
+        strip_prefix = "rules_proto_grpc-5.0.1",
         urls = [
-            "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/4.4.0/rules_proto_grpc-4.4.0.tar.gz",
+            "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/5.0.1/rules_proto_grpc-5.0.1.tar.gz",
         ],
     )
 
