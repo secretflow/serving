@@ -42,10 +42,13 @@ def sf_serving_deps():
 
 def _dataproxy():
     maybe(
-        git_repository,
+        http_archive,
         name = "dataproxy",
-        commit = "e38d723ab274d4568bf93cf74c0cb516435118c5",
-        remote = "https://github.com/secretflow/dataproxy.git",
+        urls = [
+            "https://github.com/secretflow/dataproxy/archive/refs/tags/v0.3.0b0.tar.gz",
+        ],
+        strip_prefix = "dataproxy-0.3.0b0",
+        sha256 = "016915d16bd9331e2b7766d2a4090166c7c9f5e58b3ba75f68df3e23cde9846a",
     )
 
 def _heu():
