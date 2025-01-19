@@ -202,8 +202,8 @@ def _com_github_brpc_brpc():
     maybe(
         http_archive,
         name = "com_github_brpc_brpc",
-        sha256 = "85856da0216773e1296834116f69f9e80007b7ff421db3be5c9d1890ecfaea74",
-        strip_prefix = "brpc-1.9.0",
+        sha256 = "da0860ca2430b5fc09b52a803b39397faf005cd2e1256c9666b83c4c0e060a38",
+        strip_prefix = "brpc-1.12.1",
         type = "tar.gz",
         patch_args = ["-p1"],
         patches = [
@@ -211,7 +211,7 @@ def _com_github_brpc_brpc():
             "@sf_serving//bazel:patches/brpc.patch",
         ],
         urls = [
-            "https://github.com/apache/brpc/archive/refs/tags/1.9.0.tar.gz",
+            "https://github.com/apache/brpc/archive/refs/tags/1.12.1.tar.gz",
         ],
     )
 
