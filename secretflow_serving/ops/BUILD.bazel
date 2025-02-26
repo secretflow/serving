@@ -29,6 +29,10 @@ serving_cc_library(
         "//secretflow_serving/ops/he/linear:phe_2p_dot_product",
         "//secretflow_serving/ops/he/linear:phe_2p_merge_y",
         "//secretflow_serving/ops/he/linear:phe_2p_reduce",
+        "//secretflow_serving/ops/he/tree:phe_2p_tree_ensemble_merge",
+        "//secretflow_serving/ops/he/tree:phe_2p_tree_ensemble_predict",
+        "//secretflow_serving/ops/he/tree:phe_2p_tree_merge",
+        "//secretflow_serving/ops/he/tree:phe_2p_tree_select",
     ],
 )
 
@@ -72,7 +76,7 @@ serving_cc_library(
         ":op_kernel_factory",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:graph_cc_proto",
-        "@org_apache_arrow//:arrow",
+        "@arrow",
     ],
 )
 
@@ -162,7 +166,7 @@ serving_cc_binary(
     srcs = ["dot_product_benchmark.cc"],
     deps = [
         ":dot_product",
-        "@com_github_google_benchmark//:benchmark_main",
+        "@google_benchmark//:benchmark_main",
     ],
 )
 
@@ -194,7 +198,7 @@ serving_cc_binary(
     deps = [
         ":merge_y",
         "//secretflow_serving/util:utils",
-        "@com_github_google_benchmark//:benchmark_main",
+        "@google_benchmark//:benchmark_main",
     ],
 )
 
@@ -227,7 +231,12 @@ serving_cc_library(
 
 serving_cc_library(
     name = "tree_utils",
+    srcs = ["tree_utils.cc"],
     hdrs = ["tree_utils.h"],
+    deps = [
+        ":node_def_util",
+        "//secretflow_serving/util:arrow_helper",
+    ],
 )
 
 serving_cc_library(

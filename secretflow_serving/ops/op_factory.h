@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "secretflow_serving/core/singleton.h"
 #include "secretflow_serving/ops/op_def_builder.h"
 

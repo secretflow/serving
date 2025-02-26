@@ -147,6 +147,9 @@ TEST_P(ArrowProcessingParamTest, Works) {
 
   // compute
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   compute_ctx.inputs.emplace_back(
       std::vector<std::shared_ptr<arrow::RecordBatch>>{input});
 

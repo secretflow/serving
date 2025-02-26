@@ -45,7 +45,7 @@ serving_cc_library(
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:feature_cc_proto",
         "//secretflow_serving/util:arrow_helper",
-        "@org_apache_arrow//:arrow",
+        "@arrow",
     ],
 )
 
@@ -59,8 +59,8 @@ serving_cc_library(
         "//secretflow_serving/spis:batch_feature_service_cc_proto",
         "//secretflow_serving/spis:error_code_cc_proto",
         "//secretflow_serving/util:network",
-        "@com_github_brpc_brpc//:brpc",
-        "@com_github_brpc_brpc//:json2pb",
+        "@brpc",
+        "@brpc//:json2pb",
         "@yacl//yacl/utils:elapsed_timer",
     ],
     alwayslink = True,
@@ -94,7 +94,7 @@ serving_cc_library(
     deps = [
         ":feature_adapter_factory",
         "//secretflow_serving/util:csv_util",
-        "@com_github_gflags_gflags//:gflags",
+        "@gflags",
     ],
     alwayslink = True,
 )
@@ -104,7 +104,7 @@ serving_cc_test(
     srcs = ["file_adapter_test.cc"],
     deps = [
         ":file_adapter",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc//:butil",
     ],
 )
 
@@ -129,6 +129,6 @@ serving_cc_test(
     srcs = ["streaming_adapter_test.cc"],
     deps = [
         ":streaming_adapter",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc//:butil",
     ],
 )

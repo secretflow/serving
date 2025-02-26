@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "arrow/csv/api.h"
 
 #include "secretflow_serving/feature_adapter/feature_adapter.h"

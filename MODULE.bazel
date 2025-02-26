@@ -1,0 +1,143 @@
+# Copyright 2025 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+module(
+    name = "sf_serving",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "apple_support", version = "1.17.1")
+bazel_dep(name = "protobuf", version = "27.3")
+bazel_dep(name = "rules_proto_grpc_python", version = "5.0.0")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "spdlog", version = "1.14.1")
+bazel_dep(name = "gflags", version = "2.2.2")
+bazel_dep(name = "opentelemetry-proto", version = "1.5.0")
+bazel_dep(name = "prometheus-cpp", version = "1.2.4")
+bazel_dep(name = "abseil-cpp", version = "20240722.0")
+bazel_dep(name = "rapidjson", version = "1.1.0.bcr.20241007")
+bazel_dep(name = "pybind11_bazel", version = "2.13.6")
+bazel_dep(name = "rules_cuda", version = "0.2.3")
+bazel_dep(name = "rules_cc", version = "0.0.13")
+bazel_dep(name = "rules_foreign_cc")
+bazel_dep(name = "platforms", version = "0.0.8")
+single_version_override(
+    module_name = "rules_foreign_cc",
+    version = "0.12.0",
+)
+bazel_dep(name = "grpc")
+single_version_override(
+    module_name = "grpc",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:grpc_1.66.patch",
+        "//bazel/patches:grpc_module_file.patch",
+    ],
+    version = "1.66.0.bcr.3",
+)
+
+cuda = use_extension("@rules_cuda//cuda:extensions.bzl", "toolchain")
+cuda.local_toolchain(
+    name = "local_cuda",
+    toolkit_path = "",
+)
+use_repo(cuda, "local_cuda")
+
+# self-host registry
+bazel_dep(name = "yacl", version = "0.4.5b10-nightly-20241224")
+bazel_dep(name = "arrow", version = "14.0.2")
+bazel_dep(name = "openssl", version = "3.3.2.bcr.1")
+bazel_dep(name = "aws_sdk_cpp")
+single_version_override(
+    module_name = "aws_sdk_cpp",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:aws_1.7.336.patch",
+    ],
+    version = "1.7.336",
+)
+bazel_dep(name = "brpc")
+single_version_override(
+    module_name = "brpc",
+    patch_strip = 1,
+    patches = [
+        # Serving implements the x-b3 header logic using opentelemetry-cpp.
+        # Therefore, we use a patch here to revert to the original x-bd header logic of brpc.
+        "//bazel/patches:brpc.patch",
+    ],
+    version = "1.11.0-20241212-282bc90",
+)
+
+# git
+bazel_dep(name = "heu")
+git_override(
+    module_name = "heu",
+    commit = "d2adb263d61645ff2b33e5f667dc86a1d3c49707",
+    remote = "https://github.com/secretflow/heu.git",
+)
+bazel_dep(name = "opentelemetry-cpp")
+git_override(
+    module_name = "opentelemetry-cpp",
+    commit = "baecbb95bd63df53e0af16e87bc683967962c5f8",
+    remote = "https://github.com/open-telemetry/opentelemetry-cpp.git",
+)
+bazel_dep(name = "dataproxy")
+git_override(
+    module_name = "dataproxy",
+    commit = "4bb95c833cc2fc9e72297d0f4c3a71ac35f95d7b",
+    remote = "https://github.com/secretflow/dataproxy.git",
+)
+bazel_dep(name = "kuscia")
+git_override(
+    module_name = "kuscia",
+    commit = "a1208dcdab6682dfc6d3ae21b2d5990e917cbf2f",
+    remote = "https://github.com/secretflow/kuscia.git",
+)
+
+# python
+bazel_dep(name = "rules_python", version = "0.34.0")
+
+DEFAULT_PYTHON_VERSION = "3.10"
+SUPPORTED_PYTHON_VERSIONS = [
+    "3.9",
+    "3.10",
+    "3.11",
+]
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+[
+    python.toolchain(
+        configure_coverage_tool = True,
+        ignore_root_user_error = True,
+        is_default = python_version == DEFAULT_PYTHON_VERSION,
+        python_version = python_version,
+    )
+    for python_version in SUPPORTED_PYTHON_VERSIONS
+]
+use_repo(python, "python_versions")
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+[
+    pip.parse(
+        hub_name = "sf_serving_pip",
+        python_version = python_version,
+        requirements_linux = "//python_lib:requirements_lock_{}.txt".format(python_version.replace(".", "_")),
+    )
+    for python_version in SUPPORTED_PYTHON_VERSIONS
+]
+
+use_repo(pip, "dataproxy_sdk_pip")
+
+# test
+bazel_dep(name = "googletest", version = "1.15.2", dev_dependency = True)
+bazel_dep(name = "google_benchmark", version = "1.8.5", dev_dependency = True)

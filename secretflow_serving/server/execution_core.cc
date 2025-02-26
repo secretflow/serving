@@ -18,6 +18,7 @@
 #include "yacl/utils/elapsed_timer.h"
 
 #include "secretflow_serving/feature_adapter/feature_adapter_factory.h"
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/util/arrow_helper.h"
 #include "secretflow_serving/util/thread_pool.h"
 #include "secretflow_serving/util/utils.h"
@@ -79,7 +80,10 @@ ExecutionCore::ExecutionCore(Options opts)
 
 void ExecutionCore::Execute(const apis::ExecuteRequest* request,
                             apis::ExecuteResponse* response) {
+  auto trace_id =
+      ::opentelemetry::trace::Tracer::GetCurrentSpan()->GetContext().trace_id();
   SPDLOG_DEBUG("execute core begin, request: {}", request->ShortDebugString());
+
   yacl::ElapsedTimer timer;
   try {
     SERVING_ENFORCE(request->service_spec().id() == opts_.id,
@@ -134,14 +138,14 @@ void ExecutionCore::Execute(const apis::ExecuteRequest* request,
     }
     response->mutable_status()->set_code(errors::ErrorCode::OK);
   } catch (const Exception& e) {
-    SPDLOG_ERROR("execute failed, request: {}, code:{}, msg:{}, stack:{}",
-                 PbToJsonNoExcept(request), e.code(), e.what(),
-                 e.stack_trace());
+    SPDLOG_ERROR("[{}] execute failed, request: {}, code:{}, msg:{}, stack:{}",
+                 HexTraceId(trace_id), PbToJsonNoExcept(request), e.code(),
+                 e.what(), e.stack_trace());
     response->mutable_status()->set_code(e.code());
     response->mutable_status()->set_msg(e.what());
   } catch (const std::exception& e) {
-    SPDLOG_ERROR("execute failed, request: {}, msg:{}",
-                 PbToJsonNoExcept(request), e.what());
+    SPDLOG_ERROR("[{}] execute failed, request: {}, msg:{}",
+                 HexTraceId(trace_id), PbToJsonNoExcept(request), e.what());
     response->mutable_status()->set_code(errors::ErrorCode::UNEXPECTED_ERROR);
     response->mutable_status()->set_msg(e.what());
   }

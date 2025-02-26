@@ -21,7 +21,7 @@ serving_cc_library(
     srcs = ["oss_client.cc"],
     hdrs = ["oss_client.h"],
     deps = [
-        "@com_aws_sdk//:aws",
+        "@aws_sdk_cpp//:transfer",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -32,7 +32,7 @@ serving_cc_library(
     hdrs = ["sys_util.h"],
     deps = [
         "//secretflow_serving/core:exception",
-        "@com_github_openssl_openssl//:openssl",
+        "@openssl",
     ],
 )
 
@@ -41,9 +41,11 @@ serving_cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
+        "//secretflow_serving/apis:error_code_cc_proto",
         "//secretflow_serving/apis:status_cc_proto",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:feature_cc_proto",
+        "@protobuf//:json_util",
     ],
 )
 
@@ -55,7 +57,8 @@ serving_cc_library(
         ":utils",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/protos:data_type_cc_proto",
-        "@org_apache_arrow//:arrow",
+        "@arrow",
+        "@yacl//yacl/base:buffer",
     ],
 )
 
@@ -99,7 +102,7 @@ serving_cc_test(
     srcs = ["csv_extractor_test.cc"],
     deps = [
         ":csv_extractor",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc//:butil",
     ],
 )
 
@@ -116,7 +119,7 @@ serving_cc_library(
     hdrs = ["backoff_policy.h"],
     deps = [
         "//secretflow_serving/config:retry_policy_cc_config",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -129,7 +132,7 @@ serving_cc_library(
         "//secretflow_serving/config:retry_policy_cc_config",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/core:singleton",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -142,7 +145,7 @@ serving_cc_library(
         "//secretflow_serving/config:cluster_config_cc_proto",
         "//secretflow_serving/config:tls_config_cc_proto",
         "//secretflow_serving/core:exception",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -170,6 +173,6 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/core:exception",
         "//secretflow_serving/core:singleton",
-        "@com_alipay_sf_heu//heu/library/numpy",
+        "@heu//heu/library/numpy",
     ],
 )

@@ -56,7 +56,13 @@ struct SpanAttrOption {
 };
 
 void SetSpanAttrs(
-    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span,
+    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span>& span,
     const SpanAttrOption& option);
+
+inline std::string HexTraceId(const opentelemetry::trace::TraceId& trace) {
+  char buf[32];
+  trace.ToLowerBase16(buf);
+  return std::string(buf, sizeof(buf));
+}
 
 }  // namespace secretflow::serving

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//python:defs.bzl", "python_proto_compile")
+load("@rules_proto_grpc_python//:defs.bzl", "python_proto_compile")
 load("//bazel:serving.bzl", "serving_cc_binary", "serving_cc_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -48,7 +47,7 @@ serving_cc_library(
     deps = [
         ":inference_service_cc_proto",
         "//secretflow_serving/apis:error_code_cc_proto",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -70,8 +69,8 @@ serving_cc_binary(
         ":inference_executor",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/core:logging",
-        "@com_google_absl//absl/debugging:failure_signal_handler",
-        "@com_google_absl//absl/debugging:symbolize",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
     ],
 )
 

@@ -119,6 +119,9 @@ TEST_P(MergeYParamTest, Works) {
 
   // compute
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   std::vector<std::shared_ptr<arrow::RecordBatch>> input_list;
   for (const auto& v : feature_value_list) {
     arrow::DoubleBuilder builder;

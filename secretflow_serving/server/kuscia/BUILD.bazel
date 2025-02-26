@@ -39,8 +39,8 @@ serving_cc_library(
     deps = [
         ":serving_config_cc_proto",
         "//secretflow_serving/util:utils",
-        "@com_github_tencent_rapidjson//:rapidjson",
         "@kuscia//proto/api/v1alpha1/appconfig:app_config_cc_proto",
+        "@rapidjson",
     ],
 )
 
@@ -49,6 +49,6 @@ serving_cc_test(
     srcs = ["config_parser_test.cc"],
     deps = [
         ":config_parser",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc//:butil",
     ],
 )

@@ -1,0 +1,25 @@
+diff --git a/bazel/patches/BUILD.bazel b/bazel/patches/BUILD.bazel
+index 0a1b85c..b19dcfb 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -155,6 +155,20 @@ cc_library(
+     ],
+ )
+ 
++cc_library(
++    name = "transfer",
++    srcs = glob([
++        "aws-cpp-sdk-transfer/source/**/*.cpp",
++        "aws-cpp-sdk-transfer/include/**/*.h",
++    ]),
++    includes = [
++        "aws-cpp-sdk-transfer/include/",
++    ],
++    deps = [
++        ":s3",
++    ],
++)
++
+ genrule(
+     name = "SDKConfig_h",
+     outs = [

@@ -18,6 +18,7 @@
 
 #include "arrow/api.h"
 #include "google/protobuf/repeated_field.h"
+#include "yacl/base/buffer.h"
 
 #include "secretflow_serving/core/exception.h"
 
@@ -59,6 +60,17 @@ inline std::shared_ptr<arrow::RecordBatch> MakeRecordBatch(
     std::vector<std::shared_ptr<arrow::Array>> columns) {
   return MakeRecordBatch(std::const_pointer_cast<arrow::Schema>(schema),
                          num_rows, std::move(columns));
+}
+
+inline void BuildBinaryArray(const ::yacl::Buffer& buf,
+                             std::shared_ptr<arrow::Array>* array) {
+  arrow::BinaryBuilder builder;
+  if (buf.size() > 0) {
+    SERVING_CHECK_ARROW_STATUS(builder.Append(buf.data<uint8_t>(), buf.size()));
+  } else {
+    SERVING_CHECK_ARROW_STATUS(builder.AppendEmptyValue());
+  }
+  SERVING_CHECK_ARROW_STATUS(builder.Finish(array));
 }
 
 std::string SerializeRecordBatch(

@@ -112,6 +112,9 @@ TEST_F(DotProductTest, Works) {
 
   // build input
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   {
     std::shared_ptr<arrow::Array> x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11;
     using arrow::ipc::internal::json::ArrayFromJSON;
@@ -233,6 +236,9 @@ TEST_F(DotProductTest, WorksNoFeature) {
 
   // build input
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   {
     std::vector<std::shared_ptr<arrow::Field>> mock_input_fields = {
         arrow::field("x1", arrow::float64()),

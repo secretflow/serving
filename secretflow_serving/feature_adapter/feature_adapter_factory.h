@@ -16,6 +16,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 #include "secretflow_serving/core/singleton.h"
 #include "secretflow_serving/feature_adapter/feature_adapter.h"
