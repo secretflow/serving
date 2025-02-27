@@ -1,3 +1,18 @@
+# Copyright 2024 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 include docker-compose/.env
 include .env
 
@@ -18,7 +33,7 @@ clean:
 	@[ -f "$(PWD)/$(BOB_STATS_PID)" ] && @kill `cat $(BOB_STATS_PID)` || true && rm -f "$(PWD)/$(BOB_STATS_PID)"
 	@(docker compose -p ${DOCKER_PROJ_NAME} down)
 
-all: clean init start-docker analysis 
+all: clean init start-docker analysis
 	@echo "well done!"
 
 init:
@@ -28,10 +43,10 @@ analysis:
 	@[ ! -d "$(PWD)/docker-compose/logs" ] && mkdir -p "$(PWD)/docker-compose/logs" && echo "Directory created." || echo "Directory already exists."
 	@[ ! -d "$(PWD)/docker-compose/logs/alice" ] && mkdir -p "$(PWD)/docker-compose/logs/alice" && echo "Directory created." || echo "Directory already exists."
 	@[ ! -d "$(PWD)/docker-compose/logs/bob" ] && mkdir -p "$(PWD)/docker-compose/logs/bob" && echo "Directory created." || echo "Directory already exists."
-	
+
 	@nohup python $(PWD)/stats.py $(DOCKER_PROJ_NAME)-serving_alice-1 $(PWD)/docker-compose/logs/alice/stats.csv 2>&1 & echo $$! > $(PWD)/$(ALICE_STATS_PID)
 	@nohup python $(PWD)/stats.py $(DOCKER_PROJ_NAME)-serving_bob-1 $(PWD)/docker-compose/logs/bob/stats.csv 2>&1 & echo $$! > $(PWD)/$(BOB_STATS_PID)
-	
+
 	~/go/bin/go-wrk -c $(CONCURRENCY_NUM) -d $(TEST_DURATION) -body @$(PWD)/request_body/$(BODY_JSON) -M POST -H "Content-Type:application/json" http://127.0.0.1:9010/PredictionService/Predict > $(PWD)/docker-compose/logs/wrk.log
 
 	python $(PWD)/plot_csv_data.py $(PWD)/docker-compose/logs/alice/stats.csv $(PWD)/docker-compose/logs/alice
@@ -43,6 +58,6 @@ analysis:
 	@[ -f "$(PWD)/$(BOB_STATS_PID)" ] && kill `cat $(BOB_STATS_PID)` || true && rm -f "$(PWD)/$(BOB_STATS_PID)"
 	@(docker compose -p ${DOCKER_PROJ_NAME} down)
 
-start-docker: 
+start-docker:
 	@(cd $(PWD)/docker-compose && docker compose -p ${DOCKER_PROJ_NAME} up -d)
 	sleep 15

@@ -32,10 +32,12 @@ bazel_dep(name = "rules_cuda", version = "0.2.3")
 bazel_dep(name = "rules_cc", version = "0.0.13")
 bazel_dep(name = "rules_foreign_cc")
 bazel_dep(name = "platforms", version = "0.0.8")
+
 single_version_override(
     module_name = "rules_foreign_cc",
     version = "0.12.0",
 )
+
 bazel_dep(name = "grpc")
 single_version_override(
     module_name = "grpc",
@@ -67,6 +69,7 @@ single_version_override(
     ],
     version = "1.7.336",
 )
+
 bazel_dep(name = "brpc")
 single_version_override(
     module_name = "brpc",
@@ -86,18 +89,21 @@ git_override(
     commit = "d2adb263d61645ff2b33e5f667dc86a1d3c49707",
     remote = "https://github.com/secretflow/heu.git",
 )
+
 bazel_dep(name = "opentelemetry-cpp")
 git_override(
     module_name = "opentelemetry-cpp",
     commit = "baecbb95bd63df53e0af16e87bc683967962c5f8",
     remote = "https://github.com/open-telemetry/opentelemetry-cpp.git",
 )
+
 bazel_dep(name = "dataproxy")
 git_override(
     module_name = "dataproxy",
     commit = "4bb95c833cc2fc9e72297d0f4c3a71ac35f95d7b",
     remote = "https://github.com/secretflow/dataproxy.git",
 )
+
 bazel_dep(name = "kuscia")
 git_override(
     module_name = "kuscia",
@@ -109,6 +115,7 @@ git_override(
 bazel_dep(name = "rules_python", version = "0.34.0")
 
 DEFAULT_PYTHON_VERSION = "3.10"
+
 SUPPORTED_PYTHON_VERSIONS = [
     "3.9",
     "3.10",
@@ -116,6 +123,7 @@ SUPPORTED_PYTHON_VERSIONS = [
 ]
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
 [
     python.toolchain(
         configure_coverage_tool = True,
@@ -125,8 +133,11 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
     )
     for python_version in SUPPORTED_PYTHON_VERSIONS
 ]
+
 use_repo(python, "python_versions")
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
 [
     pip.parse(
         hub_name = "sf_serving_pip",
