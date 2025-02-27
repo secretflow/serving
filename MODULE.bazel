@@ -19,7 +19,7 @@ module(
 
 bazel_dep(name = "apple_support", version = "1.17.1")
 bazel_dep(name = "protobuf", version = "27.3")
-bazel_dep(name = "rules_proto_grpc_python", version = "5.0.0")
+bazel_dep(name = "rules_proto_grpc_python", version = "5.0.1")
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "spdlog", version = "1.14.1")
 bazel_dep(name = "gflags", version = "2.2.2")
