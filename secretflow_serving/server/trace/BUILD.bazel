@@ -23,15 +23,14 @@ serving_cc_library(
     deps = [
         ":brpc_http_carrier",
         ":bthreadlocal_context_storage",
+        ":noop",
         ":span_info_cc_proto",
         ":spdlog_span_exporter",
         "//secretflow_serving/apis:common_cc_proto",
         "//secretflow_serving/config:trace_config_cc_proto",
         "//secretflow_serving/server:serving_version",
-        "@com_github_brpc_brpc//:brpc",
-        "@io_opentelemetry_cpp//api",
-        "@io_opentelemetry_cpp//sdk:headers",
-        "@io_opentelemetry_cpp//sdk/src/trace",
+        "@brpc",
+        "@opentelemetry-cpp//sdk/src/trace",
     ],
 )
 
@@ -43,10 +42,10 @@ serving_cc_library(
         "//secretflow_serving/config:trace_config_cc_proto",
         "//secretflow_serving/core:exception",
         "//secretflow_serving/util:utils",
-        "@com_github_opentelemetry_proto//:trace_service_proto_cc",
-        "@io_opentelemetry_cpp//api",
-        "@io_opentelemetry_cpp//exporters/otlp:otlp_recordable",
-        "@io_opentelemetry_cpp//sdk:headers",
+        "@opentelemetry-cpp//api",
+        "@opentelemetry-cpp//exporters/otlp:otlp_recordable",
+        "@opentelemetry-cpp//sdk:headers",
+        "@opentelemetry-proto//:trace_service_proto_cc",
     ],
 )
 
@@ -56,8 +55,8 @@ serving_cc_library(
     hdrs = ["bthreadlocal_context_storage.h"],
     deps = [
         "//secretflow_serving/core:exception",
-        "@com_github_brpc_brpc//:bthread",
-        "@io_opentelemetry_cpp//api",
+        "@brpc//:bthread",
+        "@opentelemetry-cpp//api",
     ],
 )
 
@@ -66,8 +65,8 @@ serving_cc_library(
     hdrs = ["brpc_http_carrier.h"],
     deps = [
         "//secretflow_serving/config:trace_config_cc_proto",
-        "@com_github_brpc_brpc//:bthread",
-        "@io_opentelemetry_cpp//api",
+        "@brpc//:bthread",
+        "@opentelemetry-cpp//api",
     ],
 )
 
@@ -79,4 +78,13 @@ proto_library(
 cc_proto_library(
     name = "span_info_cc_proto",
     deps = [":span_info"],
+)
+
+serving_cc_library(
+    name = "noop",
+    hdrs = ["noop.h"],
+    deps = [
+        "@opentelemetry-cpp//api",
+        "@opentelemetry-cpp//sdk:headers",
+    ],
 )

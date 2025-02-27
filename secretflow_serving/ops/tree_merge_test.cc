@@ -84,6 +84,9 @@ TEST_F(TreeMergeTest, Works) {
   // build input
 
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   std::vector<uint8_t> alice_select_0 = {0, /*01100000*/ (1 << 5) | (1 << 6)};
   std::vector<uint8_t> bob_select_0 = {
       0, /*11000011*/ 1 | (1 << 1) | (1 << 6) | (1 << 7)};

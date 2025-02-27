@@ -165,7 +165,7 @@ msgid ""
 "Serving."
 msgstr ""
 "HTTP数据源：Secretflow-Serving 定义一组服务提供接口（:doc:`SPI "
-"</reference/spi>`）来获取特征数据。特征提供方可以通过实现"
+"</reference/spi>`）来获取特征数据。特征提供方可以通过实现SPI并部署服务来提供特征数据。"
 
 #: ../../source/topics/system/intro.rst:60
 msgid ""

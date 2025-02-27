@@ -66,9 +66,9 @@ def serving_cc_library(
     cc_library(
         linkopts = linkopts,
         copts = _serving_copts() + copts,
-        deps = deps + [
-            "@com_github_gabime_spdlog//:spdlog",
-        ],
+        deps = [
+            "@spdlog//:spdlog",
+        ] + deps,
         **kargs
     )
 
@@ -84,7 +84,7 @@ def serving_cc_test(
         copts = _serving_copts() + copts,
         deps = deps + [
             # use tcmalloc same as release bins. make them has same behavior on mem.
-            "@com_google_googletest//:gtest_main",
+            "@googletest//:gtest_main",
         ],
         # static link for tcmalloc
         linkstatic = True,

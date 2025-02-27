@@ -22,9 +22,9 @@ serving_cc_library(
     hdrs = ["metrics_service.h"],
     deps = [
         "//secretflow_serving/apis:metrics_cc_proto",
-        "@com_github_brpc_brpc//:brpc",
-        "@com_github_brpc_brpc//:butil",
-        "@com_github_jupp0r_prometheus_cpp//core",
+        "@brpc",
+        "@brpc//:butil",
+        "@prometheus-cpp//core",
         "@yacl//yacl/utils:elapsed_timer",
     ],
 )
@@ -34,7 +34,7 @@ serving_cc_library(
     srcs = ["default_metrics_registry.cc"],
     hdrs = ["default_metrics_registry.h"],
     deps = [
-        "@com_github_jupp0r_prometheus_cpp//core",
+        "@prometheus-cpp//core",
     ],
 )
 

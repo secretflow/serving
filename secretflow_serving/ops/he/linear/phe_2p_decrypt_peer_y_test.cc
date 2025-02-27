@@ -105,6 +105,7 @@ TEST_F(PheDecryptPeerYTest, Works) {
   ComputeContext compute_ctx;
   compute_ctx.other_party_ids = {"bob"};
   compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   compute_ctx.he_kit_mgm = he_kit_mgm_.get();
 
   // bob y

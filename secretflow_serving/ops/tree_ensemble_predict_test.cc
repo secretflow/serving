@@ -72,6 +72,9 @@ TEST_P(TreeEnsemblePredictParamTest, Works) {
   }
 
   ComputeContext compute_ctx;
+  compute_ctx.other_party_ids = {"bob"};
+  compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   for (size_t i = 0; i < param.tree_weights.size(); ++i) {
     const auto& weights = param.tree_weights[i];
 

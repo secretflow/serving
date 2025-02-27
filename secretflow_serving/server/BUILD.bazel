@@ -21,7 +21,7 @@ serving_cc_library(
     srcs = ["health.cc"],
     hdrs = ["health.h"],
     deps = [
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -35,6 +35,7 @@ serving_cc_library(
         "//secretflow_serving/framework:executable",
         "//secretflow_serving/protos:feature_cc_proto",
         "//secretflow_serving/server/metrics:default_metrics_registry",
+        "//secretflow_serving/server/trace",
     ],
 )
 
@@ -45,6 +46,7 @@ serving_cc_library(
     deps = [
         "//secretflow_serving/apis:prediction_service_cc_proto",
         "//secretflow_serving/framework:predictor",
+        "//secretflow_serving/server/trace",
         "//secretflow_serving/util:utils",
     ],
 )
@@ -56,8 +58,7 @@ serving_cc_library(
     deps = [
         ":execution_core",
         "//secretflow_serving/server/metrics:default_metrics_registry",
-        "//secretflow_serving/server/trace",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -68,8 +69,7 @@ serving_cc_library(
     deps = [
         ":prediction_core",
         "//secretflow_serving/server/metrics:default_metrics_registry",
-        "//secretflow_serving/server/trace",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -82,7 +82,7 @@ serving_cc_library(
         "//secretflow_serving/core:exception",
         "//secretflow_serving/server/metrics:default_metrics_registry",
         "//secretflow_serving/server/trace",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
         "@yacl//yacl/utils:elapsed_timer",
     ],
 )
@@ -124,8 +124,8 @@ serving_cc_binary(
         "//secretflow_serving/core:exception",
         "//secretflow_serving/core:logging",
         "//secretflow_serving/server/trace",
-        "@com_google_absl//absl/debugging:failure_signal_handler",
-        "@com_google_absl//absl/debugging:symbolize",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
     ],
 )
 

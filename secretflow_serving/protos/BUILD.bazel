@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_cc//cc:defs.bzl", "cc_proto_library")
-load("@rules_proto_grpc//python:defs.bzl", "python_proto_compile")
+load("@rules_proto_grpc_python//:defs.bzl", "python_proto_compile")
 
 package(default_visibility = ["//visibility:public"])
 

@@ -480,3 +480,25 @@ if __name__ == "__main__":
         query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
         score_col_name='pred_y',
     ).exec(0.1)
+
+    AccuracyTestCase(
+        service_id="ou_xgb",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/ou_xgb',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred_y',
+    ).exec()
+
+    AccuracyTestCase(
+        service_id="ou_xgb_features_in_one_party",
+        parties=['alice', 'bob'],
+        case_dir='.ci/test_data/fetures_in_one_party/ou_xgb',
+        package_name='s_model.tar.gz',
+        input_csv_names={'alice': 'alice.csv', 'bob': 'bob.csv'},
+        expect_csv_name='predict.csv',
+        query_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '15'],
+        score_col_name='pred_y',
+    ).exec()

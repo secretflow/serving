@@ -105,7 +105,7 @@ See :ref:`Serving Config <ServingConfig>` for more config information
 
 .. note::
 
-  * For Alice, ``__ALICE_URL__`` can be simply configured to ``0.0.0.0:9110``, ``__BOB_URL__`` is the url (eg:http://192.168.11.34:9111) where bob's serving ``communicationPort`` is listen on, you need to replace it with bob's serving url.
+  * For Alice, ``__ALICE_URL__`` can be simply configured to ``0.0.0.0:9110``, ``__BOB_URL__`` is the url (eg:http://192.168.11.34:9111) where bob's serving ``communicationPort`` is listen on, you need to replace it with bob's serving url. 
   * The above configuration is referenced from `alice-serving-config <https://github.com/secretflow/serving/blob/main/examples/alice/serving.config>`_. Please adjust the configuration items according to your actual scenario.
   * **Note** `mockOpts` is configured here for a mock feature data source, which will provide simulated feature data to support the model prediction process. In actual use, please provide feature data in the form of a feature service by implementing the :ref:`SecretFlow-Serving Feature Service SPI <BatchFeatureService>`.
 

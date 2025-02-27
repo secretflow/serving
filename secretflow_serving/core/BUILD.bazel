@@ -32,7 +32,7 @@ serving_cc_library(
     deps = [
         ":exception",
         "//secretflow_serving/config:logging_config_cc_proto",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc//:butil",
     ],
 )
 
@@ -51,7 +51,7 @@ serving_cc_library(
     hdrs = ["types.h"],
     deps = [
         #"@com_github_eigenteam_eigen//:eigen3",
-        "@com_alipay_sf_heu//heu/library/numpy:matrix",
+        "@heu//heu/library/numpy:matrix",
     ],
 )
 

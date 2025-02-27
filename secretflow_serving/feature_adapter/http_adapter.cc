@@ -170,7 +170,7 @@ std::string HttpFeatureAdapter::MakeSpiRequest(spis::Header& trace_header,
   batch_request.mutable_param()->CopyFrom(*(request.fs_param));
 
   std::string json_str;
-  ::google::protobuf::util::JsonOptions options;
+  ::google::protobuf::util::JsonPrintOptions options;
   options.preserve_proto_field_names = true;
   auto status = google::protobuf::util::MessageToJsonString(batch_request,
                                                             &json_str, options);

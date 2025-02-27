@@ -14,12 +14,10 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstdint>
-#include <cstring>
-#include <string>
+#include "arrow/api.h"
 
-#include "secretflow_serving/core/exception.h"
+#include "secretflow_serving/protos/graph.pb.h"
+#include "secretflow_serving/protos/op.pb.h"
 
 namespace secretflow::serving::op {
 
@@ -41,93 +39,51 @@ struct TreeNode {
   int32_t leaf_index = -1;
 };
 
+struct Tree {
+  int32_t root_id;
+
+  int32_t num_leaf;
+
+  std::set<int32_t> used_feature_idx_list;
+
+  std::map<int32_t, TreeNode> nodes;
+};
+
 struct TreePredictSelect {
   // | counts of padding bits in last bit map | 0-7 bit map | 8-15 bit map | ...
   std::vector<uint8_t> select;
 
   TreePredictSelect() = default;
+  explicit TreePredictSelect(const std::string& str);
+  explicit TreePredictSelect(std::string_view str);
+  explicit TreePredictSelect(const std::vector<uint64_t>& u64s);
 
-  explicit TreePredictSelect(const std::string& str) {
-    select.resize(str.size());
-    std::memcpy(select.data(), str.data(), str.size());
-  }
+  void SetSelectBuf(const std::string& str);
 
-  explicit TreePredictSelect(std::string_view str) {
-    select.resize(str.size());
-    std::memcpy(select.data(), str.data(), str.size());
-  }
+  void SetSelectBuf(std::string_view str);
 
-  void SetSelectBuf(const std::string& str) {
-    select.resize(str.size());
-    std::memcpy(select.data(), str.data(), str.size());
-  }
+  void SetLeafs(size_t leafs, bool all_selected = false);
 
-  void SetSelectBuf(std::string_view str) {
-    select.resize(str.size());
-    std::memcpy(select.data(), str.data(), str.size());
-  }
+  [[nodiscard]] size_t Leafs() const;
 
-  void SetLeafs(size_t leafs, bool all_selected = false) {
-    select.resize(std::ceil(leafs / 8.0) + 1, 0);
-    uint8_t pad_bits = leafs % 8 ? 8 - leafs % 8 : 0;
-    select[0] = pad_bits;
-    if (all_selected) {
-      for (size_t i = 1; i < select.size(); ++i) {
-        select[i] = std::numeric_limits<uint8_t>::max();
-      }
-    }
-  }
+  void Merge(const TreePredictSelect& s);
 
-  size_t Leafs() const {
-    if (select.empty()) {
-      return 0;
-    }
-    return (select.size() - 1) * 8 - select[0];
-  }
+  void SetLeafSelected(uint32_t leaf_idx);
 
-  void Merge(const TreePredictSelect& s) {
-    SERVING_ENFORCE(Leafs(), errors::ErrorCode::LOGIC_ERROR);
-    SERVING_ENFORCE_EQ(Leafs(), s.Leafs());
-    for (size_t i = 1; i < s.select.size(); i++) {
-      select[i] &= s.select[i];
-    }
-  }
+  [[nodiscard]] int32_t GetLeafIndex() const;
 
-  void SetLeafSelected(uint32_t leaf_idx) {
-    SERVING_ENFORCE_LT(leaf_idx, Leafs());
-    size_t vec_idx = leaf_idx / 8 + 1;
-    uint8_t bit_mask = 1 << (leaf_idx % 8);
-    select[vec_idx] |= bit_mask;
-  }
+  [[nodiscard]] bool CheckLeafSelected(uint32_t leaf_idx) const;
 
-  int32_t GetLeafIndex() const {
-    SERVING_ENFORCE(Leafs(), errors::ErrorCode::LOGIC_ERROR);
+  [[nodiscard]] std::vector<uint64_t> ToU64Vec() const;
 
-    int32_t idx = -1;
-    size_t i = 1;
-
-    while (i < select.size()) {
-      if (select[i]) {
-        const auto s = select[i];
-        // assert only one bit is set.
-        SERVING_ENFORCE((s & (s - 1)) == 0, errors::ErrorCode::LOGIC_ERROR,
-                        "i {}, s {}", i, s);
-        idx = (i - 1) * 8 + std::round(std::log2(s));
-        i++;
-        break;
-      }
-      i++;
-    }
-
-    while (i < select.size()) {
-      // assert only one bit is set.
-      SERVING_ENFORCE(select[i++] == 0, errors::ErrorCode::LOGIC_ERROR);
-    }
-
-    SERVING_ENFORCE(idx != -1, errors::ErrorCode::LOGIC_ERROR);
-
-    return idx;
-  }
+  static size_t GetSelectsU64VecSize(size_t leaf_num);
 };
+
+void BuildTreeFromNode(const NodeDef& node_def, const OpDef& op_def,
+                       const std::vector<std::string>& feature_list,
+                       Tree* tree);
+
+std::vector<TreePredictSelect> TreePredict(
+    const Tree& tree, const std::shared_ptr<arrow::RecordBatch>& input);
 
 }  // namespace secretflow::serving::op

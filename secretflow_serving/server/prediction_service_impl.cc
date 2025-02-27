@@ -50,6 +50,11 @@ void PredictionServiceImpl::Predict(
   yacl::ElapsedTimer timer;
 
   prediction_core_->Predict(request, response);
+  if (response->status().code() != errors::ErrorCode::OK) {
+    response->mutable_status()->set_msg(
+        fmt::format("[{}] {}", HexTraceId(span->GetContext().trace_id()),
+                    response->status().msg()));
+  }
 
   timer.Pause();
   SPDLOG_DEBUG("predict end, time: {}", timer.CountMs());

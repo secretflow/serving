@@ -79,7 +79,7 @@ serving_cc_library(
         "//secretflow_serving/core:exception",
         "//secretflow_serving/server/trace",
         "//secretflow_serving/util:utils",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -95,7 +95,7 @@ serving_cc_library(
         "//secretflow_serving/server:execution_core",
         "//secretflow_serving/server/trace",
         "//secretflow_serving/util:utils",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -110,7 +110,7 @@ serving_cc_library(
         "//secretflow_serving/server:execution_core",
         "//secretflow_serving/util:arrow_helper",
         "//secretflow_serving/util:utils",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 

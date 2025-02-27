@@ -75,7 +75,7 @@ serving_cc_library(
         ":factory",
         "//secretflow_serving/util:network",
         "//secretflow_serving/util:oss_client",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
         "@yacl//yacl/utils:elapsed_timer",
     ],
     alwayslink = True,

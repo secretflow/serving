@@ -83,7 +83,7 @@ To deploy SecretFlow-Serving in Kusica, you first need to register the template 
       tag: latest
 
 .. note::
-
+  
   You can also use mirrors at Alibaba Cloud: ``secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latestsecretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:[tag]``
 
 The explanation of the common fields can be found `here <https://www.secretflow.org.cn/docs/kuscia/latest/zh-Hans/reference/concepts/appimage_cn#appimage-ref>`_.

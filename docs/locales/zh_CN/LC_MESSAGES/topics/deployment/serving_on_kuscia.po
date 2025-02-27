@@ -604,3 +604,4 @@ msgstr ""
 #: ../../source/topics/deployment/serving_on_kuscia.rst:236
 msgid "Indicate which parties can initiate the prediction. Default: All"
 msgstr ""
+

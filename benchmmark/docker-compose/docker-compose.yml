@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  serving_alice:
+    entrypoint:
+      - bash
+      - -c
+      - "bash /home/admin/serving/setup_wan.sh && ${ALICE_SERVING_RUN}"
+    image: ${IMAGE_WITH_TAG}
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "9010:9010"
+    volumes:
+      - ./config/:/home/admin/serving/conf/
+      - ${ALICE_MODEL}:/home/admin/serving/data/model.tar.gz
+      - ./setup_wan.sh:/home/admin/serving/setup_wan.sh
+    deploy:
+      resources:
+        limits:
+          cpus: '${ALICE_CPU_LIMIT}'
+          memory: ${ALICE_MEMORY_LIMIT}
+  serving_bob:
+    entrypoint:
+      - bash
+      - -c
+      - "bash /home/admin/serving/setup_wan.sh && ${BOB_SERVING_RUN}"
+    image: ${IMAGE_WITH_TAG}
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "9011:9011"
+    volumes:
+      - ./config/:/home/admin/serving/conf/
+      - ${BOB_MODEL}:/home/admin/serving/data/model.tar.gz
+      - ./setup_wan.sh:/home/admin/serving/setup_wan.sh
+    deploy:
+      resources:
+        limits:
+          cpus: '${BOB_CPU_LIMIT}'
+          memory: ${BOB_MEMORY_LIMIT}

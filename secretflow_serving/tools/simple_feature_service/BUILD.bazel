@@ -26,7 +26,7 @@ serving_cc_library(
         "//secretflow_serving/spis:common_cc_proto",
         "//secretflow_serving/spis:error_code_cc_proto",
         "//secretflow_serving/util:csv_extractor",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -35,7 +35,7 @@ serving_cc_binary(
     srcs = ["main.cc"],
     deps = [
         ":simple_feature_service_lib",
-        "@com_github_gflags_gflags//:gflags",
-        "@org_apache_arrow//:arrow",
+        "@arrow",
+        "@gflags",
     ],
 )

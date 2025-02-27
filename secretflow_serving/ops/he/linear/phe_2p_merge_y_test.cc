@@ -133,6 +133,7 @@ TEST_P(PheMergeYTest, Works) {
   ComputeContext compute_ctx;
   compute_ctx.other_party_ids = {"bob"};
   compute_ctx.self_id = "alice";
+  compute_ctx.requester_id = "alice";
   compute_ctx.he_kit_mgm = he_kit_mgm_.get();
 
   // build input record_batch

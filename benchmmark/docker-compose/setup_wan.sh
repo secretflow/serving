@@ -1,4 +1,4 @@
-# Copyright 2023 Ant Group Co., Ltd.
+# Copyright 2024 Ant Group Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,29 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Description:
-#   AWS C++ SDK
-load("@rules_cc//cc:defs.bzl", "cc_library")
 
-package(default_visibility = ["//visibility:public"])
+set -eu
 
-licenses(["notice"])  # Apache 2.0
+yum install iproute-tc -y;
+# tc qdisc add dev eth0 root handle 1: tbf rate 100mbit burst 128kb latency 10ms;
+# tc qdisc add dev eth0 parent 1:1 handle 10: netem delay 10msec limit 8000
 
-exports_files(["LICENSE"])
-
-cc_library(
-    name = "aws_c_event_stream",
-    srcs = glob([
-        "source/*.c",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
-    includes = [
-        "include/",
-    ],
-    deps = [
-        "@com_aws_c_common//:aws_c_common",
-        "@com_aws_checksums//:aws_checksums",
-    ],
-)
