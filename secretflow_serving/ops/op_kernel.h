@@ -87,6 +87,10 @@ class OpKernel {
     SERVING_ENFORCE_EQ(ctx->inputs.size(), input_schema_list_.size(),
                        "node: {} schema size be equal to input edges",
                        opts_.node_def.name());
+    SERVING_ENFORCE(!ctx->self_id.empty(), errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE(!ctx->requester_id.empty(), errors::ErrorCode::LOGIC_ERROR);
+    SERVING_ENFORCE(!ctx->other_party_ids.empty(),
+                    errors::ErrorCode::LOGIC_ERROR);
 
     for (size_t edge_index = 0; edge_index != ctx->inputs.size();
          ++edge_index) {

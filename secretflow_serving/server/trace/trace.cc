@@ -15,7 +15,7 @@
 #include "secretflow_serving/server/trace/trace.h"
 
 #include "opentelemetry/context/propagation/global_propagator.h"
-#include "opentelemetry/sdk/trace/simple_processor.h"
+#include "opentelemetry/sdk/trace/batch_span_processor_factory.h"
 #include "opentelemetry/sdk/trace/tracer_provider.h"
 #include "opentelemetry/trace/propagation/b3_propagator.h"
 #include "opentelemetry/trace/propagation/http_trace_context.h"
@@ -25,6 +25,7 @@
 
 #include "secretflow_serving/server/trace/brpc_http_carrier.h"
 #include "secretflow_serving/server/trace/bthreadlocal_context_storage.h"
+#include "secretflow_serving/server/trace/noop.h"
 #include "secretflow_serving/server/trace/spdlog_span_exporter.h"
 #include "secretflow_serving/server/version.h"
 #include "secretflow_serving/util/utils.h"
@@ -33,23 +34,41 @@
 
 namespace secretflow::serving {
 
+DEFINE_uint32(trace_processor_max_queue_size, 10240,
+              "Flag for "
+              "`opentelemetry::sdk::trace::BatchSpanProcessorOptions.max_queue_"
+              "size`. The maximum "
+              "buffer/queue size. After the size is reached, spans "
+              "are dropped");
+
+DEFINE_uint32(
+    trace_processor_schedule_delay_millis, 2000,
+    "Flag for "
+    "`opentelemetry::sdk::trace::BatchSpanProcessorOptions.schedule_"
+    "delay_millis`. The time interval between two consecutive exports.");
+
+DEFINE_uint32(
+    trace_processor_max_export_batch_size, 512,
+    "Flag for "
+    "`opentelemetry::sdk::trace::BatchSpanProcessorOptions.max_export_"
+    "batch_size`. The maximum batch size of every export. It must be "
+    "smaller or equal to max_queue_size.");
+
 namespace {
 
 void AddBrpcInfoToSpan(
     const brpc::Controller& cntl,
-    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span,
+    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span>& span,
     bool is_client) {
   span->SetAttribute(
       opentelemetry::trace::SemanticConventions::kHttpRequestMethod,
       std::string(brpc::HttpMethod2Str(cntl.http_request().method())));
-  if (cntl.method()) {
+  if (cntl.method() != nullptr) {
     span->SetAttribute(opentelemetry::trace::SemanticConventions::kRpcMethod,
                        cntl.method()->full_name());
     span->SetAttribute(opentelemetry::trace::SemanticConventions::kRpcService,
                        cntl.method()->service()->full_name());
   }
-  span->SetAttribute(opentelemetry::trace::SemanticConventions::kRpcSystem,
-                     "brpc");
   if (is_client) {
     span->SetAttribute(
         opentelemetry::trace::SemanticConventions::kServerAddress,
@@ -78,7 +97,6 @@ void AddBrpcInfoToSpan(
   cntl.http_request().uri().Print(os);
   span->SetAttribute(opentelemetry::trace::SemanticConventions::kUrlFull,
                      os.str());
-
   span->SetAttribute(opentelemetry::trace::SemanticConventions::kUrlPath,
                      cntl.http_request().uri().path());
   span->SetAttribute("request_protocol",
@@ -87,19 +105,22 @@ void AddBrpcInfoToSpan(
 }  // namespace
 
 std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor> GetTraceLogProcessor(
-    const TraceLogConfig& trace_log_config) {
-  // use trace spdlog as exporter
-  auto exporter = std::make_unique<SpdLogSpanExporter>(trace_log_config);
-  return std::make_unique<opentelemetry::sdk::trace::SimpleSpanProcessor>(
-      std::move(exporter));
-}
-
-void SetUpNoopTracerProvider() {
-  auto trace_provider =
-      opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>(
-          new opentelemetry::trace::NoopTracerProvider());
-
-  opentelemetry::trace::Provider::SetTracerProvider(trace_provider);
+    const TraceConfig& trace_config) {
+  if (!trace_config.trace_log_enable()) {
+    return std::make_unique<trace::NoopSpanProcessor>();
+  } else {
+    // use trace spdlog as exporter
+    auto exporter =
+        std::make_unique<SpdLogSpanExporter>(trace_config.trace_log_conf());
+    opentelemetry::sdk::trace::BatchSpanProcessorOptions options{
+        .max_queue_size = FLAGS_trace_processor_max_export_batch_size,
+        .schedule_delay_millis = std::chrono::milliseconds(
+            FLAGS_trace_processor_schedule_delay_millis),
+        .max_export_batch_size = FLAGS_trace_processor_max_export_batch_size,
+    };
+    return opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
+        std::move(exporter), options);
+  }
 }
 
 void SetUpBThreadStorage() {
@@ -110,34 +131,32 @@ void SetUpBThreadStorage() {
   opentelemetry::context::RuntimeContext::SetRuntimeContextStorage(ctx_storage);
 }
 
-// TODO: provider should be protected by bthread mutex
-void SetUpNormalTracerProvider(
-    std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>>
-        processors) {
-  // Default is an always-on sampler.
-  opentelemetry::sdk::resource::ResourceAttributes attributes = {
-      {"service.name", "Secretflow Serving"},
-      {"service.version", SERVING_VERSION_STRING}};
-  auto resource = opentelemetry::sdk::resource::Resource::Create(attributes);
-  auto context = std::make_unique<opentelemetry::sdk::trace::TracerContext>(
-      std::move(processors), resource);
-  auto provider =
-      opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>(
-          new opentelemetry::sdk::trace::TracerProvider(std::move(context)));
-
-  // Set the global trace provider
-  opentelemetry::trace::Provider::SetTracerProvider(provider);
-}
-
 void SetUpTracerProvider(
     std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>>
-        processors) {
-  if (processors.empty()) {
-    SetUpNoopTracerProvider();
-    SPDLOG_INFO("no span processor configured, noop tracer will be used");
+        processors,
+    bool enable_log) {
+  opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>
+      provider;
+  if (enable_log) {
+    // Default is an always-on sampler.
+    opentelemetry::sdk::resource::ResourceAttributes attributes = {
+        {"service.name", "Secretflow Serving"},
+        {"service.version", SERVING_VERSION_STRING},
+        {opentelemetry::trace::SemanticConventions::kRpcSystem, "brpc"}};
+    auto resource = opentelemetry::sdk::resource::Resource::Create(attributes);
+    auto context = std::make_unique<opentelemetry::sdk::trace::TracerContext>(
+        std::move(processors), resource);
+    provider =
+        opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>(
+            new opentelemetry::sdk::trace::TracerProvider(std::move(context)));
   } else {
-    SetUpNormalTracerProvider(std::move(processors));
+    provider =
+        opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>(
+            new opentelemetry::sdk::trace::TracerProvider(
+                std::move(processors)));
+    SPDLOG_INFO("simple trace provider for disable trace export");
   }
+  opentelemetry::trace::Provider::SetTracerProvider(provider);
 }
 
 void SetUpPropagator() {
@@ -149,18 +168,13 @@ void SetUpPropagator() {
 }
 
 void InitTracer(const TraceConfig& trace_config) {
+  auto processor = GetTraceLogProcessor(trace_config);
   std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>>
       processors;
+  processors.emplace_back(std::move(processor));
+  SPDLOG_INFO("trace span processor configured");
 
-  if (trace_config.trace_log_enable()) {
-    SPDLOG_INFO("trace log span processor configured");
-
-    auto processor = GetTraceLogProcessor(trace_config.trace_log_conf());
-
-    processors.push_back(std::move(processor));
-  }
-
-  SetUpTracerProvider(std::move(processors));
+  SetUpTracerProvider(std::move(processors), trace_config.trace_log_enable());
 
   SetUpPropagator();
 
@@ -171,7 +185,7 @@ opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> GetTracer(
     std::string_view tracer_name, std::string_view version) {
   auto provider = opentelemetry::trace::Provider::GetTracerProvider();
   if (tracer_name.empty()) {
-    return provider->GetTracer("secretflow_serving", SERVING_VERSION_STRING);
+    return provider->GetTracer("services");
   }
   return provider->GetTracer(tracer_name, version);
 }
@@ -188,7 +202,7 @@ opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> CreateServerSpan(
   options.kind = opentelemetry::trace::SpanKind::kServer;  // server
   options.parent = opentelemetry::trace::GetSpan(context)->GetContext();
 
-  std::string span_name = span_info;
+  const std::string& span_name = span_info;
 
   auto span = GetTracer(tracer_name)->StartSpan(span_name, options);
 
@@ -200,7 +214,8 @@ opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> CreateClientSpan(
     apis::Header* request_header, std::string_view tracer_name) {
   return CreateClientSpan(
       cntl, service_info,
-      request_header ? request_header->mutable_data() : nullptr, tracer_name);
+      (request_header != nullptr) ? request_header->mutable_data() : nullptr,
+      tracer_name);
 }
 
 opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> CreateClientSpan(
@@ -210,11 +225,11 @@ opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> CreateClientSpan(
   opentelemetry::trace::StartSpanOptions span_options;
   span_options.kind = trace_api::SpanKind::kClient;
   span_options.parent = opentelemetry::context::RuntimeContext::GetCurrent();
-  std::string span_name = service_info;
+  const std::string& span_name = service_info;
 
   auto tracer = GetTracer(tracer_name);
   auto span = tracer->StartSpan(span_name, span_options);
-  auto scope = tracer->WithActiveSpan(span);
+  auto scope = opentelemetry::trace::Tracer::WithActiveSpan(span);
   BrpcHttpCarrierSetable carrier(&cntl->http_request(), header_map);
   auto prop = opentelemetry::trace::propagation::B3PropagatorMultiHeader();
   auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
@@ -224,14 +239,13 @@ opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> CreateClientSpan(
 }
 
 void SetSpanAttrs(
-    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span,
+    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span>& span,
     const SpanAttrOption& option) {
   SpanInfo span_info;
   span_info.set_model_service_id(option.service_id);
   span_info.set_party_id(option.party_id);
 
   span->SetAttribute("span_info", PbToJson(&span_info));
-
   span->SetStatus(option.code == errors::ErrorCode::OK
                       ? opentelemetry::trace::StatusCode::kOk
                       : opentelemetry::trace::StatusCode::kError,

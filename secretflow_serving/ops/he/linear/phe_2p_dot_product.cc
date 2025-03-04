@@ -51,13 +51,6 @@ heu_matrix::PMatrix TableToPMatrix(
   return plain_matrix;
 }
 
-inline void BuildBinaryArray(const ::yacl::Buffer& buf,
-                             std::shared_ptr<arrow::Array>* array) {
-  arrow::BinaryBuilder builder;
-  SERVING_CHECK_ARROW_STATUS(builder.Append(buf.data<uint8_t>(), buf.size()));
-  SERVING_CHECK_ARROW_STATUS(builder.Finish(array));
-}
-
 }  // namespace
 
 PheDotProduct::PheDotProduct(OpKernelOptions opts)
@@ -210,11 +203,8 @@ void PheDotProduct::DoCompute(ComputeContext* ctx) {
     auto c_i = evaluator->Mul(c_intercept_, feature_encoder->Encode(1));
 
     heu_matrix::CMatrix c_i_matrix(c_wxe_matrix.shape());
-    for (int i = 0; i < c_i_matrix.rows(); ++i) {
-      for (int j = 0; j < c_i_matrix.cols(); ++j) {
-        c_i_matrix(i, j) = c_i;
-      }
-    }
+    c_i_matrix.ForEach(
+        [&](int64_t r, int64_t c, heu_phe::Ciphertext* ct) { *ct = c_i; });
     result_matrix = dst_m_evaluator->Add(c_wxe_matrix, c_i_matrix);
   }
 

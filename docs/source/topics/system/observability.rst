@@ -215,8 +215,7 @@ Every line of the trace log file is a `ResourceSpans <https://github.com/open-te
       "scopeSpans": [
         {
           "scope": {
-            "name": "secretflow_serving",
-            "version": "SF_SERVING_VERSION"
+            "name": "services"
           },
           "spans": [
             {
@@ -250,7 +249,6 @@ Every line of the trace log file is a `ResourceSpans <https://github.com/open-te
                     "stringValue": "secretflow.serving.apis.PredictionService"
                   }
                 },
-                { "key": "rpc.system", "value": { "stringValue": "brpc" } },
                 {
                   "key": "server.address",
                   "value": { "stringValue": "127.0.0.1:9010" }

@@ -69,8 +69,6 @@ int cmd_through_popen(std::ostream& os, const char* cmd) {
   return -1;
 }
 
-namespace {
-
 std::string SHA256String(const std::string& str) {
   unsigned char results[SHA256_DIGEST_LENGTH];
   EVP_Digest(str.data(), str.length(), results, nullptr, EVP_sha256(), nullptr);
@@ -78,8 +76,6 @@ std::string SHA256String(const std::string& str) {
   return absl::BytesToHexString(absl::string_view(
       reinterpret_cast<const char*>(results), SHA256_DIGEST_LENGTH));
 }
-
-}  // namespace
 
 }  // namespace
 

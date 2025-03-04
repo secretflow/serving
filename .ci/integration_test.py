@@ -564,6 +564,9 @@ class ExampleTest(ProcRunGuard):
                     res["status"]["code"] == 1
                 ), f'return status code({res["status"]["code"]}) should be OK(1)'
 
+            # wait trace flush
+            time.sleep(10)
+
             # check trace log
             self.check_trace_log()
 

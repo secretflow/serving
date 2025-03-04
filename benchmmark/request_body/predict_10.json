@@ -1,0 +1,35 @@
+{
+  "service_spec": {
+    "id": "test_service_id"
+  },
+  "fs_params": {
+    "alice": {
+      "query_datas": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ]
+    },
+    "bob": {
+      "query_datas": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ]
+    }
+  }
+}
