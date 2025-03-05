@@ -23,14 +23,13 @@ serving_cc_library(
     deps = [
         ":brpc_http_carrier",
         ":bthreadlocal_context_storage",
+        ":noop",
         ":span_info_cc_proto",
         ":spdlog_span_exporter",
         "//secretflow_serving/apis:common_cc_proto",
         "//secretflow_serving/config:trace_config_cc_proto",
         "//secretflow_serving/server:serving_version",
         "@com_github_brpc_brpc//:brpc",
-        "@io_opentelemetry_cpp//api",
-        "@io_opentelemetry_cpp//sdk:headers",
         "@io_opentelemetry_cpp//sdk/src/trace",
     ],
 )
@@ -79,4 +78,13 @@ proto_library(
 cc_proto_library(
     name = "span_info_cc_proto",
     deps = [":span_info"],
+)
+
+serving_cc_library(
+    name = "noop",
+    hdrs = ["noop.h"],
+    deps = [
+        "@io_opentelemetry_cpp//api",
+        "@io_opentelemetry_cpp//sdk:headers",
+    ],
 )

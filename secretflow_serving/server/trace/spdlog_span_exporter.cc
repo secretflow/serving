@@ -57,8 +57,7 @@ SpdLogSpanExporter::SpdLogSpanExporter(const TraceLogConfig& trace_log_config)
   logger_.sinks().push_back(file_sink);
   logger_.set_level(spdlog::level::info);
   logger_.set_pattern(kFormatPattern);
-  logger_.flush_on(spdlog::level::info);
-  SPDLOG_INFO("trace log init success, trace_log_path={}", trace_log_path);
+  SPDLOG_INFO("trace logger init success, trace_log_path={}", trace_log_path);
 }
 
 std::unique_ptr<opentelemetry::sdk::trace::Recordable>
@@ -66,7 +65,6 @@ SpdLogSpanExporter::MakeRecordable() noexcept {
   return std::make_unique<opentelemetry::exporter::otlp::OtlpRecordable>();
 }
 
-// TODO: maybe cache
 opentelemetry::sdk::common::ExportResult SpdLogSpanExporter::Export(
     const opentelemetry::nostd::span<
         std::unique_ptr<opentelemetry::sdk::trace::Recordable>>&
@@ -80,10 +78,10 @@ opentelemetry::sdk::common::ExportResult SpdLogSpanExporter::Export(
         request;
     opentelemetry::exporter::otlp::OtlpRecordableUtils::PopulateRequest(
         spans, &request);
-    for (auto& resource_spans : request.resource_spans()) {
+    for (const auto& resource_spans : request.resource_spans()) {
       logger_.info(PbToJson(&resource_spans));
     }
-
+    logger_.flush();
   } catch (const std::exception& e) {
     SPDLOG_ERROR("log span failed, unexcept error={}", e.what());
     return opentelemetry::sdk::common::ExportResult::kFailure;

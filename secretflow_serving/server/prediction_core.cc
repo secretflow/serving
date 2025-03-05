@@ -17,6 +17,7 @@
 #include "fmt/ranges.h"
 #include "spdlog/spdlog.h"
 
+#include "secretflow_serving/server/trace/trace.h"
 #include "secretflow_serving/util/utils.h"
 
 namespace secretflow::serving {
@@ -31,17 +32,19 @@ PredictionCore::PredictionCore(Options opts) : opts_(std::move(opts)) {
 
 void PredictionCore::Predict(const apis::PredictRequest* request,
                              apis::PredictResponse* response) noexcept {
+  auto trace_id =
+      ::opentelemetry::trace::Tracer::GetCurrentSpan()->GetContext().trace_id();
   try {
     PredictImpl(request, response);
   } catch (const Exception& e) {
-    SPDLOG_ERROR("Predict failed, request: {}, code:{}, msg:{}, stack:{}",
-                 PbToJsonNoExcept(request), e.code(), e.what(),
-                 e.stack_trace());
+    SPDLOG_ERROR("[{}] Predict failed, request: {}, code:{}, msg:{}, stack:{}",
+                 HexTraceId(trace_id), PbToJsonNoExcept(request), e.code(),
+                 e.what(), e.stack_trace());
     response->mutable_status()->set_code(e.code());
     response->mutable_status()->set_msg(e.what());
   } catch (const std::exception& e) {
-    SPDLOG_ERROR("Predict failed, request: {}, msg:{}",
-                 PbToJsonNoExcept(request), e.what());
+    SPDLOG_ERROR("[{}] Predict failed, request: {}, msg:{}",
+                 HexTraceId(trace_id), PbToJsonNoExcept(request), e.what());
     response->mutable_status()->set_code(errors::ErrorCode::UNEXPECTED_ERROR);
     response->mutable_status()->set_msg(e.what());
   }
