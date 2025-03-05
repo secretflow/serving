@@ -11,6 +11,8 @@
 
 > please add your unreleased change here.
 
+## 20250305 - 0.9.0b0
+
 - [Feature] Support phe tree model predict.
 - [Improvement] The trace export mode is optimized to export trace in batches
 - [Bugfix] Fixed an issue where trace information was not passed when the trace export function was disabled
