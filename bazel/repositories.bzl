@@ -48,7 +48,7 @@ def _dataproxy():
             "https://github.com/secretflow/dataproxy/archive/refs/tags/v0.3.0b0.tar.gz",
         ],
         strip_prefix = "dataproxy-0.3.0b0",
-        sha256 = "016915d16bd9331e2b7766d2a4090166c7c9f5e58b3ba75f68df3e23cde9846a",
+        sha256 = "00ab16c24b7de42209437226e1825c391178dbdefcffccdc159de9a49b914c58",
     )
 
 def _heu():
