@@ -1,9 +1,9 @@
 [tool.black]
 skip-string-normalization = true
+extend-exclude = '''.*_pb2.py'''
 
 [tool.isort]
 profile = "black"
-extend-exclude = '''.*_pb2.py'''
 
 [tool.rstcheck]
 report_level = "ERROR"
