@@ -62,7 +62,10 @@ single_version_override(
     version = "1.7.336",
 )
 
-single_version_override(module_name = "grpc", version = "1.66.0.bcr.4")
+single_version_override(
+    module_name = "grpc",
+    version = "1.66.0.bcr.4",
+)
 
 bazel_dep(name = "brpc")
 single_version_override(

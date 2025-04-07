@@ -96,7 +96,9 @@ def main():
     extract_to = os.path.join(project_root, 'protoc_temp')
     os.makedirs(extract_to, exist_ok=True)
 
-    url = 'https://github.com/protocolbuffers/protobuf/releases/download/v25.6/protoc-25.6-linux-x86_32.zip',
+    url = (
+        'https://github.com/protocolbuffers/protobuf/releases/download/v25.6/protoc-25.6-linux-x86_32.zip',
+    )
     if platform.system() == "Darwin":
         url = 'https://github.com/protocolbuffers/protobuf/releases/download/v25.6/protoc-25.6-osx-aarch_64.zip'
     else:

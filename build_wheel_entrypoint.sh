@@ -47,7 +47,7 @@ while getopts "j:p:" options; do
     esac
 done
 
-source ${BASE_DIR}/update_version.sh
+python3 ${BASE_DIR}/update_version.py
 
 if [[ ${bazel_jobs} -le 0 ]]; then
     bazel build --verbose_failures -c opt //:serving_lib --@rules_python//python/config_settings:python_version=${python_ver}
