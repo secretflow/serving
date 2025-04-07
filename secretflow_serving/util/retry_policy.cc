@@ -57,6 +57,13 @@ class RetryPolicy : public brpc::RpcRetryPolicy, public BackOffT {
       return true;
     }
 
+    // The internal design of brpc does not support retries for RPC timeout
+    // errors, so it is also necessary to filter out RPC timeout error codes
+    // here.
+    if (cntl->ErrorCode() == brpc::ERPCTIMEDOUT) {
+      return false;
+    }
+
     if (retry_aggressive_) {
       SPDLOG_INFO("retry aggressive, {}", cntl->ErrorCode());
       return true;
@@ -66,7 +73,6 @@ class RetryPolicy : public brpc::RpcRetryPolicy, public BackOffT {
       auto error_code = cntl->ErrorCode();
       if (KCustomRetryBrpcCode.find(error_code) != KCustomRetryBrpcCode.end()) {
         SPDLOG_INFO("retry brpc error, {}", error_code);
-
         return true;
       }
 
@@ -75,7 +81,6 @@ class RetryPolicy : public brpc::RpcRetryPolicy, public BackOffT {
               KCustomRetryHttpCode.end()) {
         SPDLOG_INFO("retry on http code, {}",
                     cntl->http_response().status_code());
-
         return true;
       }
     }

@@ -1,4 +1,0 @@
-grpcio>=1.42.0,!=1.48.0
-protobuf>5
-pyarrow==14.0.2
-numpy<2

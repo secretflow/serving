@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@python_versions//3.10:defs.bzl", compile_pip_requirements_3_10 = "compile_pip_requirements")
+load("@python_versions//3.11:defs.bzl", compile_pip_requirements_3_11 = "compile_pip_requirements")
+load("@python_versions//3.9:defs.bzl", compile_pip_requirements_3_9 = "compile_pip_requirements")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
+load("//:version.bzl", "SERVING_VERSION")
+
+exports_files([
+    "README.md",
+    "LICENSE",
+])
 
 pkg_tar(
     name = "sf_serving",
@@ -30,4 +40,92 @@ pkg_tar(
         "secretflow_serving/tools/": "tools/",
     },
     strip_prefix = "./",
+)
+
+compile_pip_requirements_3_9(
+    name = "requirements_3_9",
+    src = "requirements.txt",
+    requirements_txt = "requirements_lock_3_9.txt",
+)
+
+compile_pip_requirements_3_10(
+    name = "requirements_3_10",
+    src = "requirements.txt",
+    requirements_txt = "requirements_lock_3_10.txt",
+)
+
+compile_pip_requirements_3_11(
+    name = "requirements_3_11",
+    src = "requirements.txt",
+    requirements_txt = "requirements_lock_3_11.txt",
+)
+
+# https://rules-python.readthedocs.io/en/latest/api/rules_python/python/packaging.html#py_wheel_rule
+py_wheel(
+    name = "serving_lib",
+    abi = select(
+        {
+            "@rules_python//python/config_settings:is_python_3.10": "cp310",
+            "@rules_python//python/config_settings:is_python_3.11": "cp311",
+            "@rules_python//python/config_settings:is_python_3.9": "cp39",
+            "//conditions:default": "none",
+        },
+    ),
+    author = "SecretFlow Team",
+    author_email = "secretflow-contact@service.alipay.com",
+    classifiers = [
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+    ],
+    description_content_type = "text/markdown",
+    description_file = "README.md",
+    distribution = "secretflow-serving-lib",
+    extra_distinfo_files = {
+        "//:LICENSE": "LICENSE",
+    },
+    homepage = "https://github.com/secretflow/serving",
+    license = "Apache License 2.0",
+    # TODO: add other fields.
+    platform = select(
+        {
+            "@bazel_tools//src/conditions:linux_x86_64": "manylinux2014_x86_64",
+            "@bazel_tools//src/conditions:darwin_arm64": "macosx_12_0_arm64",
+            "@bazel_tools//src/conditions:darwin_x86_64": "macosx_10_16_x86_64",
+            "@bazel_tools//src/conditions:linux_aarch64": "manylinux_2_28_aarch64",
+            "//conditions:default": "any",
+        },
+    ),
+    python_requires = ">=3.9",
+    python_tag = select(
+        {
+            "@rules_python//python/config_settings:is_python_3.10": "cp310",
+            "@rules_python//python/config_settings:is_python_3.11": "cp311",
+            "@rules_python//python/config_settings:is_python_3.9": "cp39",
+            "//conditions:default": "py3",
+        },
+    ),
+    requires_file = "requirements.txt",
+    summary = "Serving is a subproject of Secretflow that implements model serving capabilities.",
+    tags = ["manual"],
+    twine = None,
+    version = SERVING_VERSION,
+    deps = [
+        ":serving_lib_pkg",
+    ],
+)
+
+py_package(
+    name = "serving_lib_pkg",
+    packages = [
+        "secretflow_serving",
+        "secretflow_serving_lib",
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        "//secretflow_serving/tools/inferencer:inferencer_wrapper",
+        "//secretflow_serving_lib:api",
+        "//secretflow_serving_lib:init",
+        "//secretflow_serving_lib:libserving",
+    ],
 )

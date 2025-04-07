@@ -54,4 +54,4 @@ echo "6. Update secretflow_serving_lib doc."
 cd ..
 bash build_wheel_entrypoint.sh > /dev/null 2>&1
 cd -
-sphinx-apidoc -f -d 2 -t source/topics/library/templates -o source/reference ../python_lib/secretflow_serving_lib/
+sphinx-apidoc -f -d 2 -t source/topics/library/templates -o source/reference ../secretflow_serving_lib/

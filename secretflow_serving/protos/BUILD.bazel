@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto_grpc_python//:defs.bzl", "python_proto_compile")
-
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
@@ -99,60 +97,4 @@ proto_library(
 cc_proto_library(
     name = "compute_trace_cc_proto",
     deps = [":compute_trace_proto"],
-)
-
-python_proto_compile(
-    name = "graph_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":graph_proto"],
-)
-
-python_proto_compile(
-    name = "bundle_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":bundle_proto"],
-)
-
-python_proto_compile(
-    name = "op_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":op_proto"],
-)
-
-python_proto_compile(
-    name = "attr_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":attr_proto"],
-)
-
-python_proto_compile(
-    name = "data_type_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":data_type_proto"],
-)
-
-python_proto_compile(
-    name = "compute_trace_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":compute_trace_proto"],
-)
-
-python_proto_compile(
-    name = "link_function_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":link_function_proto"],
-)
-
-python_proto_compile(
-    name = "feature_py_proto",
-    output_mode = "NO_PREFIX",
-    prefix_path = "../..",
-    protos = [":feature_proto"],
 )

@@ -15,9 +15,11 @@ vipclient-*
 compile_commands.json
 .clangd
 Pipfile
+protoc_temp/
 
 # bazel
 bazel-*
+MODULE.bazel.lock
 
 # cmake related
 abseil-cpp

@@ -54,7 +54,7 @@ class InferenceExecutor {
                ControlResponse* response);
 
  private:
-  const Options opts_;
+  Options opts_;
 
   std::unique_ptr<Server> server_;
 
