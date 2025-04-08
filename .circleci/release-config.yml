@@ -55,12 +55,14 @@ commands:
             conda create -n build python=<< parameters.python_ver >> -y
             conda activate build
 
+            conda install -c conda-forge cmake==3.31.6
+
             export BAZEL_MAX_JOBS=16
             sh ./build_wheel_entrypoint.sh
             python3 -m pip install twine
             ls python_lib/dist/*.whl
 
-            python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} python_lib/dist/*.whl
+            # python3 -m twine upload -r pypi -u __token__ -p ${PYPI_TWINE_TOKEN} bazel-bin/*.whl
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -89,7 +91,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake@3.31.6 ninja libomp wget go
+            brew install bazelisk ninja libomp wget go
       - run:
           name: "Install Miniconda"
           command: |
@@ -174,14 +176,14 @@ jobs:
             echo $TAG
             docker buildx create --name serving-image-builder --platform linux/arm64,linux/amd64 --use
 
-            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG --push .
+            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:$TAG --push .
+            # docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:$TAG --push .
 
-            if [[ $TAG =~ b[0-9]$ ]]; then
-                echo "tag and push latest image."
-                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:latest --push .
-                docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latest --push .
-            fi
+            # if [[ $TAG =~ b[0-9]$ ]]; then
+            #     echo "tag and push latest image."
+            #     docker buildx build --platform linux/arm64,linux/amd64 -t secretflow/serving-anolis8:latest --push .
+            #     docker buildx build --platform linux/arm64,linux/amd64 -t secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/serving-anolis8:latest --push .
+            # fi
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

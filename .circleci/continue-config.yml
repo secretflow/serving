@@ -129,7 +129,7 @@ jobs:
       - checkout
       - run:
           name: "Install homebrew dependencies"
-          command: brew install bazelisk cmake@3.31.6 ninja libomp wget go md5sha1sum
+          command: brew install bazelisk ninja libomp wget go md5sha1sum
       - run:
           name: "Install Miniconda"
           command: |
@@ -137,6 +137,11 @@ jobs:
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init bash zsh
+
+            conda create -n build python=3.10 -y
+            conda activate build
+
+            conda install -c conda-forge cmake==3.31.6
       - build_and_test:
           bazel_targets: "//python_lib/..."
 
