@@ -58,6 +58,7 @@ header: # <1>
     - '**/*.config'
     - '**/*.conf'
     - '**/*.env'
+    - '**/*_pb2.py'
     - 'LICENSE'
     - 'NOTICE'
     - '.bazelversion'

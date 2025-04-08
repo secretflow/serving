@@ -58,7 +58,8 @@ message RetryPolicyConfig {
   // errors (brpc does not retry http errors by default)
   bool retry_custom = 1;
 
-  // Whether to retry on any http or brpc error, default is false.
+  // Whether to retry on any http and brpc error expect brpc::ERPCTIMEDOUT,
+  // default is false.
   bool retry_aggressive = 2;
 
   // The number of retries, default 3.

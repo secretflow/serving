@@ -93,7 +93,8 @@ opentelemetry::sdk::common::ExportResult SpdLogSpanExporter::Export(
   return opentelemetry::sdk::common::ExportResult::kSuccess;
 }
 
-bool SpdLogSpanExporter::Shutdown(std::chrono::microseconds timeout) noexcept {
+bool SpdLogSpanExporter::Shutdown(
+    std::chrono::microseconds /*timeout*/) noexcept {
   const std::lock_guard<opentelemetry::common::SpinLockMutex> locked(lock_);
   logger_.flush();
   is_shutdown_ = true;
@@ -103,6 +104,13 @@ bool SpdLogSpanExporter::Shutdown(std::chrono::microseconds timeout) noexcept {
 bool SpdLogSpanExporter::isShutdown() const noexcept {
   const std::lock_guard<opentelemetry::common::SpinLockMutex> locked(lock_);
   return is_shutdown_;
+}
+
+bool SpdLogSpanExporter::ForceFlush(
+    std::chrono::microseconds /*timeout*/) noexcept {
+  const std::lock_guard<opentelemetry::common::SpinLockMutex> locked(lock_);
+  logger_.flush();
+  return true;
 }
 
 }  // namespace secretflow::serving

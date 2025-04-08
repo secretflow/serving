@@ -15,10 +15,44 @@
 # limitations under the License.
 set -e
 
-cd python_lib
-rm -rf dist
-python setup.py bdist_wheel
-python -m pip install dist/*.whl --force-reinstall
-cd -
+show_help() {
+    echo "Usage: bash build_wheel_entrypoint.sh [OPTION]"
+    echo "  -j bazel_jobs"
+    echo "          specifies the limit number of bazel jobs."
+    echo "  -p pytho_version"
+    echo "          specifies the python version."
+    echo
+}
 
-python -c "import secretflow_serving_lib"
+BASE_DIR=$(cd "$(dirname "$0")" && pwd)
+
+bazel_jobs=0
+python_ver="3.10"
+while getopts "j:p:" options; do
+    case "${options}" in
+    j)
+        bazel_jobs=${OPTARG}
+        if [[ ${bazel_jobs} -le 0 ]]; then
+            echo "-j value shall be greater than 0, get ${OPTARG}."
+            exit 1
+        fi
+        ;;
+    p)
+        python_ver=${OPTARG}
+        ;;
+    *)
+        show_help
+        exit 1
+        ;;
+    esac
+done
+
+python3 ${BASE_DIR}/update_version.py
+
+if [[ ${bazel_jobs} -le 0 ]]; then
+    bazel build --verbose_failures -c opt //:serving_lib --@rules_python//python/config_settings:python_version=${python_ver}
+else
+    bazel build --verbose_failures -c opt //:serving_lib --@rules_python//python/config_settings:python_version=${python_ver} --jobs ${bazel_jobs}
+fi
+
+python -m pip install ${BASE_DIR}/bazel-bin/*.whl --force-reinstall

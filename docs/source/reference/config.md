@@ -433,7 +433,7 @@ S3 protocol.
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | retry_custom | [ bool](#bool ) | Default is false, the error code of brpc's retry strategy is used. If it is True, it will be retried on additional error codes, including some http errors (brpc does not retry http errors by default) |
-| retry_aggressive | [ bool](#bool ) | Whether to retry on any http or brpc error, default is false. |
+| retry_aggressive | [ bool](#bool ) | Whether to retry on any http or brpc error expect brpc::ERPCTIMEDOUT, default is false. |
 | max_retry_count | [ int32](#int32 ) | The number of retries, default 3. |
 | backoff_mode | [ RetryPolicyBackOffMode](#retrypolicybackoffmode ) | backoff time mode, default is FIX_BACKOFF. |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) backoff_config.fixed_backoff_config | [ FixedBackOffConfig](#fixedbackoffconfig ) | The fixed backoff time config. |

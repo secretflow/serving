@@ -42,6 +42,9 @@ const size_t kHeartBeatCheckFailedNum = 10;
 
 const int64_t kRequestBatchNum = 500;
 
+const int64_t kRpcTimeoutMs = 5000;
+const int64_t kConnectTimeoutMs = 2000;
+
 }  // namespace
 
 namespace {
@@ -78,6 +81,18 @@ InferenceExecutor::InferenceExecutor(Options opts) : opts_(std::move(opts)) {
         opts_.serving_conf.feature_source_conf().streaming_opts().file_path());
   }
 
+  // The inferencer scene expands the timeout setting appropriately
+  if (opts_.serving_conf.cluster_conf().channel_desc().connect_timeout_ms() <=
+      0) {
+    opts_.serving_conf.mutable_cluster_conf()
+        ->mutable_channel_desc()
+        ->set_rpc_timeout_ms(kConnectTimeoutMs);
+  }
+  if (opts_.serving_conf.cluster_conf().channel_desc().rpc_timeout_ms() <= 0) {
+    opts_.serving_conf.mutable_cluster_conf()
+        ->mutable_channel_desc()
+        ->set_rpc_timeout_ms(kRpcTimeoutMs);
+  }
   channels_ = BuildChannelsFromConfig(opts_.serving_conf.cluster_conf());
 
   // begin services
@@ -155,6 +170,9 @@ void InferenceExecutor::OnRun() {
                     "send init msg to {} failed.", p);
     row_num_list.emplace_back(res.init_msg().row_num());
   }
+
+  SPDLOG_INFO("init others finished.");
+
   if (row_num_ > 0) {
     // mock feature source no need check row num (row_num < 0)
     compute_row_num = row_num_;
@@ -370,15 +388,15 @@ bool InferenceExecutor::SendMsg(const std::string& target_id,
   stub.Push(&cntl, &request, response, nullptr);
   if (cntl.Failed()) {
     SPDLOG_WARN(
-        "call ({}) init control failed, msg:{}, may need "
+        "send ({}) control_msg[{}] failed, msg:{}, may need "
         "retry",
-        target_id, cntl.ErrorText());
+        target_id, static_cast<int>(type), cntl.ErrorText());
     return false;
   } else if (!CheckStatusOk(response->status())) {
     SPDLOG_WARN(
-        "call ({}) init control msg failed, msg:{}, may need "
+        "call ({}) control_msg[{}] failed, msg:{}, may need "
         "retry",
-        target_id, response->status().msg());
+        target_id, static_cast<int>(type), response->status().msg());
     return false;
   }
   return true;

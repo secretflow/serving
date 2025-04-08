@@ -40,11 +40,12 @@ class SpdLogSpanExporter : public opentelemetry::sdk::trace::SpanExporter {
           std::unique_ptr<opentelemetry::sdk::trace::Recordable>>&
           spans) noexcept override;
 
-  bool Shutdown(std::chrono::microseconds timeout =
-                    std::chrono::microseconds::max()) noexcept override;
+  bool Shutdown(std::chrono::microseconds /*timeout*/) noexcept override;
+
+  bool ForceFlush(std::chrono::microseconds /*timeout*/) noexcept override;
 
  private:
-  bool isShutdown() const noexcept;
+  [[nodiscard]] bool isShutdown() const noexcept;
 
  private:
   bool is_shutdown_ = false;
