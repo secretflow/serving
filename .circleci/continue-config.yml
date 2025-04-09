@@ -50,14 +50,6 @@ commands:
       - run:
           name: "build"
           command: |
-            conda list -n build cmake
-
-            echo $PATH
-
-            which cmake
-
-            ls $CONDA_PREFIX/bin/cmake
-
             cmake --version
 
             export BAZEL_MAX_JOBS=16
@@ -152,6 +144,16 @@ jobs:
             conda activate build
 
             conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
+
+            conda list -n build cmake
+
+            echo "---------------"
+
+            echo $PATH
+
+            echo "---------------"
+
+            ls $CONDA_PREFIX/bin/cmake
       - build_and_test:
           bazel_targets: "//python_lib/..."
 
