@@ -59,11 +59,7 @@ commands:
 
             conda init bash zsh
 
-            cmake --version
-
-            export BAZEL_MAX_JOBS=16
-
-            sh ./build_wheel_entrypoint.sh
+            sh ./build_wheel_entrypoint.sh -j 16
             bazel build <<parameters.bazel_targets>> -c opt --jobs 16
       - run:
           name: "test"
