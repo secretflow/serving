@@ -55,6 +55,10 @@ commands:
             conda create -n build python=<< parameters.python_ver >> -y
             conda activate build
 
+            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
+
+            cmake --version
+
             export BAZEL_MAX_JOBS=16
             sh ./build_wheel_entrypoint.sh
             python3 -m pip install twine
@@ -89,7 +93,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake ninja libomp wget go
+            brew install bazelisk ninja libomp wget go
       - run:
           name: "Install Miniconda"
           command: |
