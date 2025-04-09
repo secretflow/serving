@@ -40,6 +40,8 @@ commands:
       - run:
           name: Install Python dependencies
           command: |
+            conda info --env
+
             python3 -m pip install -r python_lib/requirements.txt
             python3 -m pip install -r .ci/requirements-ci.txt
       - run:
@@ -52,6 +54,7 @@ commands:
           command: |
             source $HOME/miniconda/bin/activate
             conda init bash zsh
+            conda info --env
 
             cmake --version
 
