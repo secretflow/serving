@@ -28,6 +28,29 @@ commands:
     steps:
       # Kill the whole ci after 1hr
       - run:
+          name: Conda env
+          command: |
+            conda init bash
+
+            conda create -n build python=3.10 -y
+            conda activate build
+
+            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
+
+            conda list -n build cmake
+
+            echo "---------------"
+
+            echo $PATH
+
+            echo "---------------"
+
+            ls $CONDA_PREFIX/bin/cmake
+
+            echo "---------------"
+
+            cmake --version
+      - run:
           name: Cancel build after set time
           background: true
           command: |
@@ -138,26 +161,6 @@ jobs:
             wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
-            conda init bash
-
-            conda create -n build python=3.10 -y
-            conda activate build
-
-            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
-
-            conda list -n build cmake
-
-            echo "---------------"
-
-            echo $PATH
-
-            echo "---------------"
-
-            ls $CONDA_PREFIX/bin/cmake
-
-            echo "---------------"
-
-            cmake --version
       - build_and_test:
           bazel_targets: "//python_lib/..."
 
