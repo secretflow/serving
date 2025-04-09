@@ -55,7 +55,7 @@ commands:
             conda create -n build python=<< parameters.python_ver >> -y
             conda activate build
 
-            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y 
+            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
 
             cmake --version
 
