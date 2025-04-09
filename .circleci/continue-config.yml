@@ -138,7 +138,7 @@ jobs:
             wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-MacOSX-arm64.sh -O ~/miniconda.sh
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
-            conda init bash zsh
+            conda init bash
 
             conda create -n build python=3.10 -y
             conda activate build
@@ -154,6 +154,10 @@ jobs:
             echo "---------------"
 
             ls $CONDA_PREFIX/bin/cmake
+
+            echo "---------------"
+
+            cmake --version
       - build_and_test:
           bazel_targets: "//python_lib/..."
 
