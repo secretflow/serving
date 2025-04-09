@@ -50,6 +50,8 @@ commands:
       - run:
           name: "build"
           command: |
+            cmake --version
+
             export BAZEL_MAX_JOBS=16
 
             sh ./build_wheel_entrypoint.sh

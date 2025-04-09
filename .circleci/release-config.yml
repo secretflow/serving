@@ -57,6 +57,8 @@ commands:
 
             conda install -c conda-forge cmake==3.31.6 -y
 
+            cmake --version
+
             export BAZEL_MAX_JOBS=16
             sh ./build_wheel_entrypoint.sh
             python3 -m pip install twine
