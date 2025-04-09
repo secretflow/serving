@@ -20,29 +20,29 @@ parameters:
     default: false
 
 commands:
-  setup_deps:
-    steps:
-      # Kill the whole ci after 1hr
-      - run:
-          name: Cancel build after set time
-          background: true
-          command: |
-            sleep 3600
-            echo "Canceling workflow as too much time has elapsed"
-            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
-      - run:
-          name: Checkout devtools
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
-          name: Install Python dependencies
-          command: |
-            python3 -m pip install -r python_lib/requirements.txt
-            python3 -m pip install -r .ci/requirements-ci.txt
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+  # setup_deps:
+  #   steps:
+  #     # Kill the whole ci after 1hr
+  #     - run:
+  #         name: Cancel build after set time
+  #         background: true
+  #         command: |
+  #           sleep 3600
+  #           echo "Canceling workflow as too much time has elapsed"
+  #           curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
+  #     - run:
+  #         name: Checkout devtools
+  #         command: git clone https://github.com/secretflow/devtools.git ../devtools
+  #     - run:
+  #         name: Install Python dependencies
+  #         command: |
+  #           python3 -m pip install -r python_lib/requirements.txt
+  #           python3 -m pip install -r .ci/requirements-ci.txt
+  #     - run:
+  #         name: Setup GCS
+  #         command: |
+  #           echo ${gcs_content} > ../gcs.data
+  #           ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
 
   build_and_test:
     parameters:
@@ -50,7 +50,7 @@ commands:
         type: string
         default: "//..."
       is_macos:
-        type: int
+        type: integer
         default: 0
     steps:
       # Kill the whole ci after 1hr
