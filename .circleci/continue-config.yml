@@ -50,6 +50,14 @@ commands:
       - run:
           name: "build"
           command: |
+            conda list -n build cmake
+
+            echo $PATH
+
+            which cmake
+
+            ls $CONDA_PREFIX/bin/cmake
+
             cmake --version
 
             export BAZEL_MAX_JOBS=16
