@@ -20,11 +20,7 @@ parameters:
     default: false
 
 commands:
-  build_and_test:
-    parameters:
-      bazel_targets:
-        type: string
-        default: "//..."
+  setup_deps:
     steps:
       # Kill the whole ci after 1hr
       - run:
@@ -40,8 +36,37 @@ commands:
       - run:
           name: Install Python dependencies
           command: |
-            conda info --env
+            python3 -m pip install -r python_lib/requirements.txt
+            python3 -m pip install -r .ci/requirements-ci.txt
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
 
+  build_and_test:
+    parameters:
+      bazel_targets:
+        type: string
+        default: "//..."
+      is_macos:
+        type: int
+        default: 0
+    steps:
+      # Kill the whole ci after 1hr
+      - run:
+          name: Cancel build after set time
+          background: true
+          command: |
+            sleep 3600
+            echo "Canceling workflow as too much time has elapsed"
+            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
+      - run:
+          name: Checkout devtools
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Install Python dependencies
+          command: |
             python3 -m pip install -r python_lib/requirements.txt
             python3 -m pip install -r .ci/requirements-ci.txt
       - run:
@@ -52,9 +77,11 @@ commands:
       - run:
           name: "build"
           command: |
-            source $HOME/miniconda/bin/activate
+            if [ <<parameters.bazel_targets>> -eq 1 ]; then
+              source $HOME/miniconda/bin/activate
+            fi
+
             conda init bash zsh
-            conda info --env
 
             cmake --version
 
@@ -146,26 +173,10 @@ jobs:
             source $HOME/miniconda/bin/activate
             conda init bash zsh
 
-            conda create -n build python=3.10 -y
-            conda activate build
-
             conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
-
-            conda list -n build cmake
-
-            echo "---------------"
-
-            echo $PATH
-
-            echo "---------------"
-
-            ls $CONDA_PREFIX/bin/cmake
-
-            echo "---------------"
-
-            cmake --version
       - build_and_test:
           bazel_targets: "//python_lib/..."
+          is_macos: 1
 
 workflows:
   unittest:
