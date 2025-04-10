@@ -47,7 +47,7 @@ use_repo(cuda, "local_cuda")
 
 # self-host registry
 bazel_dep(name = "yacl", version = "0.4.5b10-nightly-20241224")
-bazel_dep(name = "arrow", version = "14.0.2")
+bazel_dep(name = "arrow", version = "14.0.2.bcr.1")
 bazel_dep(name = "openssl", version = "3.3.2.bcr.1")
 bazel_dep(name = "heu", version = "0.6.0.dev20250123")
 bazel_dep(name = "kuscia", version = "0.14.0b0")
