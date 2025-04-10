@@ -25,6 +25,9 @@ commands:
       bazel_targets:
         type: string
         default: "//..."
+      is_macos:
+        type: integer
+        default: 0
     steps:
       # Kill the whole ci after 1hr
       - run:
@@ -50,9 +53,13 @@ commands:
       - run:
           name: "build"
           command: |
-            export BAZEL_MAX_JOBS=16
+            if [ <<parameters.bazel_targets>> -eq 1 ]; then
+              source $HOME/miniconda/bin/activate
+            fi
 
-            sh ./build_wheel_entrypoint.sh
+            conda init bash zsh
+
+            sh ./build_wheel_entrypoint.sh -j 16
             bazel build <<parameters.bazel_targets>> -c opt --jobs 16
       - run:
           name: "test"
@@ -129,7 +136,7 @@ jobs:
       - checkout
       - run:
           name: "Install homebrew dependencies"
-          command: brew install bazelisk cmake ninja libomp wget go md5sha1sum
+          command: brew install bazelisk ninja libomp wget go md5sha1sum
       - run:
           name: "Install Miniconda"
           command: |
@@ -137,8 +144,11 @@ jobs:
             bash ~/miniconda.sh -b -p $HOME/miniconda
             source $HOME/miniconda/bin/activate
             conda init bash zsh
+
+            conda install -c conda-forge cmake==3.31.6 --force-reinstall -y
       - build_and_test:
           bazel_targets: "//secretflow_serving_lib/..."
+          is_macos: 1
 
 workflows:
   unittest:
