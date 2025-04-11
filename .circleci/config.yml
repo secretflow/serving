@@ -69,6 +69,12 @@ workflows:
             secretflow_serving_lib/.* build-and-run true
             bazel/.* build-and-run true
             .bazelrc build-and-run true
+            .bazeliskrc build-and-run true
+            MODULE.bazel build-and-run true
+            BUILD.bazel build-and-run true
+            requirements.txt build-and-run true
+            ./*.sh build-and-run true
+            ./*.py build-and-run true
       - lint
   publish-workflow:
     when:
