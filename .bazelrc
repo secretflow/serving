@@ -13,7 +13,7 @@
 # limitations under the License.
 
 common --experimental_repo_remote_exec
-common --remote_download_regex='.*libserving\.so$|.*_pb2\.py$|.*\/secretflow_serving$|.*sf_serving\.tar\.gz$|.*\/simple_feature_service$|.*\/inferencer$'
+common --remote_download_regex='.*libserving\.so$|.*_pb2\.py$|.*\/secretflow_serving$|.*sf_serving\.tar\.gz$|.*\/simple_feature_service$|.*\/inferencer$|.*\.whl$'
 common --experimental_cc_shared_library
 
 common --registry=https://raw.githubusercontent.com/secretflow/bazel-registry/main
