@@ -80,7 +80,7 @@ single_version_override(
 )
 
 # python
-bazel_dep(name = "rules_python", version = "1.2.0")
+bazel_dep(name = "rules_python", version = "1.3.0")
 
 DEFAULT_PYTHON_VERSION = "3.10"
 
