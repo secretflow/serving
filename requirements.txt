@@ -1,4 +1,4 @@
 grpcio>=1.42.0,!=1.48.0
 protobuf>=4,<5
-pyarrow==14.0.2
+pyarrow==19.0.1
 numpy<2
