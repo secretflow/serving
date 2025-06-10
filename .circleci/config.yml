@@ -63,6 +63,7 @@ workflows:
       - path-filtering/filter:
           base-revision: main
           config-path: .circleci/continue-config.yml
+          tag: "3.9"
           mapping: |
             .circleci/continue-config.yml build-and-run true
             secretflow_serving/.* build-and-run true
