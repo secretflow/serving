@@ -106,7 +106,7 @@ workflows:
               only: main
   publish-workflow:
     when:
-      equal: ["release", << pipeline.parameters.GHA_Event >>]
+      equal: [ "release", << pipeline.parameters.GHA_Event >> ]
     jobs:
       - continuation/continue:
           configuration_path: .circleci/release-config.yml
