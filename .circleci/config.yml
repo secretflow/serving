@@ -73,7 +73,7 @@ jobs:
             secretflow-doctools build --lang zh_CN --lang en
             secretflow-doctools publish \
               --name @secretflow/x-serving \
-              --index-js _build/esm/index.js
+              --index-js build/esm/index.js
 
 workflows:
   unittest-workflow:
