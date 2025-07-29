@@ -46,10 +46,9 @@ commands:
             python3 -m pip install -r requirements.txt
             python3 -m pip install -r .ci/requirements-ci.txt
       - run:
-          name: Setup GCS
+          name: Setup BuildBuddy Cache
           command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+            ../devtools/bazel_cache_setup.py --min_download
       - run:
           name: "build"
           command: |
